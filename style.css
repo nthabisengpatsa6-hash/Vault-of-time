@@ -13,9 +13,9 @@ body {
   margin-top: 20px;
 }
 .block.selected {
-  background-color: #ffe082; /* a soft yellow highlight */
-  border: 2px solid #ffca28;
-  box-shadow: 0 0 5px #ffb300;
+  background-color: #ffe082 !important; /* a soft yellow highlight */
+  border: 2px solid #ffca28 !important;
+  box-shadow: 0 0 5px #ffb300 !important;
 }
 .block {
   width: 50px;
