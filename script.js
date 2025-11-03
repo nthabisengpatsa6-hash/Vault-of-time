@@ -2,6 +2,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const modal = document.getElementById('modal');
   console.log("Modal element is:", modal);
   const closeButton = document.querySelector('.close-button');
+  const blocks = document.querySelectorAll('.block');
+blocks.forEach((block, index) => {
+  block.addEventListener('click', () => handleClick(index, block));
+});
 
   function handleClick(index, blockElement) {
     console.log('Block clicked:', index + 1);
