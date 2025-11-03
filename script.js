@@ -1,5 +1,6 @@
 // Modal Logic
 const modal = document.getElementById('modal');
+console.log("Modal element is:", modal);
 const closeButton = document.querySelector('.close');
 
 // Show modal when a block is clicked
