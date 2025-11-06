@@ -1,4 +1,4 @@
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -13,12 +13,11 @@
       transform-origin: bottom center;
       animation:
         tick 1.2s infinite steps(2, start),
-        clock-glow 3s ease-in-out 1; /* one-time glow at load */
+        clock-glow 3s ease-in-out 1;
       text-shadow: 0 0 0 rgba(212,175,55,0);
       opacity: 0.85;
     }
 
-    /* mirrored clock on right */
     .clock-icon.reverse {
       animation:
         tick-reverse 1.2s infinite steps(2, start),
@@ -37,7 +36,6 @@
       100% { transform: rotate(0deg); }
     }
 
-    /* startup glow */
     @keyframes clock-glow {
       0% {
         text-shadow: 0 0 0 rgba(212,175,55,0);
@@ -73,6 +71,32 @@
     footer a:hover {
       color: #ffd966;
     }
+
+    /* --- FORM STYLE --- */
+    form#blockForm {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+    form#blockForm input, form#blockForm button {
+      padding: 0.6rem;
+      border-radius: 5px;
+      border: 1px solid #999;
+      font-size: 1rem;
+    }
+    form#blockForm button {
+      background: #d4af37;
+      border: none;
+      color: #111;
+      font-weight: 600;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    form#blockForm button.active {
+      cursor: pointer;
+      opacity: 1;
+    }
   </style>
 </head>
 
@@ -90,9 +114,21 @@
   <div id="modal" class="modal hidden">
     <div class="modal-content">
       <span class="close-button">&times;</span>
-      <h3>🔓 Unlock this Block</h3>
-      <p>This block is waiting for your memory, secret, or story. Soon, you’ll be able to claim it forever.</p>
-      <button disabled>Coming Soon</button>
+      <h3>🗝️ Claim Your Block</h3>
+      <p>This block is waiting for your memory, secret, or story.</p>
+
+      <form id="blockForm">
+        <label for="name">Name</label>
+        <input type="text" id="name" placeholder="Your name" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required>
+
+        <label for="upload">Upload file (image/audio)</label>
+        <input type="file" id="upload" accept="image/*,audio/*">
+
+        <button type="submit" disabled>Opens Dec 2025</button>
+      </form>
     </div>
   </div>
 
@@ -119,52 +155,7 @@
     <p><a href="contact.html" target="_blank">📩 Contact Us</a></p>
   </footer>
 
-  <script>
-    // === GENERATE 100 BLOCKS DYNAMICALLY ===
-    document.addEventListener("DOMContentLoaded", function () {
-      const grid = document.getElementById("grid");
-
-      // Create 100 numbered blocks
-      for (let i = 1; i <= 100; i++) {
-        const block = document.createElement("div");
-        block.classList.add("block");
-        block.textContent = i;
-        grid.appendChild(block);
-      }
-
-      const modal = document.getElementById("modal");
-      const closeButton = document.querySelector(".close-button");
-      const allBlocks = document.querySelectorAll(".block");
-
-      // Mark claimed blocks (example)
-      const claimedBlocks = [3, 7, 15, 21];
-      claimedBlocks.forEach((id) => {
-        if (allBlocks[id - 1]) {
-          allBlocks[id - 1].classList.add("claimed");
-          allBlocks[id - 1].style.cursor = "not-allowed";
-        }
-      });
-
-      // Handle click event for available blocks
-      allBlocks.forEach((block, index) => {
-        if (!block.classList.contains("claimed")) {
-          block.addEventListener("click", () => handleClick(index, block));
-        }
-      });
-
-      function handleClick(index, blockElement) {
-        allBlocks.forEach((b) => b.classList.remove("selected"));
-        blockElement.classList.add("selected");
-        modal.classList.remove("hidden");
-      }
-
-      if (closeButton) {
-        closeButton.addEventListener("click", () => {
-          modal.classList.add("hidden");
-        });
-      }
-    });
-  </script>
+  <!-- 👇🏽 Link to external JavaScript -->
+  <script src="script.js"></script>
 </body>
 </html>
-
