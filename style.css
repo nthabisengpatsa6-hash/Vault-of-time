@@ -1,10 +1,14 @@
 
+/* --- GLOBAL THEME --- */
 body {
-  font-family: sans-serif;
+  font-family: 'Poppins', sans-serif;
   text-align: center;
-  background: #fdf6e3;
-  color: #333;
+  background-color: #0d1117; /* deep navy/charcoal */
+  color: #e6edf3;
+  margin: 0;
 }
+
+/* --- GRID / BLOCKS --- */
 .grid-container {
   display: grid;
   grid-template-columns: repeat(10, 50px);
@@ -12,74 +16,110 @@ body {
   justify-content: center;
   margin-top: 20px;
 }
-.block.selected {
-  background-color: #ffe082 !important; /* a soft yellow highlight */
-  border: 2px solid #ffca28 !important;
-  box-shadow: 0 0 5px #ffb300 !important;
-}
+
 .block {
   width: 50px;
   height: 50px;
-  background: #ccc;
-  border: 1px solid #999;
+  background: #cfd2d6; /* light neutral grey */
+  border: 1px solid #2f333a;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-size: 12px;
+  transition: all 0.2s ease;
 }
-.block:hover {
-  background: #a2d2ff;
+
+.block:hover:not(.claimed) {
+  background: #dfe2e5;
 }
+
+.block.selected {
+  background-color: #f5e79e !important; /* warm gold highlight */
+  border: 2px solid #d4af37 !important;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.7) !important;
+}
+
+.block.claimed {
+  background-color: #446b6f; /* muted turquoise */
+  border: 1px solid #274c50;
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
+/* --- STORY SECTION (for later expansion) --- */
 .story {
   margin: 40px auto;
   max-width: 700px;
   padding: 20px;
-  background-color: #fff8e7;
-  border-left: 5px solid #a58b5f;
-  font-family: Georgia, 'Times New Roman', serif;
-  color: #333;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  background-color: #161b22;
+  border-left: 5px solid #d4af37;
+  color: #e6edf3;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  border-radius: 6px;
 }
 
 .story h2 {
   margin-bottom: 10px;
   font-size: 24px;
+  color: #f9d26e;
 }
 
 .story p {
   line-height: 1.6;
   margin-bottom: 15px;
 }
-/* Modal Overlay */
+
+/* --- MODAL --- */
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
 }
 
-/* Hidden by default */
 .hidden {
   display: none;
 }
 
-/* Modal Content Box */
 .modal-content {
-  background-color: #fffaf0;
+  background-color: #1c2128; /* dark modal box */
   padding: 2rem;
   border-radius: 12px;
   max-width: 400px;
   width: 90%;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
   text-align: center;
-  font-family: 'Georgia', serif;
+  color: #e6edf3;
+  font-family: 'Poppins', sans-serif;
+}
+
+.modal-content h2 {
+  color: #f9d26e;
+  margin-bottom: 10px;
+}
+
+.modal-content p {
+  color: #c9d1d9;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.modal-content button {
+  background-color: #d4af37;
+  color: #0d1117;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  cursor: not-allowed;
+  font-weight: bold;
+  margin-top: 1rem;
 }
 
 .close-button {
@@ -88,27 +128,11 @@ body {
   right: 16px;
   font-size: 28px;
   font-weight: bold;
-  color: #333;
+  color: #f9d26e;
   cursor: pointer;
-  z-index: 1000; /* ensures it's above other elements */
+  z-index: 1000;
 }
 
 .close-button:hover {
-  color: #000;
-    }
-
-
-.close-button:hover {
-  color: #000;
-}
-
-.block.claimed {
-  background-color: #ff4d4d; /* red tone */
-  border: 1px solid #b30000;
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.block.selected {
-  border: 2px solid #00cc99; /* whatever colour you like for active selection */
+  color: #fff;
 }
