@@ -42,3 +42,58 @@ document.addEventListener("DOMContentLoaded", function () {
   // Optional: expose handleClick globally (if needed elsewhere)
   window.handleClick = handleClick;
 });
+
+// === VAULT OF TIME INTERACTIVE SCRIPT ===
+document.addEventListener("DOMContentLoaded", function () {
+  const grid = document.getElementById("grid");
+  const modal = document.getElementById("modal");
+  const closeButton = document.querySelector(".close-button");
+  const form = document.getElementById("blockForm");
+
+  // === 1. Generate Blocks Dynamically ===
+  for (let i = 1; i <= 100; i++) { // change 100 to 1000 later
+    const block = document.createElement("div");
+    block.classList.add("block");
+    block.textContent = i;
+    grid.appendChild(block);
+  }
+
+  const allBlocks = document.querySelectorAll(".block");
+
+  // === 2. Mark Claimed Blocks (temporary demo) ===
+  const claimedBlocks = [3, 7, 15, 21];
+  claimedBlocks.forEach((id) => {
+    if (allBlocks[id - 1]) {
+      allBlocks[id - 1].classList.add("claimed");
+      allBlocks[id - 1].style.cursor = "not-allowed";
+    }
+  });
+
+  // === 3. Click handler for available blocks ===
+  allBlocks.forEach((block, index) => {
+    if (!block.classList.contains("claimed")) {
+      block.addEventListener("click", () => handleClick(index, block));
+    }
+  });
+
+  function handleClick(index, blockElement) {
+    allBlocks.forEach((b) => b.classList.remove("selected"));
+    blockElement.classList.add("selected");
+    modal.classList.remove("hidden");
+  }
+
+  // === 4. Close modal ===
+  if (closeButton) {
+    closeButton.addEventListener("click", () => {
+      modal.classList.add("hidden");
+    });
+  }
+
+  // === 5. Placeholder form logic ===
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    alert("Uploads will open in December. Thank you for being early!");
+    modal.classList.add("hidden");
+    form.reset();
+  });
+});
