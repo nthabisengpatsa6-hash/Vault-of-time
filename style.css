@@ -100,3 +100,9 @@ body {
 .close-button:hover {
   color: #000;
 }
+.claimed {
+  background-color: black;   /* Makes it look different */
+  color: gold;               /* Optional: changes the text color */
+  pointer-events: none;      /* So people can’t click it */
+  cursor: not-allowed;       /* Shows a little “🚫” when you hover */
+}
