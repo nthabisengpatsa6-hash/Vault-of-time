@@ -26,9 +26,3 @@ blocks.forEach((block, index) => {
   // Expose handleClick globally
   window.handleClick = handleClick;
 });
-// A list of block numbers that are already taken
-const claimedBlocks = [25, 47, 82];
-
-if (claimedBlocks.includes(blockNumber)) {
-    block.classList.add("claimed");
-}
