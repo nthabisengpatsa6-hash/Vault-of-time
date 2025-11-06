@@ -26,3 +26,10 @@ blocks.forEach((block, index) => {
   // Expose handleClick globally
   window.handleClick = handleClick;
 });
+
+// This function is triggered when a block is clicked
+function handleClick(blockNumber) {
+  alert("You clicked on block #" + (blockNumber + 1));
+  // You can replace this alert with something cooler later,
+  // like opening a form or showing block details.
+}
