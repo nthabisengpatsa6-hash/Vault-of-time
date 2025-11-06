@@ -101,8 +101,9 @@ body {
   color: #000;
 }
 .claimed {
-  background-color: black;   /* Makes it look different */
-  color: gold;               /* Optional: changes the text color */
-  pointer-events: none;      /* So people can’t click it */
-  cursor: not-allowed;       /* Shows a little “🚫” when you hover */
+  background-color: black;         /* Block turns black */
+  color: white;                    /* The number turns white (optional) */
+  pointer-events: none;            /* Stops people from clicking the block */
+  cursor: not-allowed;             /* Shows 🚫 when hovering */
+  opacity: 0.7;                    /* Slightly faded (optional for style) */
 }
