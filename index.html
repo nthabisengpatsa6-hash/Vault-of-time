@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,12 +7,22 @@
   <link rel="stylesheet" href="style.css" />
 
   <style>
-    /* --- Header Clock Animation --- */
+    /* --- CLOCK ANIMATION: Tick + Power-Up Glow --- */
     .clock-icon {
       display: inline-block;
       transform-origin: bottom center;
-      animation: tick 1.2s infinite steps(2, start);
-      text-shadow: 0 0 6px rgba(212,175,55,0.8);
+      animation:
+        tick 1.2s infinite steps(2, start),
+        clock-glow 3s ease-in-out 1; /* one-time glow at load */
+      text-shadow: 0 0 0 rgba(212,175,55,0);
+      opacity: 0.85;
+    }
+
+    /* mirrored clock on right */
+    .clock-icon.reverse {
+      animation:
+        tick-reverse 1.2s infinite steps(2, start),
+        clock-glow 3s ease-in-out 1;
     }
 
     @keyframes tick {
@@ -21,7 +31,33 @@
       100% { transform: rotate(0deg); }
     }
 
-    /* --- Contact link at bottom --- */
+    @keyframes tick-reverse {
+      0% { transform: rotate(0deg); }
+      50% { transform: rotate(-6deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    /* startup glow */
+    @keyframes clock-glow {
+      0% {
+        text-shadow: 0 0 0 rgba(212,175,55,0);
+        opacity: 0.4;
+        transform: scale(1);
+      }
+      50% {
+        text-shadow: 0 0 20px rgba(212,175,55,0.9),
+                     0 0 40px rgba(212,175,55,0.6);
+        opacity: 1;
+        transform: scale(1.1);
+      }
+      100% {
+        text-shadow: 0 0 6px rgba(212,175,55,0.8);
+        opacity: 0.85;
+        transform: scale(1);
+      }
+    }
+
+    /* footer contact link */
     footer {
       text-align: center;
       margin: 2rem 0;
@@ -41,7 +77,11 @@
 </head>
 
 <body>
-  <h1><span class="clock-icon">🕰️</span> The Vault of Time</h1>
+  <h1>
+    <span class="clock-icon">🕰️</span>
+    The Vault of Time
+    <span class="clock-icon reverse">🕰️</span>
+  </h1>
 
   <!-- GRID CONTAINER -->
   <div class="grid-container" id="grid"></div>
@@ -74,9 +114,9 @@
     </p>
   </section>
 
-  <!-- CONTACT US LINK -->
+  <!-- CONTACT LINK -->
   <footer>
-    <p><a href="contact.html">📩 Contact Us</a></p>
+    <p><a href="contact.html" target="_blank">📩 Contact Us</a></p>
   </footer>
 
   <script>
