@@ -102,6 +102,13 @@ body {
   color: #000;
 }
 
-body {
-  background-color: red !important;
+.block.claimed {
+  background-color: #ff4d4d; /* red tone */
+  border: 1px solid #b30000;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.block.selected {
+  border: 2px solid #00cc99; /* whatever colour you like for active selection */
 }
