@@ -102,11 +102,3 @@ body {
   color: #000;
 }
 
-.claimed {
-  background-color: black;         /* Block turns black */
-  color: white;                    /* The number turns white (optional) */
-  pointer-events: none;            /* Stops people from clicking the block */
-  cursor: not-allowed;             /* Shows 🚫 when hovering */
-  opacity: 0.7;                    /* Slightly faded (optional for style) */
-}
-
