@@ -76,3 +76,23 @@ document.addEventListener("DOMContentLoaded", function () {
     modal.classList.add("hidden");
   });
 });
+// COUNTDOWN TIMER
+const countdownDate = new Date("Dec 15, 2025 12:00:00").getTime(); // Change date/time here
+
+const timerInterval = setInterval(function() {
+  const now = new Date().getTime();
+  const distance = countdownDate - now;
+
+  const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+  const timer = document.getElementById("timer");
+  if (distance > 0) {
+    timer.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  } else {
+    clearInterval(timerInterval);
+    timer.innerHTML = "🎉 The Founders Drop is LIVE!";
+  }
+}, 1000);
