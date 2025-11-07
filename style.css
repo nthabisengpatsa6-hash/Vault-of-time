@@ -1,4 +1,3 @@
-
 /* --- GLOBAL THEME --- */
 body {
   font-family: 'Poppins', sans-serif;
@@ -135,4 +134,17 @@ body {
 
 .close-button:hover {
   color: #fff;
+}
+
+/* --- COUNTDOWN TIMER --- */
+.countdown {
+  text-align: center;
+  margin: 1rem auto 2rem;
+  color: #d4af37; /* gold */
+}
+
+#timer {
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  font-weight: 600;
 }
