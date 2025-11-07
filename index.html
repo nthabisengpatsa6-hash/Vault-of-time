@@ -9,29 +9,27 @@
   <style>
     /* CLOCK ANIMATION */
     .clock-icon {
-      display: inline-block;
-      transform-origin: bottom center;
-      animation: tick 1.2s infinite steps(2, start), clock-glow 3s ease-in-out 1;
-      text-shadow: 0 0 0 rgba(212,175,55,0);
-      opacity: 0.85;
+      display:inline-block;
+      transform-origin:bottom center;
+      animation:tick 1.2s infinite steps(2,start), clock-glow 3s ease-in-out 1;
+      text-shadow:0 0 0 rgba(212,175,55,0);
+      opacity:.85;
     }
     .clock-icon.reverse {
-      animation: tick-reverse 1.2s infinite steps(2, start), clock-glow 3s ease-in-out 1;
+      animation:tick-reverse 1.2s infinite steps(2,start), clock-glow 3s ease-in-out 1;
     }
-    @keyframes tick {0%{transform:rotate(0)}50%{transform:rotate(6deg)}100%{transform:rotate(0)}}
-    @keyframes tick-reverse {0%{transform:rotate(0)}50%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
-    @keyframes clock-glow {
-      0% {text-shadow:0 0 0 rgba(212,175,55,0);opacity:.4;transform:scale(1)}
-      50% {text-shadow:0 0 20px rgba(212,175,55,.9),0 0 40px rgba(212,175,55,.6);opacity:1;transform:scale(1.1)}
-      100% {text-shadow:0 0 6px rgba(212,175,55,.8);opacity:.85;transform:scale(1)}
+    @keyframes tick{0%{transform:rotate(0)}50%{transform:rotate(6deg)}100%{transform:rotate(0)}}
+    @keyframes tick-reverse{0%{transform:rotate(0)}50%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
+    @keyframes clock-glow{
+      0%{text-shadow:0 0 0 rgba(212,175,55,0);opacity:.4;transform:scale(1)}
+      50%{text-shadow:0 0 20px rgba(212,175,55,.9),0 0 40px rgba(212,175,55,.6);opacity:1;transform:scale(1.1)}
+      100%{text-shadow:0 0 6px rgba(212,175,55,.8);opacity:.85;transform:scale(1)}
     }
 
-    /* FOOTER */
     footer{text-align:center;margin:2rem 0}
     footer a{color:#f9d26e;text-decoration:none;font-weight:600;transition:color .3s ease}
     footer a:hover{color:#ffd966}
 
-    /* FORM */
     form#blockForm{
       display:flex;
       flex-direction:column;
@@ -52,53 +50,49 @@
       cursor:pointer;
     }
 
-    /* GRID STYLES */
+    /* GRID */
     .grid-container {
-      display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 6px;
-      max-width: 320px;
-      margin: 1.5rem auto;
+      display:grid;
+      grid-template-columns:repeat(10,1fr);
+      gap:6px;
+      max-width:320px;
+      margin:1.5rem auto;
     }
     .block {
-      background: #1e1e1e;
-      color: #fff;
-      border: 1px solid #555;
-      text-align: center;
-      padding: 10px 0;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: 0.3s;
+      background:#1e1e1e;
+      color:#fff;
+      border:1px solid #555;
+      text-align:center;
+      padding:10px 0;
+      border-radius:4px;
+      cursor:pointer;
+      transition:0.3s;
     }
-    .block:hover { background: #333; }
-    .block.claimed { background: #444; color: #777; cursor: not-allowed; }
-    .block.selected { outline: 2px solid #d4af37; }
+    .block:hover{background:#333;}
+    .block.claimed{background:#444;color:#777;cursor:not-allowed;}
+    .block.selected{outline:2px solid #d4af37;}
 
-    .modal.hidden { display: none; }
-    .modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 10;
+    .modal.hidden{display:none;}
+    .modal{
+      position:fixed;
+      top:0;left:0;
+      width:100%;height:100%;
+      background:rgba(0,0,0,0.7);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      z-index:10;
     }
-    .modal-content {
-      background: #111;
-      color: #eee;
-      padding: 2rem;
-      border-radius: 8px;
-      width: 90%;
-      max-width: 400px;
-      text-align: left;
+    .modal-content{
+      background:#111;
+      color:#eee;
+      padding:2rem;
+      border-radius:8px;
+      width:90%;
+      max-width:400px;
+      text-align:left;
     }
-    .close-button {
-      float: right;
-      cursor: pointer;
-      font-size: 1.2rem;
-    }
+    .close-button{float:right;cursor:pointer;font-size:1.2rem;}
   </style>
 </head>
 
@@ -156,11 +150,61 @@
     <p>🗝 One block. One moment. Yours forever.</p>
   </section>
 
+  <!-- INFO SECTIONS -->
+  <section class="info">
+    <h2 style="color:#d4af37; text-align:center;">📖 About the Vault of Time</h2>
+    <p style="max-width:700px; margin:0 auto; text-align:center;">
+      The Vault of Time is a digital monument built for memory.<br><br>
+      In a world that moves too fast, this project offers a space for people to pause — 
+      to store a piece of themselves for the future.<br><br>
+      Each block represents a moment, a voice, a snapshot of humanity sealed in time until 2050.<br><br>
+      When the Vault opens, it will reveal a collective story of who we were, what we dreamed, and how we hoped.<br><br>
+      This is not just a website — it’s a reminder that we were here.
+    </p>
+    <hr style="margin:2rem auto; width:60%; border:0.5px solid #333;">
+  </section>
+
+  <section class="info">
+    <h2 style="color:#d4af37; text-align:center;">💰 How to Buy a Block</h2>
+    <ol style="max-width:700px; margin:0 auto; line-height:1.6;">
+      <li>Click <strong>“Buy a Block”</strong>.</li>
+      <li>Choose an available block from the grid (glowing = available, dim = taken).</li>
+      <li>Upload your image, audio, or message.</li>
+      <li>Confirm your payment (R250 per block).</li>
+      <li>Receive your confirmation email and digital certificate.</li>
+    </ol>
+    <p style="text-align:center; margin-top:1rem;">
+      🧱 Each block is yours to edit for up to 7 days after purchase. After that, it’s sealed until 2050.<br>
+      <em>Payment integration coming soon.</em>
+    </p>
+    <hr style="margin:2rem auto; width:60%; border:0.5px solid #333;">
+  </section>
+
+  <section class="info">
+    <h2 style="color:#d4af37; text-align:center;">⚖️ Vault Rules</h2>
+    <ul style="max-width:700px; margin:0 auto; line-height:1.6;">
+      <li>❌ No hate speech, discrimination, or harassment.</li>
+      <li>❌ No NSFW, violent, or illegal content.</li>
+      <li>❌ No confessions to crimes (they will be reported).</li>
+      <li>❌ No copyrighted media unless you are the rightful owner.</li>
+      <li>🕊 Keep your submission kind, creative, or meaningful.</li>
+      <li>🧱 Once your block is sealed, no refunds will be issued.</li>
+    </ul>
+    <p style="text-align:center; margin-top:1rem;">
+      By submitting, you agree to the Vault’s 
+      <a href="terms.html" style="color:#d4af37; text-decoration:none;">Terms & Conditions</a>.
+    </p>
+    <hr style="margin:2rem auto; width:60%; border:0.5px solid #333;">
+  </section>
+
   <footer>
-    <p><a href="contact.html">📩 Contact Us</a></p>
+    <p>
+      <a href="contact.html">📩 Contact Us</a> | 
+      <a href="terms.html">📜 Terms & Conditions</a><br>
+      <small style="color:#777;">© 2025 The Vault of Time. All rights reserved.</small>
+    </p>
   </footer>
 
-  <!-- External JS -->
   <script src="script.js"></script>
 </body>
 </html>
