@@ -117,7 +117,8 @@
       <h3>🗝️ Claim Your Block</h3>
       <p>This block is waiting for your memory, secret, or story.</p>
 
-      <form id="blockForm">
+      <form id="blockForm" name="blockForm" method="POST" data-netlify="true">
+  <input type="hidden" name="form-name" value="blockForm">
         <label for="name">Name</label>
         <input type="text" id="name" placeholder="Your name" required>
 
