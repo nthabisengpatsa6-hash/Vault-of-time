@@ -3,24 +3,30 @@ document.addEventListener("DOMContentLoaded", function () {
   const modal = document.getElementById("modal");
   const closeButton = document.querySelector(".close-button");
 
-  // Load claimed blocks from localStorage (personal persistence)
+  // === SETTINGS ===
+  const totalBlocks = 1000;
+  // Change this range when next drop opens
+  const visibleRange = [1, 100]; // Drop 1: blocks 1–100
+  const founderBlock = 1;
+
+  // === Load claimed blocks (from localStorage for now) ===
   const claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
 
-  // Generate 100 blocks
-  for (let i = 1; i <= 100; i++) {
+  // === GRID GENERATION ===
+  for (let i = visibleRange[0]; i <= visibleRange[1]; i++) {
     const block = document.createElement("div");
     block.classList.add("block");
     block.textContent = i;
 
-    // === Founder’s Block ===
-    if (i === 1) {
+    // Founder’s reserved block
+    if (i === founderBlock) {
       block.classList.add("founder");
       block.title = "🔒 Reserved by The Vault of Time Founder";
       block.style.border = "2px solid gold";
       block.style.cursor = "not-allowed";
     }
 
-    // === Personal Claimed Blocks ===
+    // Claimed blocks (persistent on your device)
     if (claimedBlocks.includes(i)) {
       block.classList.add("claimed");
       block.style.cursor = "not-allowed";
@@ -29,14 +35,21 @@ document.addEventListener("DOMContentLoaded", function () {
     grid.appendChild(block);
   }
 
+  // === DROP MESSAGE ===
+  const message = document.createElement("p");
+  message.style.textAlign = "center";
+  message.style.color = "#d4af37";
+  message.style.marginTop = "1rem";
+  message.style.fontWeight = "600";
+  message.textContent = `Showing Founders Drop (Blocks ${visibleRange[0]}–${visibleRange[1]}). The next drop unlocks after ${visibleRange[1]} blocks are sealed.`;
+  grid.insertAdjacentElement("afterend", message);
+
   const allBlocks = document.querySelectorAll(".block");
 
-  // Handle click for available blocks
+  // === CLICK HANDLER ===
   allBlocks.forEach((block, index) => {
-    const blockNumber = index + 1;
-
-    // Skip claimed or founder blocks
-    if (claimedBlocks.includes(blockNumber) || blockNumber === 1) return;
+    const blockNumber = index + visibleRange[0];
+    if (claimedBlocks.includes(blockNumber) || blockNumber === founderBlock) return;
 
     block.addEventListener("click", () => handleClick(blockNumber, block));
   });
@@ -46,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
     blockElement.classList.add("selected");
     modal.classList.remove("hidden");
 
-    // Save claimed block on form submit
+    // Save claimed block when form submitted
     const form = document.getElementById("blockForm");
     if (form) {
       form.onsubmit = () => {
@@ -58,9 +71,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Close modal
+  // === CLOSE MODAL ===
   closeButton.addEventListener("click", () => {
     modal.classList.add("hidden");
   });
 });
-
