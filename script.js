@@ -89,11 +89,3 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // === 5. Placeholder form logic ===
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    alert("Uploads will open in December. Thank you for being early!");
-    modal.classList.add("hidden");
-    form.reset();
-  });
-});
