@@ -26,72 +26,33 @@
       100%{text-shadow:0 0 6px rgba(212,175,55,.8);opacity:.85;transform:scale(1)}
     }
 
+    /* COUNTDOWN TIMER */
+    .countdown {
+      text-align: center;
+      margin: 1rem auto 2rem;
+      color: #d4af37;
+    }
+    #timer {
+      font-size: 1.3rem;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    /* FOOTER + FORM + GRID */
     footer{text-align:center;margin:2rem 0}
     footer a{color:#f9d26e;text-decoration:none;font-weight:600;transition:color .3s ease}
     footer a:hover{color:#ffd966}
-
-    form#blockForm{
-      display:flex;
-      flex-direction:column;
-      gap:0.8rem;
-      margin-top:1rem;
-    }
-    form#blockForm input,form#blockForm button{
-      padding:0.6rem;
-      border-radius:5px;
-      border:1px solid #999;
-      font-size:1rem;
-    }
-    form#blockForm button{
-      background:#d4af37;
-      border:none;
-      color:#111;
-      font-weight:600;
-      cursor:pointer;
-    }
-
-    /* GRID */
-    .grid-container {
-      display:grid;
-      grid-template-columns:repeat(10,1fr);
-      gap:6px;
-      max-width:320px;
-      margin:1.5rem auto;
-    }
-    .block {
-      background:#1e1e1e;
-      color:#fff;
-      border:1px solid #555;
-      text-align:center;
-      padding:10px 0;
-      border-radius:4px;
-      cursor:pointer;
-      transition:0.3s;
-    }
+    form#blockForm{display:flex;flex-direction:column;gap:0.8rem;margin-top:1rem;}
+    form#blockForm input,form#blockForm button{padding:0.6rem;border-radius:5px;border:1px solid #999;font-size:1rem;}
+    form#blockForm button{background:#d4af37;border:none;color:#111;font-weight:600;cursor:pointer;}
+    .grid-container{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;max-width:320px;margin:1.5rem auto;}
+    .block{background:#1e1e1e;color:#fff;border:1px solid #555;text-align:center;padding:10px 0;border-radius:4px;cursor:pointer;transition:0.3s;}
     .block:hover{background:#333;}
     .block.claimed{background:#444;color:#777;cursor:not-allowed;}
     .block.selected{outline:2px solid #d4af37;}
-
     .modal.hidden{display:none;}
-    .modal{
-      position:fixed;
-      top:0;left:0;
-      width:100%;height:100%;
-      background:rgba(0,0,0,0.7);
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      z-index:10;
-    }
-    .modal-content{
-      background:#111;
-      color:#eee;
-      padding:2rem;
-      border-radius:8px;
-      width:90%;
-      max-width:400px;
-      text-align:left;
-    }
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10;}
+    .modal-content{background:#111;color:#eee;padding:2rem;border-radius:8px;width:90%;max-width:400px;text-align:left;}
     .close-button{float:right;cursor:pointer;font-size:1.2rem;}
   </style>
 </head>
@@ -102,6 +63,12 @@
     The Vault of Time
     <span class="clock-icon reverse">🕰️</span>
   </h1>
+
+  <!-- COUNTDOWN TIMER -->
+  <div id="countdown" class="countdown">
+    <h2>🕰️ Founders Drop Opens In:</h2>
+    <div id="timer"></div>
+  </div>
 
   <!-- GRID -->
   <div class="grid-container" id="grid"></div>
@@ -206,5 +173,25 @@
   </footer>
 
   <script src="script.js"></script>
+
+  <!-- COUNTDOWN SCRIPT -->
+  <script>
+    const countdownDate = new Date("Dec 15, 2025 12:00:00").getTime();
+    const timerInterval = setInterval(function() {
+      const now = new Date().getTime();
+      const distance = countdownDate - now;
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      const timer = document.getElementById("timer");
+      if (distance > 0) {
+        timer.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      } else {
+        clearInterval(timerInterval);
+        timer.innerHTML = "🎉 The Founders Drop is LIVE!";
+      }
+    }, 1000);
+  </script>
 </body>
 </html>
