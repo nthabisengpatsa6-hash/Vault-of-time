@@ -75,6 +75,10 @@ document.addEventListener("DOMContentLoaded", function () {
     modal.classList.add("hidden");
   });
 
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.classList.add("hidden");
+  });
+
   // === SIDE MENU LOGIC ===
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
@@ -85,16 +89,52 @@ document.addEventListener("DOMContentLoaded", function () {
   menuToggle.addEventListener("click", () => {
     sideMenu.classList.add("open");
     overlay.classList.add("show");
+    menuToggle.classList.add("active");
+
+    // Optional: auto-expand the first accordion (About)
+    const firstHeader = document.querySelector(".accordion-header");
+    if (firstHeader && !firstHeader.classList.contains("active")) {
+      firstHeader.click();
+    }
   });
 
-  // Close menu (via button or overlay)
+  // Close menu
   closeMenu.addEventListener("click", () => {
     sideMenu.classList.remove("open");
     overlay.classList.remove("show");
+    menuToggle.classList.remove("active");
   });
 
   overlay.addEventListener("click", () => {
     sideMenu.classList.remove("open");
     overlay.classList.remove("show");
+    menuToggle.classList.remove("active");
   });
+
+  // === ACCORDION LOGIC ===
+  const accordionHeaders = document.querySelectorAll(".accordion-header");
+
+  accordionHeaders.forEach((header) => {
+    header.addEventListener("click", () => {
+      const content = header.nextElementSibling;
+      const isOpen = content.classList.contains("show");
+
+      // Close all
+      document.querySelectorAll(".accordion-content").forEach((c) => c.classList.remove("show"));
+      document.querySelectorAll(".accordion-header").forEach((h) => h.classList.remove("active"));
+
+      // Open clicked
+      if (!isOpen) {
+        content.classList.add("show");
+        header.classList.add("active");
+
+        // Smooth scroll to bring it into view
+        setTimeout(() => {
+          header.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 200);
+      }
+    });
+  });
+
+  console.log("Vault of Time script loaded ✅");
 });
