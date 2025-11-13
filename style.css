@@ -5,27 +5,28 @@ body {
   background-color: #0d1117; /* deep navy/charcoal */
   color: #e6edf3;
   margin: 0;
+  overflow-x: hidden;
 }
 
 /* --- GRID / BLOCKS --- */
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(35px, 1fr)); /* responsive layout */
+  grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
   gap: 5px;
   justify-content: center;
   margin: 20px auto;
-  max-width: 95vw; /* prevent overflow on small screens */
+  max-width: 95vw;
 }
 
 .block {
-  aspect-ratio: 1 / 1; /* keeps squares */
-  background: #cfd2d6; /* light neutral grey */
+  aspect-ratio: 1 / 1;
+  background: #cfd2d6;
   border: 1px solid #2f333a;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: clamp(8px, 2vw, 12px); /* resizes text gracefully */
+  font-size: clamp(8px, 2vw, 12px);
   transition: all 0.2s ease;
   border-radius: 3px;
 }
@@ -35,13 +36,13 @@ body {
 }
 
 .block.selected {
-  background-color: #f5e79e !important; /* warm gold highlight */
+  background-color: #f5e79e !important;
   border: 2px solid #d4af37 !important;
   box-shadow: 0 0 8px rgba(212, 175, 55, 0.7) !important;
 }
 
 .block.claimed {
-  background-color: #446b6f; /* muted turquoise */
+  background-color: #446b6f;
   border: 1px solid #274c50;
   opacity: 0.85;
   cursor: not-allowed;
@@ -89,7 +90,7 @@ body {
 }
 
 .modal-content {
-  background-color: #1c2128; /* dark modal box */
+  background-color: #1c2128;
   padding: 2rem;
   border-radius: 12px;
   max-width: 400px;
@@ -97,7 +98,6 @@ body {
   box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
   text-align: center;
   color: #e6edf3;
-  font-family: 'Poppins', sans-serif;
 }
 
 .modal-content h2 {
@@ -137,17 +137,18 @@ body {
   color: #fff;
 }
 
-/* --- SIDE MENU (fixed width & fully hidden) --- */
+/* --- SIDE MENU --- */
 .side-menu {
   position: fixed;
   top: 0;
-  left: -320px; /* completely hidden */
-  width: 280px; /* fixed width for consistent animation */
+  left: -320px;
+  width: 280px;
   height: 100%;
   background-color: #161b22;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
   padding: 20px;
-  transition: left 0.3s ease-in-out;
+  transition: left 0.35s ease-in-out, opacity 0.3s ease;
+  opacity: 0;
   z-index: 2000;
   overflow-y: auto;
   border-right: 1px solid #2f333a;
@@ -155,19 +156,26 @@ body {
 
 .side-menu.open {
   left: 0;
+  opacity: 1;
 }
 
-.side-menu h3 {
+.side-menu h2 {
   color: #f9d26e;
-  margin-top: 0;
+  margin: 0 0 10px;
+  text-align: left;
+  font-size: 18px;
+}
+
+.side-menu p, .side-menu li, .side-menu a {
+  color: #e6edf3;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .side-menu a {
   display: block;
-  color: #e6edf3;
   text-decoration: none;
-  margin: 10px 0;
-  font-weight: 500;
+  margin: 8px 0;
   transition: color 0.3s ease;
 }
 
@@ -175,21 +183,60 @@ body {
   color: #d4af37;
 }
 
-/* --- OVERLAY --- */
-.overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  z-index: 1500;
+/* --- ACCORDION --- */
+.accordion {
+  margin-top: 20px;
 }
 
-.overlay.show {
+.accordion-item {
+  border-bottom: 1px solid #2f333a;
+  padding: 8px 0;
+}
+
+.accordion-header {
+  background: none;
+  border: none;
+  color: #f9d26e;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: color 0.3s;
+}
+
+.accordion-header::after {
+  content: "+";
+  color: #d4af37;
+  font-size: 18px;
+  font-weight: 700;
+  transition: transform 0.3s, color 0.3s;
+}
+
+.accordion-header.active::after {
+  content: "–";
+  color: #ffd966;
+  transform: rotate(180deg);
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  color: #e6edf3;
+  font-size: 14px;
+  line-height: 1.6;
+  transition: max-height 0.35s ease, opacity 0.35s ease;
+  opacity: 0;
+}
+
+.accordion-content.show {
+  max-height: 1000px;
   opacity: 1;
-  pointer-events: auto;
+  margin-top: 8px;
 }
 
 /* --- HAMBURGER ICON --- */
@@ -206,31 +253,55 @@ body {
 
 .menu-toggle.active {
   transform: rotate(90deg);
-    }
-/* --- SIDE MENU (ensure fully hidden until opened) --- */
-.side-menu{position:fixed;top:0;left:-320px;width:280px;height:100%;background:#161b22;
-  box-shadow:2px 0 10px rgba(0,0,0,.5);padding:20px;transition:left .3s ease-in-out;
-  z-index:2000;overflow-y:auto;border-right:1px solid #2f333a}
-.side-menu.open{left:0}
-.side-menu h2{color:#f9d26e;margin:0 0 10px}
+}
 
-/* --- ACCORDION --- */
-.accordion{margin-top:20px}
-.accordion-item{border-bottom:1px solid #2f333a;padding:8px 0}
-.accordion-header{background:0 0;border:0;color:#f9d26e;font-size:16px;font-weight:600;
-  text-align:left;width:100%;cursor:pointer;padding:10px 0;display:flex;align-items:center;
-  justify-content:space-between;transition:color .3s}
-.accordion-header::after{content:"+";color:#d4af37;font-size:18px;font-weight:700;
-  transition:transform .3s,color .3s}
-.accordion-header.active::after{content:"–";color:#ffd966;transform:rotate(180deg)}
-.accordion-content{max-height:0;overflow:hidden;color:#e6edf3;font-size:14px;line-height:1.6;
-  transition:max-height .3s,opacity .3s;opacity:0}
-.accordion-content.show{max-height:1000px;opacity:1;margin-top:8px}
+/* --- OVERLAY --- */
+.overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 1500;
+}
 
-/* --- OVERLAY + HAMBURGER --- */
-.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);
-  opacity:0;pointer-events:none;transition:opacity .3s;z-index:1500}
-.overlay.show{opacity:1;pointer-events:auto}
-.menu-toggle{position:fixed;top:15px;left:15px;font-size:28px;color:#f9d26e;cursor:pointer;
-  z-index:2500;transition:transform .3s}
-.menu-toggle.active{transform:rotate(90deg)}
+.overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* --- FOLLOW US / FOOTER --- */
+.social-links a {
+  color: #f9d26e;
+  margin-right: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+  color: #ffd966;
+}
+
+footer {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+footer a {
+  color: #f9d26e;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+footer a:hover {
+  color: #ffd966;
+}
+
+/* --- SMOOTH SCROLLING --- */
+html {
+  scroll-behavior: smooth;
+  }
