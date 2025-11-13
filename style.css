@@ -10,23 +10,24 @@ body {
 /* --- GRID / BLOCKS --- */
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(10, 50px);
-  grid-gap: 5px;
+  grid-template-columns: repeat(auto-fit, minmax(35px, 1fr)); /* responsive layout */
+  gap: 5px;
   justify-content: center;
-  margin-top: 20px;
+  margin: 20px auto;
+  max-width: 95vw; /* prevent overflow on small screens */
 }
 
 .block {
-  width: 50px;
-  height: 50px;
+  aspect-ratio: 1 / 1; /* keeps squares */
   background: #cfd2d6; /* light neutral grey */
   border: 1px solid #2f333a;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 12px;
+  font-size: clamp(8px, 2vw, 12px); /* resizes text gracefully */
   transition: all 0.2s ease;
+  border-radius: 3px;
 }
 
 .block:hover:not(.claimed) {
@@ -205,4 +206,4 @@ body {
 
 .menu-toggle.active {
   transform: rotate(90deg);
-}
+    }
