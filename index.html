@@ -37,9 +37,7 @@
       z-index: 2500;
       transition: transform 0.3s ease;
     }
-    .menu-toggle.active {
-      transform: rotate(90deg);
-    }
+    .menu-toggle.active { transform: rotate(90deg); }
 
     /* OVERLAY */
     .overlay {
@@ -57,12 +55,12 @@
       pointer-events: auto;
     }
 
-    /* SIDE MENU (fixed width & fully hidden) */
+    /* SIDE MENU */
     .side-menu {
       position: fixed;
       top: 0;
-      left: -320px; /* fully hidden */
-      width: 280px; /* fixed width */
+      left: -320px;
+      width: 280px;
       height: 100%;
       background-color: #161b22;
       box-shadow: 2px 0 10px rgba(0,0,0,0.5);
@@ -72,9 +70,7 @@
       overflow-y: auto;
       border-right: 1px solid #2f333a;
     }
-    .side-menu.open {
-      left: 0;
-    }
+    .side-menu.open { left: 0; }
     .side-menu button {
       background: none;
       border: none;
@@ -83,38 +79,53 @@
       float: right;
       cursor: pointer;
     }
-    .side-menu h2, .side-menu h3 {
+    .side-menu h2 { color: #f9d26e; margin-bottom: 10px; }
+
+    /* ACCORDION */
+    .accordion { margin-top: 20px; }
+    .accordion-item { border-bottom: 1px solid #2f333a; padding: 8px 0; }
+
+    .accordion-header {
+      background: none;
+      border: none;
       color: #f9d26e;
-      margin-bottom: 10px;
-    }
-    .side-menu ul {
-      list-style: none;
-      padding: 0;
-    }
-    .side-menu ul li {
-      margin: 15px 0;
-    }
-    .side-menu ul li a {
-      color: #e6edf3;
-      text-decoration: none;
-      font-weight: 500;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: left;
+      width: 100%;
+      cursor: pointer;
+      padding: 10px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       transition: color 0.3s ease;
-    }
-    .side-menu ul li a:hover {
-      color: #d4af37;
     }
 
-    /* FOLLOW US */
-    .social-links a {
-      display: inline-block;
-      color: #f9d26e;
-      text-decoration: none;
-      margin-right: 10px;
-      font-weight: 600;
-      transition: color 0.3s ease;
+    .accordion-header::after {
+      content: "+";
+      color: #d4af37;
+      font-size: 18px;
+      font-weight: bold;
+      transition: transform 0.3s ease, color 0.3s ease;
     }
-    .social-links a:hover {
+    .accordion-header.active::after {
+      content: "–";
       color: #ffd966;
+      transform: rotate(180deg);
+    }
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      color: #e6edf3;
+      font-size: 14px;
+      line-height: 1.6;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+    }
+    .accordion-content.show {
+      max-height: 600px;
+      opacity: 1;
+      margin-top: 8px;
     }
 
     footer{text-align:center;margin:2rem 0}
@@ -124,7 +135,6 @@
 </head>
 
 <body>
-  <!-- HAMBURGER -->
   <div class="menu-toggle" id="menuToggle">☰</div>
   <div class="overlay" id="overlay"></div>
 
@@ -132,87 +142,94 @@
   <nav class="side-menu" id="sideMenu">
     <button id="closeMenu">&times;</button>
     <h2>Vault Menu</h2>
-    <ul>
-      <li><a href="#about">About the Vault</a></li>
-      <li><a href="#how-to-buy">How to Buy a Block</a></li>
-      <li><a href="#rules">Vault Rules</a></li>
-      <li><a href="#faq">FAQ</a></li>
-      <li><a href="contact.html">Contact Us</a></li>
-      <li><a href="terms.html">Terms & Conditions</a></li>
-    </ul>
 
-    <section id="about">
-      <h3>🕰️ About the Vault</h3>
-      <p>The Vault of Time is a digital monument built for memory. In a world that moves too fast, it offers a space for people to pause and store a piece of themselves for the future.</p>
-    </section>
-
-    <section id="how-to-buy">
-      <h3>💰 How to Buy a Block</h3>
-      <ol>
-        <li>Click “Buy a Block.”</li>
-        <li>Choose an available block from the grid.</li>
-        <li>Upload your media and confirm payment ($6 per block).</li>
-        <li>Receive your confirmation email and certificate.</li>
-      </ol>
-      <p>🧱 Edit for 7 days after purchase, then sealed until 2050.</p>
-    </section>
-
-    <section id="rules">
-      <h3>⚖️ Vault Rules</h3>
-      <ul>
-        <li>❌ No hate speech, NSFW, or illegal content.</li>
-        <li>❌ No copyrighted material unless you own it.</li>
-        <li>🕊 Keep it kind, creative, and meaningful.</li>
-      </ul>
-    </section>
-
-    <section id="faq">
-      <h3>❓ FAQ</h3>
-      <p>Coming soon.</p>
-    </section>
-
-    <section id="socials">
-      <h3>📲 Follow Us</h3>
-      <div class="social-links">
-        <a href="https://www.instagram.com/officialvaultoftime" target="_blank">Instagram</a>
-        <a href="https://www.tiktok.com/@officialvaultoftime" target="_blank">TikTok</a>
+    <div class="accordion">
+      <!-- ABOUT -->
+      <div class="accordion-item">
+        <button class="accordion-header">📜 About The Vault Of Time</button>
+        <div class="accordion-content">
+          <p>The Vault Of Time is a collective internet capsule — a digital monument where people from around the world come to preserve memories, hopes, messages to their future selves, or anything deeply meaningful to them.</p>
+          <p>It exists as a preservation of memory and a quiet reminder to hold on, to persevere, and to leave a mark that time itself cannot erase. Once sealed, each block becomes part of a shared digital legacy, to be unlocked in the year <strong>2050</strong>.</p>
+        </div>
       </div>
-    </section>
+
+      <!-- HOW TO BUY -->
+      <div class="accordion-item">
+        <button class="accordion-header">💰 How To Buy</button>
+        <div class="accordion-content">
+          <ol>
+            <li>Select the block number you wish to purchase (e.g. Block 29).</li>
+            <li>Fill in your details and upload your memory.</li>
+            <li><strong>Important:</strong> Rename your uploaded file to match your block number (e.g. block29).</li>
+            <li>You’ll receive a confirmation email and a Block Owner Certificate.</li>
+          </ol>
+          <p>🧱 You have <strong>7 days</strong> after purchase to edit or delete your upload. After that, it is sealed until 2050.</p>
+        </div>
+      </div>
+
+      <!-- RULES -->
+      <div class="accordion-item">
+        <button class="accordion-header">⚖️ Vault Rules</button>
+        <div class="accordion-content">
+          <ul>
+            <li>❌ No NSFW or illegal content — such uploads will be deleted without refund.</li>
+            <li>❌ No copyrighted material unless you own it.</li>
+            <li>🚫 No confessions to crimes — these will be reported.</li>
+            <li>🚫 No hate speech or discriminatory content.</li>
+            <li>🕒 7-day edit period after purchase. After that, your upload is sealed.</li>
+            <li>💬 Keep it kind, creative, and meaningful.</li>
+            <li>💸 All transactions are final.</li>
+            <li>🪙 By purchasing a block, the buyer grants The Vault Of Time non-exclusive rights to store the content until the Vault opens in 2050.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="accordion-item">
+        <button class="accordion-header">❓ FAQ</button>
+        <div class="accordion-content">
+          <p><strong>1.</strong> The Vault Of Time is not an investment, crowdfunding, or crypto project. Each block is a one-time purchase.</p>
+          <p><strong>2.</strong> The Vault opens in <strong>2050</strong>.</p>
+          <p><strong>3.</strong> You can store photos, letters, audio, or art — anything meaningful.</p>
+          <p><strong>4.</strong> Content is stored securely off-site in encrypted cold storage, ensuring access even if the creators aren’t here in 2050.</p>
+          <p><strong>5.</strong> For partnerships or advertising, contact <a href="mailto:hello@vaultoftime.com">hello@vaultoftime.com</a>.</p>
+        </div>
+      </div>
+
+      <!-- TERMS -->
+      <div class="accordion-item">
+        <button class="accordion-header">📜 Terms & Conditions</button>
+        <div class="accordion-content">
+          <p><strong>Last Updated:</strong> November 2025</p>
+          <ul>
+            <li>All purchases are final once a block is sealed.</li>
+            <li>Buyers may edit or delete uploads within 7 days of purchase.</li>
+            <li>The Vault Of Time reserves the right to remove illegal or harmful content.</li>
+            <li>By submitting, you grant The Vault Of Time (Pty) Ltd the right to store, archive, and reveal your content in 2050.</li>
+            <li>The Vault is not responsible for external technical failures or force majeure.</li>
+          </ul>
+          <p>The Vault Of Time (Pty) Ltd — Reg. No: 2025/875420/07</p>
+        </div>
+      </div>
+
+      <!-- FOLLOW US -->
+      <div class="accordion-item">
+        <button class="accordion-header">📲 Follow Us</button>
+        <div class="accordion-content">
+          <p><a href="https://www.instagram.com/officialvaultoftime" target="_blank">Instagram</a></p>
+          <p><a href="https://www.tiktok.com/@officialvaultoftime" target="_blank">TikTok</a></p>
+        </div>
+      </div>
+    </div>
 
     <p style="font-size:12px;color:#777;margin-top:25px;">© 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</p>
   </nav>
 
   <!-- HEADER -->
-  <h1>
-    <span class="clock-icon">🕰️</span>
-    The Vault of Time
-    <span class="clock-icon reverse">🕰️</span>
-  </h1>
+  <h1><span class="clock-icon">🕰️</span> The Vault of Time <span class="clock-icon reverse">🕰️</span></h1>
 
   <!-- GRID -->
   <div class="grid-container" id="grid"></div>
-
-  <!-- MODAL -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close-button">&times;</span>
-      <h3>🗝️ Claim Your Block</h3>
-      <p>This block is waiting for your memory, secret, or story.</p>
-      <form id="blockForm" name="blockForm" method="POST"
-            data-netlify="true"
-            enctype="multipart/form-data"
-            action="/thankyou.html">
-        <input type="hidden" name="form-name" value="blockForm">
-        <label for="name">Name</label>
-        <input type="text" id="name" name="name" placeholder="Your name" required>
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="you@example.com" required>
-        <label for="upload">Upload file (image/audio)</label>
-        <input type="file" id="upload" name="upload" accept="image/*,audio/*" required>
-        <button type="submit">Submit</button>
-      </form>
-    </div>
-  </div>
 
   <!-- FOOTER -->
   <footer>
@@ -225,7 +242,6 @@
 
   <!-- SCRIPT -->
   <script>
-    // Toggle menu and overlay
     const menuToggle = document.getElementById("menuToggle");
     const sideMenu = document.getElementById("sideMenu");
     const overlay = document.getElementById("overlay");
@@ -248,8 +264,23 @@
       overlay.classList.remove("show");
       menuToggle.classList.remove("active");
     });
+
+    // Accordion with smooth scroll
+    document.querySelectorAll('.accordion-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const content = header.nextElementSibling;
+        const isOpen = content.classList.contains('show');
+        document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('show'));
+        document.querySelectorAll('.accordion-header').forEach(h => h.classList.remove('active'));
+        if (!isOpen) {
+          content.classList.add('show');
+          header.classList.add('active');
+          setTimeout(() => header.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+        }
+      });
+    });
   </script>
 
   <script src="script.js"></script>
 </body>
-  </html>
+</html>
