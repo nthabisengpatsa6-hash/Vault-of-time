@@ -136,32 +136,20 @@ body {
   color: #fff;
 }
 
-/* --- COUNTDOWN TIMER --- */
-.countdown {
-  text-align: center;
-  margin: 1rem auto 2rem;
-  color: #d4af37; /* gold */
-}
-
-#timer {
-  font-size: 1.3rem;
-  letter-spacing: 1px;
-  font-weight: 600;
-}
-
-/* --- SIDE MENU --- */
+/* --- SIDE MENU (fixed width & fully hidden) --- */
 .side-menu {
   position: fixed;
   top: 0;
-  left: -70%; /* hidden by default */
-  width: 70%;
+  left: -320px; /* completely hidden */
+  width: 280px; /* fixed width for consistent animation */
   height: 100%;
   background-color: #161b22;
   box-shadow: 2px 0 10px rgba(0,0,0,0.5);
   padding: 20px;
-  transition: left 0.3s ease;
+  transition: left 0.3s ease-in-out;
   z-index: 2000;
   overflow-y: auto;
+  border-right: 1px solid #2f333a;
 }
 
 .side-menu.open {
