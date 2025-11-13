@@ -207,3 +207,30 @@ body {
 .menu-toggle.active {
   transform: rotate(90deg);
     }
+/* --- SIDE MENU (ensure fully hidden until opened) --- */
+.side-menu{position:fixed;top:0;left:-320px;width:280px;height:100%;background:#161b22;
+  box-shadow:2px 0 10px rgba(0,0,0,.5);padding:20px;transition:left .3s ease-in-out;
+  z-index:2000;overflow-y:auto;border-right:1px solid #2f333a}
+.side-menu.open{left:0}
+.side-menu h2{color:#f9d26e;margin:0 0 10px}
+
+/* --- ACCORDION --- */
+.accordion{margin-top:20px}
+.accordion-item{border-bottom:1px solid #2f333a;padding:8px 0}
+.accordion-header{background:0 0;border:0;color:#f9d26e;font-size:16px;font-weight:600;
+  text-align:left;width:100%;cursor:pointer;padding:10px 0;display:flex;align-items:center;
+  justify-content:space-between;transition:color .3s}
+.accordion-header::after{content:"+";color:#d4af37;font-size:18px;font-weight:700;
+  transition:transform .3s,color .3s}
+.accordion-header.active::after{content:"–";color:#ffd966;transform:rotate(180deg)}
+.accordion-content{max-height:0;overflow:hidden;color:#e6edf3;font-size:14px;line-height:1.6;
+  transition:max-height .3s,opacity .3s;opacity:0}
+.accordion-content.show{max-height:1000px;opacity:1;margin-top:8px}
+
+/* --- OVERLAY + HAMBURGER --- */
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);
+  opacity:0;pointer-events:none;transition:opacity .3s;z-index:1500}
+.overlay.show{opacity:1;pointer-events:auto}
+.menu-toggle{position:fixed;top:15px;left:15px;font-size:28px;color:#f9d26e;cursor:pointer;
+  z-index:2500;transition:transform .3s}
+.menu-toggle.active{transform:rotate(90deg)}
