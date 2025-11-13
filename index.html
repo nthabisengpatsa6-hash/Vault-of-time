@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vault of Time</title>
   <link rel="stylesheet" href="style.css" />
+
   <style>
-    /* CLOCK ANIMATION (kept inline for load speed) */
+    /* CLOCK ANIMATION */
     .clock-icon {
       display:inline-block;
       transform-origin:bottom center;
@@ -28,7 +29,7 @@
 </head>
 
 <body>
-  <!-- MENU BUTTON & OVERLAY -->
+  <!-- MENU TOGGLE + OVERLAY -->
   <div class="menu-toggle" id="menuToggle">☰</div>
   <div class="overlay" id="overlay"></div>
 
@@ -38,18 +39,96 @@
     <h2>Vault Menu</h2>
 
     <div class="accordion">
-      <!-- accordion items (unchanged) -->
-      <!-- ... -->
+
+      <!-- ABOUT -->
+      <div class="accordion-item">
+        <button class="accordion-header">📜 About The Vault Of Time</button>
+        <div class="accordion-content">
+          <p>The Vault Of Time is an internet capsule where people collectively come to store memories of their lives, hopes for their futures, letters to their future selves, or anything that holds meaning to them.</p>
+          <p>It is a preservation of memory and a digital reminder to hold on and persevere — a monument to human experience, proof that even in chaos, we remember, we create, and we hope.</p>
+        </div>
+      </div>
+
+      <!-- HOW TO BUY -->
+      <div class="accordion-item">
+        <button class="accordion-header">💰 How To Buy</button>
+        <div class="accordion-content">
+          <ol>
+            <li>Select the block number you wish to purchase (e.g. 29).</li>
+            <li>Fill in your details and upload your memory.</li>
+            <li><strong>Important:</strong> Rename your uploaded file to match your block number (e.g. block29).</li>
+            <li>You’ll receive a confirmation email and a digital Block Owner Certificate.</li>
+          </ol>
+          <p>🧱 You have 7 days after purchase to edit or delete your upload. After that, it’s sealed until 2050.</p>
+        </div>
+      </div>
+
+      <!-- RULES -->
+      <div class="accordion-item">
+        <button class="accordion-header">⚖️ Vault Rules</button>
+        <div class="accordion-content">
+          <ul>
+            <li>❌ No NSFW or illegal content — will be deleted without refund.</li>
+            <li>❌ No copyrighted material unless you own it.</li>
+            <li>🚫 No hate speech or discriminatory content of any kind.</li>
+            <li>🚫 No confessions to crimes — they will be reported.</li>
+            <li>🕒 You have 7 days to edit or delete uploads before sealing.</li>
+            <li>💬 Keep uploads kind, creative, and meaningful.</li>
+            <li>💸 All transactions are final.</li>
+            <li>🪙 Buyers grant The Vault Of Time non-exclusive rights to store their content until 2050.</li>
+            <li>🔒 All content remains securely hidden until the Vault opens.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="accordion-item">
+        <button class="accordion-header">❓ FAQ</button>
+        <div class="accordion-content">
+          <p><strong>1. What is The Vault Of Time?</strong><br>The Vault is a digital time capsule — not crypto, crowdfunding, or an investment. Each block is a one-time purchase.</p>
+          <p><strong>2. When will The Vault open?</strong><br>In 2050.</p>
+          <p><strong>3. What can I store?</strong><br>Anything meaningful — images, letters, or short audio clips.</p>
+          <p><strong>4. How is the content stored?</strong><br>Your uploads are kept securely in encrypted off-site cold storage. Even if the creators are gone, the Vault will open in 2050.</p>
+          <p><strong>5. Do you allow partnerships or ads?</strong><br>Yes — email <a href="mailto:hello@vaultoftime.com">hello@vaultoftime.com</a> for sponsorship or advertising info.</p>
+          <p><strong>6. What happens after I buy a block?</strong><br>Your block locks and dims. Your memory remains hidden until 2050 (except for advertising blocks).</p>
+        </div>
+      </div>
+
+      <!-- TERMS -->
+      <div class="accordion-item">
+        <button class="accordion-header">📜 Terms & Conditions</button>
+        <div class="accordion-content">
+          <p><strong>Last Updated:</strong> November 2025</p>
+          <ul>
+            <li>All purchases are final after a block is sealed.</li>
+            <li>Buyers may edit or delete uploads within 7 days of purchase.</li>
+            <li>The Vault reserves the right to remove illegal or harmful content.</li>
+            <li>By uploading, you grant The Vault Of Time (Pty) Ltd the right to store and reveal your content in 2050.</li>
+            <li>The Vault Of Time (Pty) Ltd is not liable for file corruption or external events beyond control.</li>
+            <li>Personal data is only used for verification — never shared externally.</li>
+          </ul>
+          <p>Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</p>
+        </div>
+      </div>
+
+      <!-- FOLLOW -->
+      <div class="accordion-item">
+        <button class="accordion-header">📲 Follow Us</button>
+        <div class="accordion-content">
+          <p><a href="https://www.instagram.com/officialvaultoftime" target="_blank">Instagram</a></p>
+          <p><a href="https://www.tiktok.com/@officialvaultoftime" target="_blank">TikTok</a></p>
+        </div>
+      </div>
     </div>
 
-    <p style="font-size:12px;color:#777;margin-top:25px;">© 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</p>
+    <p style="font-size:12px;color:#777;margin-top:25px;">
+      © 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07
+    </p>
   </nav>
 
   <!-- HEADER -->
   <h1>
-    <span class="clock-icon">🕰️</span>
-    The Vault of Time
-    <span class="clock-icon reverse">🕰️</span>
+    <span class="clock-icon">🕰️</span> The Vault of Time <span class="clock-icon reverse">🕰️</span>
   </h1>
 
   <!-- GRID -->
