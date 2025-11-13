@@ -1,15 +1,15 @@
 document.addEventListener("DOMContentLoaded", function () {
+  // === GRID LOGIC ===
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
   const closeButton = document.querySelector(".close-button");
 
   // === SETTINGS ===
   const totalBlocks = 1000;
-  // Change this range when next drop opens
-  const visibleRange = [1, 100]; // Drop 1: blocks 1–100
+  const visibleRange = [1, 100]; // Founders Drop
   const founderBlock = 1;
 
-  // === Load claimed blocks (from localStorage for now) ===
+  // === LOAD CLAIMED BLOCKS (localStorage for now) ===
   const claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
 
   // === GRID GENERATION ===
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
       block.style.cursor = "not-allowed";
     }
 
-    // Claimed blocks (persistent on your device)
+    // Claimed blocks
     if (claimedBlocks.includes(i)) {
       block.classList.add("claimed");
       block.style.cursor = "not-allowed";
@@ -59,7 +59,6 @@ document.addEventListener("DOMContentLoaded", function () {
     blockElement.classList.add("selected");
     modal.classList.remove("hidden");
 
-    // Save claimed block when form submitted
     const form = document.getElementById("blockForm");
     if (form) {
       form.onsubmit = () => {
@@ -75,24 +74,27 @@ document.addEventListener("DOMContentLoaded", function () {
   closeButton.addEventListener("click", () => {
     modal.classList.add("hidden");
   });
+
+  // === SIDE MENU LOGIC ===
+  const menuToggle = document.getElementById("menuToggle");
+  const sideMenu = document.getElementById("sideMenu");
+  const closeMenu = document.getElementById("closeMenu");
+  const overlay = document.getElementById("overlay");
+
+  // Open menu
+  menuToggle.addEventListener("click", () => {
+    sideMenu.classList.add("open");
+    overlay.classList.add("show");
+  });
+
+  // Close menu (via button or overlay)
+  closeMenu.addEventListener("click", () => {
+    sideMenu.classList.remove("open");
+    overlay.classList.remove("show");
+  });
+
+  overlay.addEventListener("click", () => {
+    sideMenu.classList.remove("open");
+    overlay.classList.remove("show");
+  });
 });
-// COUNTDOWN TIMER
-const countdownDate = new Date("Dec 15, 2025 12:00:00").getTime(); // Change date/time here
-
-const timerInterval = setInterval(function() {
-  const now = new Date().getTime();
-  const distance = countdownDate - now;
-
-  const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-  const timer = document.getElementById("timer");
-  if (distance > 0) {
-    timer.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-  } else {
-    clearInterval(timerInterval);
-    timer.innerHTML = "🎉 The Founders Drop is LIVE!";
-  }
-}, 1000);
