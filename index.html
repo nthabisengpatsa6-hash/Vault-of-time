@@ -30,11 +30,15 @@
     .menu-toggle {
       position: fixed;
       top: 15px;
-      left: 20px;
+      left: 15px;
       font-size: 28px;
       color: #f9d26e;
       cursor: pointer;
-      z-index: 2001;
+      z-index: 2500;
+      transition: transform 0.3s ease;
+    }
+    .menu-toggle.active {
+      transform: rotate(90deg);
     }
 
     /* OVERLAY */
@@ -53,19 +57,20 @@
       pointer-events: auto;
     }
 
-    /* SIDE MENU */
+    /* SIDE MENU (fixed width & fully hidden) */
     .side-menu {
       position: fixed;
-      left: -70%;
       top: 0;
-      width: 70%;
+      left: -320px; /* fully hidden */
+      width: 280px; /* fixed width */
       height: 100%;
       background-color: #161b22;
       box-shadow: 2px 0 10px rgba(0,0,0,0.5);
       padding: 20px;
-      transition: left 0.3s ease;
+      transition: left 0.3s ease-in-out;
       z-index: 2000;
       overflow-y: auto;
+      border-right: 1px solid #2f333a;
     }
     .side-menu.open {
       left: 0;
@@ -96,7 +101,7 @@
       transition: color 0.3s ease;
     }
     .side-menu ul li a:hover {
-      color: #f9d26e;
+      color: #d4af37;
     }
 
     /* FOLLOW US */
@@ -218,6 +223,33 @@
     </p>
   </footer>
 
+  <!-- SCRIPT -->
+  <script>
+    // Toggle menu and overlay
+    const menuToggle = document.getElementById("menuToggle");
+    const sideMenu = document.getElementById("sideMenu");
+    const overlay = document.getElementById("overlay");
+    const closeMenu = document.getElementById("closeMenu");
+
+    menuToggle.addEventListener("click", () => {
+      sideMenu.classList.add("open");
+      overlay.classList.add("show");
+      menuToggle.classList.add("active");
+    });
+
+    closeMenu.addEventListener("click", () => {
+      sideMenu.classList.remove("open");
+      overlay.classList.remove("show");
+      menuToggle.classList.remove("active");
+    });
+
+    overlay.addEventListener("click", () => {
+      sideMenu.classList.remove("open");
+      overlay.classList.remove("show");
+      menuToggle.classList.remove("active");
+    });
+  </script>
+
   <script src="script.js"></script>
 </body>
-</html>
+  </html>
