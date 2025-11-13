@@ -26,49 +26,163 @@
       100%{text-shadow:0 0 6px rgba(212,175,55,.8);opacity:.85;transform:scale(1)}
     }
 
-    /* COUNTDOWN TIMER */
-    .countdown {
-      text-align: center;
-      margin: 1rem auto 2rem;
-      color: #d4af37;
-    }
-    #timer {
-      font-size: 1.3rem;
-      letter-spacing: 1px;
-      font-weight: 600;
+    /* HAMBURGER ICON */
+    .menu-toggle {
+      position: fixed;
+      top: 15px;
+      left: 20px;
+      font-size: 28px;
+      color: #f9d26e;
+      cursor: pointer;
+      z-index: 2001;
     }
 
-    /* FOOTER + FORM + GRID */
+    /* OVERLAY */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 1500;
+    }
+    .overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* SIDE MENU */
+    .side-menu {
+      position: fixed;
+      left: -70%;
+      top: 0;
+      width: 70%;
+      height: 100%;
+      background-color: #161b22;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+      padding: 20px;
+      transition: left 0.3s ease;
+      z-index: 2000;
+      overflow-y: auto;
+    }
+    .side-menu.open {
+      left: 0;
+    }
+    .side-menu button {
+      background: none;
+      border: none;
+      color: #f9d26e;
+      font-size: 28px;
+      float: right;
+      cursor: pointer;
+    }
+    .side-menu h2, .side-menu h3 {
+      color: #f9d26e;
+      margin-bottom: 10px;
+    }
+    .side-menu ul {
+      list-style: none;
+      padding: 0;
+    }
+    .side-menu ul li {
+      margin: 15px 0;
+    }
+    .side-menu ul li a {
+      color: #e6edf3;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+    .side-menu ul li a:hover {
+      color: #f9d26e;
+    }
+
+    /* FOLLOW US */
+    .social-links a {
+      display: inline-block;
+      color: #f9d26e;
+      text-decoration: none;
+      margin-right: 10px;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+    .social-links a:hover {
+      color: #ffd966;
+    }
+
     footer{text-align:center;margin:2rem 0}
     footer a{color:#f9d26e;text-decoration:none;font-weight:600;transition:color .3s ease}
     footer a:hover{color:#ffd966}
-    form#blockForm{display:flex;flex-direction:column;gap:0.8rem;margin-top:1rem;}
-    form#blockForm input,form#blockForm button{padding:0.6rem;border-radius:5px;border:1px solid #999;font-size:1rem;}
-    form#blockForm button{background:#d4af37;border:none;color:#111;font-weight:600;cursor:pointer;}
-    .grid-container{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;max-width:320px;margin:1.5rem auto;}
-    .block{background:#1e1e1e;color:#fff;border:1px solid #555;text-align:center;padding:10px 0;border-radius:4px;cursor:pointer;transition:0.3s;}
-    .block:hover{background:#333;}
-    .block.claimed{background:#444;color:#777;cursor:not-allowed;}
-    .block.selected{outline:2px solid #d4af37;}
-    .modal.hidden{display:none;}
-    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10;}
-    .modal-content{background:#111;color:#eee;padding:2rem;border-radius:8px;width:90%;max-width:400px;text-align:left;}
-    .close-button{float:right;cursor:pointer;font-size:1.2rem;}
   </style>
 </head>
 
 <body>
+  <!-- HAMBURGER -->
+  <div class="menu-toggle" id="menuToggle">☰</div>
+  <div class="overlay" id="overlay"></div>
+
+  <!-- SIDE MENU -->
+  <nav class="side-menu" id="sideMenu">
+    <button id="closeMenu">&times;</button>
+    <h2>Vault Menu</h2>
+    <ul>
+      <li><a href="#about">About the Vault</a></li>
+      <li><a href="#how-to-buy">How to Buy a Block</a></li>
+      <li><a href="#rules">Vault Rules</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="contact.html">Contact Us</a></li>
+      <li><a href="terms.html">Terms & Conditions</a></li>
+    </ul>
+
+    <section id="about">
+      <h3>🕰️ About the Vault</h3>
+      <p>The Vault of Time is a digital monument built for memory. In a world that moves too fast, it offers a space for people to pause and store a piece of themselves for the future.</p>
+    </section>
+
+    <section id="how-to-buy">
+      <h3>💰 How to Buy a Block</h3>
+      <ol>
+        <li>Click “Buy a Block.”</li>
+        <li>Choose an available block from the grid.</li>
+        <li>Upload your media and confirm payment ($6 per block).</li>
+        <li>Receive your confirmation email and certificate.</li>
+      </ol>
+      <p>🧱 Edit for 7 days after purchase, then sealed until 2050.</p>
+    </section>
+
+    <section id="rules">
+      <h3>⚖️ Vault Rules</h3>
+      <ul>
+        <li>❌ No hate speech, NSFW, or illegal content.</li>
+        <li>❌ No copyrighted material unless you own it.</li>
+        <li>🕊 Keep it kind, creative, and meaningful.</li>
+      </ul>
+    </section>
+
+    <section id="faq">
+      <h3>❓ FAQ</h3>
+      <p>Coming soon.</p>
+    </section>
+
+    <section id="socials">
+      <h3>📲 Follow Us</h3>
+      <div class="social-links">
+        <a href="https://www.instagram.com/officialvaultoftime" target="_blank">Instagram</a>
+        <a href="https://www.tiktok.com/@officialvaultoftime" target="_blank">TikTok</a>
+      </div>
+    </section>
+
+    <p style="font-size:12px;color:#777;margin-top:25px;">© 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</p>
+  </nav>
+
+  <!-- HEADER -->
   <h1>
     <span class="clock-icon">🕰️</span>
     The Vault of Time
     <span class="clock-icon reverse">🕰️</span>
   </h1>
-
-  <!-- COUNTDOWN TIMER -->
-  <div id="countdown" class="countdown">
-    <h2>🕰️ Founders Drop Opens In:</h2>
-    <div id="timer"></div>
-  </div>
 
   <!-- GRID -->
   <div class="grid-container" id="grid"></div>
@@ -79,119 +193,31 @@
       <span class="close-button">&times;</span>
       <h3>🗝️ Claim Your Block</h3>
       <p>This block is waiting for your memory, secret, or story.</p>
-
       <form id="blockForm" name="blockForm" method="POST"
             data-netlify="true"
             enctype="multipart/form-data"
             action="/thankyou.html">
-
         <input type="hidden" name="form-name" value="blockForm">
-
         <label for="name">Name</label>
         <input type="text" id="name" name="name" placeholder="Your name" required>
-
         <label for="email">Email</label>
         <input type="email" id="email" name="email" placeholder="you@example.com" required>
-
         <label for="upload">Upload file (image/audio)</label>
         <input type="file" id="upload" name="upload" accept="image/*,audio/*" required>
-
         <button type="submit">Submit</button>
       </form>
     </div>
   </div>
 
-  <!-- STORY -->
-  <section class="story">
-    <h2>📜 The Vault of Time</h2>
-    <p>
-      Hidden across the folds of memory and imagination lies a vault.
-      A place not built, but <em>remembered</em>. Every block is a story waiting to be told —
-      a whisper from the past or a hope for the future.
-    </p>
-    <p>
-      🕰 This is not just a website. It is a digital monument. A million-block mosaic where
-      humanity stores its fleeting thoughts, bold dreams, messy love letters,
-      inside jokes, rage-typed confessions, and buried secrets.
-    </p>
-    <p>🗝 One block. One moment. Yours forever.</p>
-  </section>
-
-  <!-- INFO SECTIONS -->
-  <section class="info">
-    <h2 style="color:#d4af37; text-align:center;">📖 About the Vault of Time</h2>
-    <p style="max-width:700px; margin:0 auto; text-align:center;">
-      The Vault of Time is a digital monument built for memory.<br><br>
-      In a world that moves too fast, this project offers a space for people to pause — 
-      to store a piece of themselves for the future.<br><br>
-      Each block represents a moment, a voice, a snapshot of humanity sealed in time until 2050.<br><br>
-      When the Vault opens, it will reveal a collective story of who we were, what we dreamed, and how we hoped.<br><br>
-      This is not just a website — it’s a reminder that we were here.
-    </p>
-    <hr style="margin:2rem auto; width:60%; border:0.5px solid #333;">
-  </section>
-
-  <section class="info">
-    <h2 style="color:#d4af37; text-align:center;">💰 How to Buy a Block</h2>
-    <ol style="max-width:700px; margin:0 auto; line-height:1.6;">
-      <li>Click <strong>“Buy a Block”</strong>.</li>
-      <li>Choose an available block from the grid (glowing = available, dim = taken).</li>
-      <li>Upload your image, audio, or message.</li>
-      <li>Confirm your payment ($6 per block).</li>
-      <li>Receive your confirmation email and digital certificate.</li>
-    </ol>
-    <p style="text-align:center; margin-top:1rem;">
-      🧱 Each block is yours to edit for up to 7 days after purchase. After that, it’s sealed until 2050.<br>
-      <em>Payment integration coming soon.</em>
-    </p>
-    <hr style="margin:2rem auto; width:60%; border:0.5px solid #333;">
-  </section>
-
-  <section class="info">
-    <h2 style="color:#d4af37; text-align:center;">⚖️ Vault Rules</h2>
-    <ul style="max-width:700px; margin:0 auto; line-height:1.6;">
-      <li>❌ No hate speech, discrimination, or harassment.</li>
-      <li>❌ No NSFW, violent, or illegal content.</li>
-      <li>❌ No confessions to crimes (they will be reported).</li>
-      <li>❌ No copyrighted media unless you are the rightful owner.</li>
-      <li>🕊 Keep your submission kind, creative, or meaningful.</li>
-      <li>🧱 Once your block is sealed, no refunds will be issued.</li>
-    </ul>
-    <p style="text-align:center; margin-top:1rem;">
-      By submitting, you agree to the Vault’s 
-      <a href="terms.html" style="color:#d4af37; text-decoration:none;">Terms & Conditions</a>.
-    </p>
-    <hr style="margin:2rem auto; width:60%; border:0.5px solid #333;">
-  </section>
-
+  <!-- FOOTER -->
   <footer>
     <p>
-      <a href="contact.html">📩 Contact Us</a> | 
+      <a href="contact.html">📩 Contact Us</a> |
       <a href="terms.html">📜 Terms & Conditions</a><br>
-      <small style="color:#777;">© 2025 The Vault of Time. All rights reserved.</small>
+      <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</small>
     </p>
   </footer>
 
   <script src="script.js"></script>
-
-  <!-- COUNTDOWN SCRIPT -->
-  <script>
-    const countdownDate = new Date("Dec 15, 2025 12:00:00").getTime();
-    const timerInterval = setInterval(function() {
-      const now = new Date().getTime();
-      const distance = countdownDate - now;
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-      const timer = document.getElementById("timer");
-      if (distance > 0) {
-        timer.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-      } else {
-        clearInterval(timerInterval);
-        timer.innerHTML = "🎉 The Founders Drop is LIVE!";
-      }
-    }, 1000);
-  </script>
 </body>
 </html>
