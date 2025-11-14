@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // === PAYPAL LOGIC ===
   let paypalContainer = null;
-  const saveBtn = form.querySelector('button[type="submit"], #uploadBtn');
+  const saveBtn = document.getElementById("uploadBtn"); // fixed reference
 
   function checkFormReady() {
     const name = document.getElementById("name").value.trim();
@@ -148,10 +148,11 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(() => paypalContainer.style.opacity = "1", 200);
   }
 
-  // Listen for input changes
+  // === LISTENERS ===
   document.getElementById("name").addEventListener("input", checkFormReady);
   document.getElementById("email").addEventListener("input", checkFormReady);
   document.getElementById("fileUpload").addEventListener("change", checkFormReady);
+  saveBtn.addEventListener("click", checkFormReady); // new line to trigger PayPal reveal
 
   // === MENU LOGIC ===
   const menuToggle = document.getElementById("menuToggle");
@@ -179,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // === ACCORDION (final fix) ===
+  // === ACCORDION ===
   function initAccordion() {
     const headers = document.querySelectorAll(".accordion-header");
     if (!headers.length) {
@@ -217,11 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-      orientation: "landscape",
-      unit: "pt",
-      format: "a4"
-    });
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -241,7 +238,7 @@ document.addEventListener("DOMContentLoaded", function () {
     doc.setFontSize(30);
     doc.text("Vault Of Time Certificate of Ownership", pageWidth / 2, 120, { align: "center" });
 
-    // Body text
+    // Body
     doc.setFont("times", "normal");
     doc.setFontSize(18);
     doc.text("This certifies that", pageWidth / 2, 200, { align: "center" });
