@@ -24,33 +24,30 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Expose Firestore globally (prevents weird module errors if needed elsewhere)
+// Expose Firestore globally
 window.db = db;
 
-// Collection reference
+// Firestore "blocks" collection
 const blocksCollection = collection(db, "blocks");
 
-// Memory cache for claimed blocks
+// Memory cache
 let claimedBlocks = [];
 
 // ============================================================================
 // FIRESTORE HELPERS
 // ============================================================================
-
-// Load the list of claimed blocks (doc IDs) – single read on startup
 async function loadClaimedBlocksFromFirestore() {
   try {
     const snapshot = await getDocs(blocksCollection);
-    claimedBlocks = snapshot.docs.map(docSnap => Number(docSnap.id));
+    claimedBlocks = snapshot.docs.map((d) => Number(d.id));
     localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
-    console.log("Loaded claimed blocks from Firestore:", claimedBlocks);
+    console.log("Loaded claimed:", claimedBlocks);
   } catch (err) {
-    console.error("Firestore error, falling back to local copy:", err);
+    console.error("Error loading Firestore:", err);
     claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   }
 }
 
-// Remote check used ONLY at checkout as a final safety net
 async function isBlockClaimedRemote(blockNumber) {
   try {
     const snap = await getDoc(doc(blocksCollection, String(blockNumber)));
@@ -61,7 +58,6 @@ async function isBlockClaimedRemote(blockNumber) {
   }
 }
 
-// Save a newly purchased block
 async function saveBlockToFirestore(blockNumber, name, email) {
   try {
     await setDoc(doc(blocksCollection, String(blockNumber)), {
@@ -69,20 +65,20 @@ async function saveBlockToFirestore(blockNumber, name, email) {
       email,
       purchasedAt: serverTimestamp()
     });
-    console.log(`Saved Block #${blockNumber} to Firestore`);
+    console.log("Saved block:", blockNumber);
   } catch (err) {
-    console.error("Failed to save block:", err);
+    console.error("Failed saving:", err);
   }
 }
 
 // ============================================================================
 // APP START
 // ============================================================================
-document.addEventListener("DOMContentLoaded", async function () {
-  console.log("Vault script loaded successfully.");
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("Vault script loaded.");
 
   // ------------------------------------------------------------------------
-  // "The Vault is opening…" Loading overlay
+  // LOADING OVERLAY
   // ------------------------------------------------------------------------
   const loadingOverlay = document.createElement("div");
   loadingOverlay.id = "vault-loading-overlay";
@@ -97,28 +93,20 @@ document.addEventListener("DOMContentLoaded", async function () {
     justifyContent: "center",
     zIndex: "9999",
     color: "#f9d26e",
-    fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    transition: "opacity 0.4s ease"
+    fontFamily: "system-ui",
+    transition: "opacity .4s ease"
   });
   loadingOverlay.innerHTML = `
     <div style="font-size:42px;margin-bottom:10px;">🕰️</div>
-    <div style="font-size:20px;font-weight:600;margin-bottom:4px;">
-      The Vault is opening…
-    </div>
-    <div style="font-size:14px;opacity:0.8;">
-      Fetching sealed blocks and preparing your grid.
-    </div>
+    <div style="font-size:20px;font-weight:600;margin-bottom:4px;">The Vault is opening…</div>
+    <div style="font-size:14px;opacity:0.8;">Fetching sealed blocks and preparing your grid.</div>
   `;
   document.body.appendChild(loadingOverlay);
 
-  function hideLoadingOverlay() {
+  const hideLoadingOverlay = () => {
     loadingOverlay.style.opacity = "0";
-    setTimeout(() => {
-      if (loadingOverlay && loadingOverlay.parentNode) {
-        loadingOverlay.parentNode.removeChild(loadingOverlay);
-      }
-    }, 400);
-  }
+    setTimeout(() => loadingOverlay.remove(), 400);
+  };
 
   // ------------------------------------------------------------------------
   // DOM refs
@@ -135,12 +123,12 @@ document.addEventListener("DOMContentLoaded", async function () {
   let selectedBlockNumber = null;
 
   // ------------------------------------------------------------------------
-  // 1) Seed claimedBlocks from localStorage so grid can render instantly
+  // SEED FROM LOCAL FIRST
   // ------------------------------------------------------------------------
   claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
 
   // ------------------------------------------------------------------------
-  // GRID GENERATION (using whatever claimedBlocks we have right now)
+  // BUILD GRID
   // ------------------------------------------------------------------------
   function buildGrid() {
     grid.innerHTML = "";
@@ -155,7 +143,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         block.style.border = "2px solid gold";
         block.style.cursor = "not-allowed";
       }
-
       if (claimedBlocks.includes(i)) {
         block.classList.add("claimed");
         block.style.cursor = "not-allowed";
@@ -164,8 +151,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       grid.appendChild(block);
     }
 
-    const existingMsg = document.getElementById("founders-message");
-    if (!existingMsg) {
+    if (!document.getElementById("founders-message")) {
       const msg = document.createElement("p");
       msg.id = "founders-message";
       msg.style.textAlign = "center";
@@ -177,14 +163,13 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   }
 
-  buildGrid(); // render immediately
+  buildGrid();
 
   // ------------------------------------------------------------------------
-  // Helper to re-apply claimed styling after we get fresh data from Firestore
+  // UPDATE GRID CLAIMED STATE
   // ------------------------------------------------------------------------
   function applyClaimedStylingToGrid() {
-    const blocks = document.querySelectorAll(".block");
-    blocks.forEach((block) => {
+    document.querySelectorAll(".block").forEach((block) => {
       const num = Number(block.textContent);
       if (claimedBlocks.includes(num)) {
         block.classList.add("claimed");
@@ -195,33 +180,24 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   // ------------------------------------------------------------------------
-  // BLOCK CLICK – now purely local (no Firestore call, so instant)
+  // BLOCK CLICK HANDLERS
   // ------------------------------------------------------------------------
   function attachBlockClickHandlers() {
-    const blocks = document.querySelectorAll(".block");
-
-    blocks.forEach((block) => {
+    document.querySelectorAll(".block").forEach((block) => {
       block.addEventListener("click", () => {
         const blockNumber = Number(block.textContent);
         if (!blockNumber) return;
+        if (blockNumber === founderBlock || claimedBlocks.includes(blockNumber)) return;
 
-        // Ignore founder or claimed blocks
-        if (blockNumber === founderBlock || claimedBlocks.includes(blockNumber)) {
-          return;
-        }
-
-        document
-          .querySelectorAll(".block")
-          .forEach((b) => b.classList.remove("selected"));
+        document.querySelectorAll(".block").forEach((b) => b.classList.remove("selected"));
         block.classList.add("selected");
 
         selectedBlockNumber = blockNumber;
-        modal.classList.remove("hidden");
 
+        modal.classList.remove("hidden");
         document.getElementById("blockNumber").value = blockNumber;
-        document.getElementById(
-          "selected-block-text"
-        ).textContent = `Selected Block: #${blockNumber}`;
+        document.getElementById("selected-block-text").textContent =
+          `Selected Block: #${blockNumber}`;
       });
     });
   }
@@ -229,7 +205,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   attachBlockClickHandlers();
 
   // ------------------------------------------------------------------------
-  // 2) Now that UI is up, fetch fresh claimed blocks from Firestore once
+  // FETCH LATEST FROM FIRESTORE
   // ------------------------------------------------------------------------
   await loadClaimedBlocksFromFirestore();
   applyClaimedStylingToGrid();
@@ -238,21 +214,19 @@ document.addEventListener("DOMContentLoaded", async function () {
   // ========================================================================
   // MODAL CLOSE
   // ========================================================================
-  if (closeButton) {
-    closeButton.addEventListener("click", () => modal.classList.add("hidden"));
-  }
-  if (modal) {
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) modal.classList.add("hidden");
-    });
-  }
+  closeButton?.addEventListener("click", () => modal.classList.add("hidden"));
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) modal.classList.add("hidden");
+  });
 
   // ========================================================================
-  // PAYPAL + FILE VALIDATION
+  // PAYPAL + VALIDATION (🔥 UPDATED! No more double renders!)
   // ========================================================================
   const saveBtn = document.getElementById("uploadBtn");
   const readyMsg = document.getElementById("ready-message");
   const paypalContainer = document.getElementById("paypal-button-container");
+
+  let paypalRendered = false; // <-- Prevents duplicates
 
   function canCheckout() {
     return (
@@ -267,7 +241,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const f = document.getElementById("fileUpload").files[0];
     if (!f) return false;
     if (f.size > 2 * 1024 * 1024) {
-      alert("❌ Your file is larger than 2MB. Please upload a smaller file.");
+      alert("❌ Your file is larger than 2MB.");
       document.getElementById("fileUpload").value = "";
       return false;
     }
@@ -280,10 +254,16 @@ document.addEventListener("DOMContentLoaded", async function () {
       paypalContainer.classList.remove("show");
       return;
     }
+
     if (canCheckout()) {
       readyMsg.classList.add("show");
+
+      if (!paypalRendered) {
+        paypalRendered = true;
+        renderPayPalButton();
+      }
+
       paypalContainer.classList.add("show");
-      renderPayPalButton();
     } else {
       readyMsg.classList.remove("show");
       paypalContainer.classList.remove("show");
@@ -295,74 +275,51 @@ document.addEventListener("DOMContentLoaded", async function () {
   form?.addEventListener("change", updateGate, true);
 
   // ========================================================================
-  // PAYPAL BUTTON – one final Firestore check here ONLY
+  // PAYPAL BUTTON – SINGLE RENDER ONLY
   // ========================================================================
   function renderPayPalButton() {
     paypalContainer.innerHTML = "";
 
-    (async () => {
-      // Final remote safety check before letting user pay
-      const taken = await isBlockClaimedRemote(selectedBlockNumber);
-      if (taken) {
-        alert(
-          "⚠️ This block has just been claimed by someone else. Please choose a different block."
-        );
+    paypal.Buttons({
+      style: { color: "gold", shape: "pill", label: "pay", height: 45 },
 
-        // Update local cache and UI
+      createOrder: (data, actions) => {
+        return actions.order.create({
+          purchase_units: [
+            {
+              description: `Vault of Time Block #${selectedBlockNumber}`,
+              amount: { value: blockPrice.toFixed(2) }
+            }
+          ]
+        });
+      },
+
+      onApprove: async (data, actions) => {
+        const details = await actions.order.capture();
+        alert(`✅ Payment completed by ${details.payer.name.given_name}.`);
+
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+
+        await saveBlockToFirestore(selectedBlockNumber, name, email);
+
         if (!claimedBlocks.includes(selectedBlockNumber)) {
           claimedBlocks.push(selectedBlockNumber);
           localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
         }
+
         applyClaimedStylingToGrid();
         modal.classList.add("hidden");
-        return;
+
+        generateCertificatePDF(name, selectedBlockNumber);
+      },
+
+      onCancel: () => alert("❌ Transaction cancelled."),
+      onError: (err) => {
+        console.error(err);
+        alert("Payment error.");
       }
-
-      paypal.Buttons({
-        style: { color: "gold", shape: "pill", label: "pay", height: 45 },
-
-        createOrder: (data, actions) => {
-          return actions.order.create({
-            purchase_units: [
-              {
-                description: `Vault of Time Block #${selectedBlockNumber}`,
-                amount: { value: blockPrice.toFixed(2) }
-              }
-            ]
-          });
-        },
-
-        onApprove: (data, actions) => {
-          return actions.order.capture().then(async (details) => {
-            alert(`✅ Payment completed by ${details.payer.name.given_name}.`);
-
-            const name = document.getElementById("name").value.trim();
-            const email = document.getElementById("email").value.trim();
-
-            await saveBlockToFirestore(selectedBlockNumber, name, email);
-
-            if (!claimedBlocks.includes(selectedBlockNumber)) {
-              claimedBlocks.push(selectedBlockNumber);
-              localStorage.setItem(
-                "claimedBlocks",
-                JSON.stringify(claimedBlocks)
-              );
-            }
-
-            applyClaimedStylingToGrid();
-            modal.classList.add("hidden");
-
-            generateCertificatePDF(name, selectedBlockNumber);
-          });
-        },
-
-        onCancel: () => alert("❌ Transaction cancelled."),
-        onError: (err) => {
-          console.error(err);
-          alert("Payment error. Please try again.");
-        }
-      }).render("#paypal-button-container");
-    })();
+    }).render("#paypal-button-container");
   }
 
   // ========================================================================
@@ -392,17 +349,18 @@ document.addEventListener("DOMContentLoaded", async function () {
   // ACCORDION
   // ========================================================================
   function initAccordion() {
-    const headers = document.querySelectorAll(".accordion-header");
-    headers.forEach((header) => {
+    document.querySelectorAll(".accordion-header").forEach((header) => {
       header.onclick = () => {
         const content = header.nextElementSibling;
         const open = content.classList.contains("show");
-        document
-          .querySelectorAll(".accordion-content")
-          .forEach((c) => c.classList.remove("show"));
-        document
-          .querySelectorAll(".accordion-header")
-          .forEach((h) => h.classList.remove("active"));
+
+        document.querySelectorAll(".accordion-content").forEach((c) =>
+          c.classList.remove("show")
+        );
+        document.querySelectorAll(".accordion-header").forEach((h) =>
+          h.classList.remove("active")
+        );
+
         if (!open) {
           content.classList.add("show");
           header.classList.add("active");
@@ -417,7 +375,11 @@ document.addEventListener("DOMContentLoaded", async function () {
   // ========================================================================
   function generateCertificatePDF(name, blockNumber) {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: "a4"
+    });
 
     const W = doc.internal.pageSize.getWidth();
     const H = doc.internal.pageSize.getHeight();
