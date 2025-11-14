@@ -131,6 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Payment failed. Please try again.");
       }
     }).render("#paypal-button-container");
+    document.dispatchEvent(new Event("paypalButtonsRendered"));
 
     // trigger the fade-in after rendering
     setTimeout(() => paypalContainer.style.opacity = "1", 200);
@@ -141,26 +142,38 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("email").addEventListener("input", checkFormReady);
   document.getElementById("fileUpload").addEventListener("change", checkFormReady);
 
-  // === ACCORDION ===
+  // === ACCORDION (robust version) ===
 function initAccordion() {
   const accordionHeaders = document.querySelectorAll(".accordion-header");
+  if (!accordionHeaders.length) {
+    console.warn("Accordion headers not found yet, retrying...");
+    setTimeout(initAccordion, 500);
+    return;
+  }
 
   accordionHeaders.forEach((header) => {
-    header.addEventListener("click", () => {
+    header.onclick = () => {
       const content = header.nextElementSibling;
       const isOpen = content.classList.contains("show");
 
+      // Close all open sections first
       document.querySelectorAll(".accordion-content").forEach((c) => c.classList.remove("show"));
       document.querySelectorAll(".accordion-header").forEach((h) => h.classList.remove("active"));
 
+      // Toggle this one
       if (!isOpen) {
         content.classList.add("show");
         header.classList.add("active");
-        setTimeout(() => header.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
+        setTimeout(() => {
+          header.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 200);
       }
-    });
+    };
   });
+
+  console.log("Accordion initialized ✅");
 }
 
-// Run accordion init after a short delay to ensure all HTML is loaded
-setTimeout(initAccordion, 300);
+// Initialize immediately and also re-initialize after PayPal buttons render
+initAccordion();
+document.addEventListener("paypalButtonsRendered", initAccordion);
