@@ -10,20 +10,21 @@ document.addEventListener("DOMContentLoaded", function () {
   const totalBlocks = 1000;
   const visibleRange = [1, 100];
   const founderBlock = 1;
-  const blockPrice = 5.00; // USD
+  const blockPrice = 6.00; // USD
 
   const claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   let selectedBlockNumber = null;
 
-  // 🧹 Clear any previous grid (fix for duplication)
+  // 🧹 Clear grid (prevent duplication)
   grid.innerHTML = "";
 
-  // Generate grid
+  // Generate blocks
   for (let i = visibleRange[0]; i <= visibleRange[1]; i++) {
     const block = document.createElement("div");
     block.classList.add("block");
     block.textContent = i;
 
+    // Founder block
     if (i === founderBlock) {
       block.classList.add("founder");
       block.title = "🔒 Reserved by The Vault of Time Founder";
@@ -31,6 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
       block.style.cursor = "not-allowed";
     }
 
+    // Claimed blocks
     if (claimedBlocks.includes(i)) {
       block.classList.add("claimed");
       block.style.cursor = "not-allowed";
@@ -39,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
     grid.appendChild(block);
   }
 
-  // Message
+  // Message below grid
   const message = document.createElement("p");
   message.style.textAlign = "center";
   message.style.color = "#d4af37";
@@ -78,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // === PAYPAL LOGIC ===
   let paypalContainer = null;
-  const saveBtn = form.querySelector('button[type="submit"]');
+  const saveBtn = form.querySelector('button[type="submit"], #uploadBtn');
 
   function checkFormReady() {
     const name = document.getElementById("name").value.trim();
@@ -86,10 +88,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const file = document.getElementById("fileUpload").files.length > 0;
 
     if (name && email && file) {
-      saveBtn.textContent = "Proceed to PayPal 💳";
-      saveBtn.style.backgroundColor = "#333";
-      saveBtn.style.cursor = "not-allowed";
-      saveBtn.disabled = true;
+      if (saveBtn) {
+        saveBtn.textContent = "Proceed to PayPal 💳";
+        saveBtn.style.backgroundColor = "#333";
+        saveBtn.style.cursor = "not-allowed";
+        saveBtn.disabled = true;
+      }
       showPayPalButton();
     }
   }
@@ -121,11 +125,17 @@ document.addEventListener("DOMContentLoaded", function () {
           localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
 
           const selectedBlock = document.querySelector(".block.selected");
-          selectedBlock.classList.remove("selected");
-          selectedBlock.classList.add("claimed");
-          selectedBlock.style.cursor = "not-allowed";
+          if (selectedBlock) {
+            selectedBlock.classList.remove("selected");
+            selectedBlock.classList.add("claimed");
+            selectedBlock.style.cursor = "not-allowed";
+          }
 
           modal.classList.add("hidden");
+
+          // Auto-generate certificate
+          const name = document.getElementById("name").value.trim();
+          generateCertificatePDF(name, selectedBlockNumber);
         });
       },
       onError: (err) => {
@@ -134,9 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }).render("#paypal-button-container");
 
-    // Dispatch event to rebind accordions if needed
     document.dispatchEvent(new Event("paypalButtonsRendered"));
-
     setTimeout(() => paypalContainer.style.opacity = "1", 200);
   }
 
@@ -185,11 +193,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const content = header.nextElementSibling;
         const isOpen = content.classList.contains("show");
 
-        // Close all open sections
         document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
         document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
 
-        // Open this one
         if (!isOpen) {
           content.classList.add("show");
           header.classList.add("active");
@@ -200,7 +206,70 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Accordion initialized ✅");
   }
 
-  // Initialize accordion on window load and after PayPal render
   window.addEventListener("load", () => setTimeout(initAccordion, 300));
   document.addEventListener("paypalButtonsRendered", () => setTimeout(initAccordion, 300));
+
+  // === CERTIFICATE PDF GENERATOR ===
+  function generateCertificatePDF(name, blockNumber) {
+    if (!window.jspdf) {
+      console.error("jsPDF not loaded yet");
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: "a4"
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // Background
+    doc.setFillColor(13, 17, 23);
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+
+    // Border
+    doc.setDrawColor(212, 175, 55);
+    doc.setLineWidth(6);
+    doc.rect(30, 30, pageWidth - 60, pageHeight - 60);
+
+    // Header
+    doc.setTextColor(212, 175, 55);
+    doc.setFont("times", "bold");
+    doc.setFontSize(30);
+    doc.text("Vault Of Time Certificate of Ownership", pageWidth / 2, 120, { align: "center" });
+
+    // Body text
+    doc.setFont("times", "normal");
+    doc.setFontSize(18);
+    doc.text("This certifies that", pageWidth / 2, 200, { align: "center" });
+
+    doc.setFont("times", "bolditalic");
+    doc.setFontSize(26);
+    doc.text(name, pageWidth / 2, 240, { align: "center" });
+
+    doc.setFont("times", "normal");
+    doc.setFontSize(18);
+    doc.text(`is the rightful guardian of Block #${blockNumber}`, pageWidth / 2, 280, { align: "center" });
+    doc.text("Sealed within The Vault until 2050.", pageWidth / 2, 310, { align: "center" });
+
+    // Date
+    const today = new Date().toLocaleDateString();
+    doc.setFontSize(14);
+    doc.text(`Issued on: ${today}`, pageWidth / 2, 360, { align: "center" });
+
+    // Logo watermark
+    const logo = new Image();
+    logo.src = "vault-logo.jpg";
+    logo.onload = () => {
+      const size = 200;
+      doc.addImage(logo, "JPEG", pageWidth - size - 60, pageHeight - size - 60, size, size, "", "FAST");
+      doc.save(`VaultOfTime_Certificate_Block${blockNumber}.pdf`);
+    };
+    logo.onerror = () => {
+      doc.save(`VaultOfTime_Certificate_Block${blockNumber}.pdf`);
+    };
+  }
 });
