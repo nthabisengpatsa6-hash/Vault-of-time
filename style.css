@@ -409,3 +409,30 @@ html {
 .hidden {
   display: none !important;
 }
+/* --- FIX HEADER ALIGNMENT (removes stray line above title) --- */
+h1 {
+  margin-top: 25px;
+  display: inline-block;
+  vertical-align: middle;
+  border: none;
+  line-height: 1.2;
+}
+
+.clock-icon {
+  vertical-align: middle;
+}
+
+.menu-toggle {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+  margin-right: 8px;
+}
+
+/* Prevent wrapping glitch between menu and title */
+@media (max-width: 600px) {
+  h1 {
+    display: block;
+    margin-top: 20px;
+  }
+}
