@@ -121,6 +121,7 @@
     <h2>Vault Menu</h2>
 
     <div class="accordion">
+      <!-- ABOUT -->
       <div class="accordion-item">
         <button class="accordion-header">📜 About The Vault Of Time</button>
         <div class="accordion-content">
@@ -130,6 +131,7 @@
         </div>
       </div>
 
+      <!-- HOW TO BUY -->
       <div class="accordion-item">
         <button class="accordion-header">💰 How To Buy</button>
         <div class="accordion-content">
@@ -160,6 +162,7 @@
         </div>
       </div>
 
+      <!-- RULES -->
       <div class="accordion-item">
         <button class="accordion-header">⚖️ Vault Rules</button>
         <div class="accordion-content">
@@ -177,6 +180,7 @@
         </div>
       </div>
 
+      <!-- FAQ -->
       <div class="accordion-item">
         <button class="accordion-header">❓ FAQ</button>
         <div class="accordion-content">
@@ -188,6 +192,7 @@
         </div>
       </div>
 
+      <!-- TERMS -->
       <div class="accordion-item">
         <button class="accordion-header">📜 Terms & Conditions</button>
         <div class="accordion-content">
@@ -204,6 +209,7 @@
         </div>
       </div>
 
+      <!-- FOLLOW -->
       <div class="accordion-item">
         <button class="accordion-header">📲 Follow Us</button>
         <div class="accordion-content">
@@ -279,25 +285,7 @@
   <script src="https://www.paypal.com/sdk/js?client-id=AUK2McH5yTvRCHXypQrwShFriZMsW7Ojf16wtlHAYP8rsK92eio4l65xyVDfC0sZl2WGQWTlFrbZZnP7&currency=USD"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- FIREBASE -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
-      authDomain: "vault-of-time-e6c03.firebaseapp.com",
-      projectId: "vault-of-time-e6c03",
-      storageBucket: "vault-of-time-e6c03.firebasestorage.app",
-      messagingSenderId: "941244238426",
-      appId: "1:941244238426:web:80f80b5237b84b1740e663"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    window.db = getFirestore(app);
-  </script>
-
-  <!-- MAIN SCRIPT -->
-  <script src="script.js"></script>
+  <!-- MAIN SCRIPT (module so Firebase works here only) -->
+  <script type="module" src="script.js"></script>
 </body>
-</html>
+  </html>
