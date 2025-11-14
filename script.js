@@ -48,6 +48,7 @@ document.addEventListener("DOMContentLoaded", function () {
   message.textContent = `Showing Founders Drop (Blocks ${visibleRange[0]}–${visibleRange[1]}). The next drop unlocks after ${visibleRange[1]} blocks are sealed.`;
   grid.insertAdjacentElement("afterend", message);
 
+  // Handle block click
   const allBlocks = document.querySelectorAll(".block");
   allBlocks.forEach((block, index) => {
     const blockNumber = index + visibleRange[0];
@@ -62,6 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // === MODAL CLOSE ===
   if (closeButton) {
     closeButton.addEventListener("click", () => {
       modal.classList.add("hidden");
@@ -98,7 +100,7 @@ document.addEventListener("DOMContentLoaded", function () {
       paypalContainer.id = "paypal-button-container";
       paypalContainer.style.marginTop = "15px";
       paypalContainer.style.opacity = "0";
-      paypalContainer.style.transition = "opacity 0.6s ease"; // ✨ smooth fade-in
+      paypalContainer.style.transition = "opacity 0.6s ease";
       form.insertAdjacentElement("afterend", paypalContainer);
     }
 
@@ -127,13 +129,14 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       },
       onError: (err) => {
-        console.error(err);
+        console.error("PayPal Error:", err);
         alert("Payment failed. Please try again.");
       }
     }).render("#paypal-button-container");
+
+    // Dispatch event to rebind accordions if needed
     document.dispatchEvent(new Event("paypalButtonsRendered"));
 
-    // trigger the fade-in after rendering
     setTimeout(() => paypalContainer.style.opacity = "1", 200);
   }
 
@@ -142,41 +145,62 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("email").addEventListener("input", checkFormReady);
   document.getElementById("fileUpload").addEventListener("change", checkFormReady);
 
-// === ACCORDION (final fix) ===
-function initAccordion() {
-  const headers = document.querySelectorAll(".accordion-header");
-  if (!headers.length) {
-    console.warn("Accordion headers not found yet. Retrying...");
-    setTimeout(initAccordion, 400);
-    return;
+  // === MENU LOGIC ===
+  const menuToggle = document.getElementById("menuToggle");
+  const sideMenu = document.getElementById("sideMenu");
+  const closeMenu = document.getElementById("closeMenu");
+  const overlay = document.getElementById("overlay");
+
+  if (menuToggle && sideMenu && closeMenu && overlay) {
+    menuToggle.addEventListener("click", () => {
+      sideMenu.classList.add("open");
+      overlay.classList.add("show");
+      menuToggle.classList.add("active");
+    });
+
+    closeMenu.addEventListener("click", () => {
+      sideMenu.classList.remove("open");
+      overlay.classList.remove("show");
+      menuToggle.classList.remove("active");
+    });
+
+    overlay.addEventListener("click", () => {
+      sideMenu.classList.remove("open");
+      overlay.classList.remove("show");
+      menuToggle.classList.remove("active");
+    });
   }
 
-  headers.forEach(header => {
-    header.addEventListener("click", () => {
-      const content = header.nextElementSibling;
-      const isOpen = content.classList.contains("show");
+  // === ACCORDION (final fix) ===
+  function initAccordion() {
+    const headers = document.querySelectorAll(".accordion-header");
+    if (!headers.length) {
+      console.warn("Accordion headers not found yet. Retrying...");
+      setTimeout(initAccordion, 400);
+      return;
+    }
 
-      // Close all open sections
-      document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
-      document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
+    headers.forEach(header => {
+      header.onclick = () => {
+        const content = header.nextElementSibling;
+        const isOpen = content.classList.contains("show");
 
-      // Open this one
-      if (!isOpen) {
-        content.classList.add("show");
-        header.classList.add("active");
-      }
+        // Close all open sections
+        document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
+        document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
+
+        // Open this one
+        if (!isOpen) {
+          content.classList.add("show");
+          header.classList.add("active");
+        }
+      };
     });
-  });
 
-  console.log("Accordion initialized ✅");
-}
+    console.log("Accordion initialized ✅");
+  }
 
-// Initialize accordion safely after everything else
-window.addEventListener("load", () => {
-  setTimeout(initAccordion, 300);
-});
-
-// Re-initialize after PayPal buttons render
-document.addEventListener("paypalButtonsRendered", () => {
-  setTimeout(initAccordion, 300);
+  // Initialize accordion on window load and after PayPal render
+  window.addEventListener("load", () => setTimeout(initAccordion, 300));
+  document.addEventListener("paypalButtonsRendered", () => setTimeout(initAccordion, 300));
 });
