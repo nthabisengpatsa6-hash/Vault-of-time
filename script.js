@@ -142,38 +142,41 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("email").addEventListener("input", checkFormReady);
   document.getElementById("fileUpload").addEventListener("change", checkFormReady);
 
-  // === ACCORDION (robust version) ===
+// === ACCORDION (final fix) ===
 function initAccordion() {
-  const accordionHeaders = document.querySelectorAll(".accordion-header");
-  if (!accordionHeaders.length) {
-    console.warn("Accordion headers not found yet, retrying...");
-    setTimeout(initAccordion, 500);
+  const headers = document.querySelectorAll(".accordion-header");
+  if (!headers.length) {
+    console.warn("Accordion headers not found yet. Retrying...");
+    setTimeout(initAccordion, 400);
     return;
   }
 
-  accordionHeaders.forEach((header) => {
-    header.onclick = () => {
+  headers.forEach(header => {
+    header.addEventListener("click", () => {
       const content = header.nextElementSibling;
       const isOpen = content.classList.contains("show");
 
-      // Close all open sections first
-      document.querySelectorAll(".accordion-content").forEach((c) => c.classList.remove("show"));
-      document.querySelectorAll(".accordion-header").forEach((h) => h.classList.remove("active"));
+      // Close all open sections
+      document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
+      document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
 
-      // Toggle this one
+      // Open this one
       if (!isOpen) {
         content.classList.add("show");
         header.classList.add("active");
-        setTimeout(() => {
-          header.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 200);
       }
-    };
+    });
   });
 
   console.log("Accordion initialized ✅");
 }
 
-// Initialize immediately and also re-initialize after PayPal buttons render
-initAccordion();
-document.addEventListener("paypalButtonsRendered", initAccordion);
+// Initialize accordion safely after everything else
+window.addEventListener("load", () => {
+  setTimeout(initAccordion, 300);
+});
+
+// Re-initialize after PayPal buttons render
+document.addEventListener("paypalButtonsRendered", () => {
+  setTimeout(initAccordion, 300);
+});
