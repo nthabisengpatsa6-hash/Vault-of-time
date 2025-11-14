@@ -25,6 +25,12 @@
       50%{text-shadow:0 0 20px rgba(212,175,55,.9),0 0 40px rgba(212,175,55,.6);opacity:1;transform:scale(1.1)}
       100%{text-shadow:0 0 6px rgba(212,175,55,.8);opacity:.85;transform:scale(1)}
     }
+
+    /* PAYPAL UI bits (kept minimal; main styles in style.css) */
+    #paypal-button-container { display:none; opacity:0; transition:opacity .4s ease; margin-top:12px; }
+    #paypal-button-container.show { display:block; opacity:1; }
+    #ready-message { display:none; opacity:0; color:#9be589; font-weight:600; font-size:14px; margin-top:8px; transition:opacity .4s ease, transform .3s ease; transform:translateY(4px); }
+    #ready-message.show { display:block; opacity:1; transform:translateY(0); }
   </style>
 </head>
 
@@ -39,7 +45,6 @@
     <h2>Vault Menu</h2>
 
     <div class="accordion">
-
       <!-- ABOUT -->
       <div class="accordion-item">
         <button class="accordion-header">📜 About The Vault Of Time</button>
@@ -145,12 +150,24 @@
     <div class="modal-content">
       <span class="close-button">&times;</span>
       <h2>Claim Your Block</h2>
+
+      <p id="selected-block-text" style="font-weight:600;color:#f9d26e;"></p>
+
       <p>Fill in your details to reserve your Vault block.</p>
-      <form id="blockForm">
+      <form id="blockForm" autocomplete="on" novalidate>
+        <input type="hidden" id="blockNumber" name="block_number" value="">
         <input type="text" id="name" name="name" placeholder="Your Name" required style="width:100%;padding:8px;margin:6px 0;border-radius:4px;border:none;">
         <input type="email" id="email" name="email" placeholder="Your Email" required style="width:100%;padding:8px;margin:6px 0;border-radius:4px;border:none;">
         <input type="file" id="fileUpload" name="fileUpload" accept="image/*,.txt,.pdf,.mp3,.mp4" required style="width:100%;padding:8px;margin:6px 0;border-radius:4px;border:none;background-color:#161b22;color:#e6edf3;">
-        <button type="submit" style="background-color:#d4af37;color:#0d1117;border:none;padding:10px 16px;border-radius:5px;cursor:pointer;font-weight:600;margin-top:10px;">Upload Memory</button>
+
+        <!-- Gate + PayPal -->
+        <div id="ready-message">✅ Ready for checkout</div>
+        <div id="paypal-button-container"></div>
+
+        <!-- Make sure this button DOESN'T submit the page -->
+        <button type="button" id="uploadBtn" style="background-color:#d4af37;color:#0d1117;border:none;padding:10px 16px;border-radius:5px;cursor:pointer;font-weight:600;margin-top:10px;">
+          Save Details
+        </button>
       </form>
     </div>
   </div>
@@ -164,6 +181,95 @@
     </p>
   </footer>
 
+  <!-- PAYPAL SDK -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AUK2McH5yTvRCHXypQrwShFriZMsW7Ojf16wtlHAYP8rsK92eio4l65xyVDfC0sZl2WGQWTlFrbZZnP7&currency=USD"></script>
+
+  <!-- INLINE BRIDGE: block → form → PayPal -->
+  <script>
+    let selectedBlockNumber = null;
+
+    // When a block is clicked (script.js also opens the modal)
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('block')) {
+        selectedBlockNumber = e.target.textContent.trim();
+        document.getElementById('blockNumber').value = selectedBlockNumber;
+        const label = document.getElementById('selected-block-text');
+        if (label) label.textContent = 'Selected Block: #' + selectedBlockNumber;
+      }
+    });
+
+    // Gate before showing PayPal button
+    const nameEl = () => document.getElementById('name');
+    const emailEl = () => document.getElementById('email');
+    const fileEl = () => document.getElementById('fileUpload');
+    const readyMsg = () => document.getElementById('ready-message');
+    const ppContainer = () => document.getElementById('paypal-button-container');
+
+    function canCheckout() {
+      return (
+        selectedBlockNumber &&
+        nameEl().value.trim() &&
+        emailEl().value.trim() &&
+        fileEl().files.length > 0
+      );
+    }
+
+    function updateGate() {
+      if (canCheckout()) {
+        readyMsg().classList.add('show');
+        ppContainer().classList.add('show');
+      } else {
+        readyMsg().classList.remove('show');
+        ppContainer().classList.remove('show');
+      }
+    }
+
+    ['input','change'].forEach(evt => {
+      document.getElementById('blockForm').addEventListener(evt, updateGate, true);
+    });
+
+    // Optional “Save Details” (no page submit)
+    document.getElementById('uploadBtn').addEventListener('click', updateGate);
+
+    // Render PayPal
+    paypal.Buttons({
+      style: { color:'gold', shape:'pill', label:'pay', height:45 },
+      createOrder: function(data, actions) {
+        const label = selectedBlockNumber ? `Vault of Time Block #${selectedBlockNumber}` : 'Vault of Time Block';
+        return actions.order.create({
+          purchase_units: [{
+            description: label,
+            amount: { currency_code: 'USD', value: '6.00' }
+          }]
+        });
+      },
+      onApprove: function(data, actions) {
+        return actions.order.capture().then(function(details) {
+          alert(`✅ Transaction completed by ${details.payer.name.given_name}.
+Your Block #${selectedBlockNumber} is now reserved.`);
+
+          // OPTIONAL: instantly mark the block as claimed visually
+          const blocks = document.querySelectorAll('.block');
+          blocks.forEach(b => {
+            if (b.textContent.trim() === String(selectedBlockNumber)) {
+              b.classList.add('claimed');
+              b.style.cursor = 'not-allowed';
+            }
+          });
+
+          // Clear + close modal if you want (your script.js already handles modal close)
+          // document.querySelector('.close-button')?.click();
+        });
+      },
+      onCancel: function() { alert('❌ Transaction cancelled.'); },
+      onError: function(err) {
+        console.error(err);
+        alert('Payment error. Please try again.');
+      }
+    }).render('#paypal-button-container');
+  </script>
+
+  <!-- YOUR EXISTING LOGIC (grid, modal, menu, accordion) -->
   <script src="script.js"></script>
 </body>
 </html>
