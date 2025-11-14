@@ -26,7 +26,7 @@
       100%{text-shadow:0 0 6px rgba(212,175,55,.8);opacity:.85;transform:scale(1)}
     }
 
-    /* PAYPAL UI bits (kept minimal; main styles in style.css) */
+    /* PAYPAL UI bits */
     #paypal-button-container { display:none; opacity:0; transition:opacity .4s ease; margin-top:12px; }
     #paypal-button-container.show { display:block; opacity:1; }
     #ready-message { display:none; opacity:0; color:#9be589; font-weight:600; font-size:14px; margin-top:8px; transition:opacity .4s ease, transform .3s ease; transform:translateY(4px); }
@@ -35,6 +35,7 @@
 </head> 
   
 <script src="https://www.paypal.com/sdk/js?client-id=AUK2McH5yTvRCHXypQrwShFriZMsW7Ojf16wtlHAYP8rsK92eio4l65xyVDfC0sZl2WGQWTlFrbZZnP7&currency=USD"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="script.js"></script>
   
 <body>
@@ -184,14 +185,10 @@
     </p>
   </footer>
 
-  <!-- PAYPAL SDK -->
-  <script src="https://www.paypal.com/sdk/js?client-id=AUK2McH5yTvRCHXypQrwShFriZMsW7Ojf16wtlHAYP8rsK92eio4l65xyVDfC0sZl2WGQWTlFrbZZnP7&currency=USD"></script>
-
   <!-- INLINE BRIDGE: block → form → PayPal -->
   <script>
     let selectedBlockNumber = null;
 
-    // When a block is clicked (script.js also opens the modal)
     document.addEventListener('click', (e) => {
       if (e.target.classList.contains('block')) {
         selectedBlockNumber = e.target.textContent.trim();
@@ -201,7 +198,6 @@
       }
     });
 
-    // Gate before showing PayPal button
     const nameEl = () => document.getElementById('name');
     const emailEl = () => document.getElementById('email');
     const fileEl = () => document.getElementById('fileUpload');
@@ -231,10 +227,8 @@
       document.getElementById('blockForm').addEventListener(evt, updateGate, true);
     });
 
-    // Optional “Save Details” (no page submit)
     document.getElementById('uploadBtn').addEventListener('click', updateGate);
 
-    // Render PayPal
     paypal.Buttons({
       style: { color:'gold', shape:'pill', label:'pay', height:45 },
       createOrder: function(data, actions) {
@@ -251,7 +245,6 @@
           alert(`✅ Transaction completed by ${details.payer.name.given_name}.
 Your Block #${selectedBlockNumber} is now reserved.`);
 
-          // OPTIONAL: instantly mark the block as claimed visually
           const blocks = document.querySelectorAll('.block');
           blocks.forEach(b => {
             if (b.textContent.trim() === String(selectedBlockNumber)) {
@@ -260,8 +253,8 @@ Your Block #${selectedBlockNumber} is now reserved.`);
             }
           });
 
-          // Clear + close modal if you want (your script.js already handles modal close)
-          // document.querySelector('.close-button')?.click();
+          const name = document.getElementById('name').value.trim();
+          generateCertificatePDF(name, selectedBlockNumber);
         });
       },
       onCancel: function() { alert('❌ Transaction cancelled.'); },
@@ -270,9 +263,57 @@ Your Block #${selectedBlockNumber} is now reserved.`);
         alert('Payment error. Please try again.');
       }
     }).render('#paypal-button-container');
+
+    // === PDF Certificate Generator ===
+    async function generateCertificatePDF(name, blockNumber) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      doc.setFillColor(13, 17, 23);
+      doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(6);
+      doc.rect(30, 30, pageWidth - 60, pageHeight - 60);
+
+      doc.setTextColor(212, 175, 55);
+      doc.setFont('times', 'bold');
+      doc.setFontSize(30);
+      doc.text('Vault Of Time Certificate of Ownership', pageWidth / 2, 120, { align: 'center' });
+
+      doc.setFont('times', 'normal');
+      doc.setFontSize(18);
+      doc.text('This certifies that', pageWidth / 2, 200, { align: 'center' });
+
+      doc.setFont('times', 'bolditalic');
+      doc.setFontSize(26);
+      doc.text(name, pageWidth / 2, 240, { align: 'center' });
+
+      doc.setFont('times', 'normal');
+      doc.setFontSize(18);
+      doc.text(`is the rightful guardian of Block #${blockNumber}`, pageWidth / 2, 280, { align: 'center' });
+      doc.text('Sealed within The Vault until 2050.', pageWidth / 2, 310, { align: 'center' });
+
+      const today = new Date().toLocaleDateString();
+      doc.setFontSize(14);
+      doc.text(`Issued on: ${today}`, pageWidth / 2, 360, { align: 'center' });
+
+      const logo = new Image();
+      logo.src = 'vault-logo.jpg';
+      logo.onload = () => {
+        const size = 200;
+        doc.addImage(logo, 'JPEG', pageWidth - size - 60, pageHeight - size - 60, size, size, '', 'FAST');
+        doc.save(`VaultOfTime_Certificate_Block${blockNumber}.pdf`);
+      };
+      logo.onerror = () => {
+        doc.save(`VaultOfTime_Certificate_Block${blockNumber}.pdf`);
+      };
+    }
   </script>
 
-  <!-- YOUR EXISTING LOGIC (grid, modal, menu, accordion) -->
   <script src="script.js"></script>
 </body>
 </html>
