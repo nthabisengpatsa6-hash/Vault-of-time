@@ -10,8 +10,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const totalBlocks = 1000;
   const visibleRange = [1, 100];
   const founderBlock = 1;
+  const blockPrice = 5.00; // USD price per block
 
   const claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
+  let selectedBlockNumber = null;
 
   // Generate blocks
   for (let i = visibleRange[0]; i <= visibleRange[1]; i++) {
@@ -19,7 +21,6 @@ document.addEventListener("DOMContentLoaded", function () {
     block.classList.add("block");
     block.textContent = i;
 
-    // Founder’s reserved block
     if (i === founderBlock) {
       block.classList.add("founder");
       block.title = "🔒 Reserved by The Vault of Time Founder";
@@ -27,7 +28,6 @@ document.addEventListener("DOMContentLoaded", function () {
       block.style.cursor = "not-allowed";
     }
 
-    // Claimed blocks
     if (claimedBlocks.includes(i)) {
       block.classList.add("claimed");
       block.style.cursor = "not-allowed";
@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", function () {
     grid.appendChild(block);
   }
 
-  // Drop message
   const message = document.createElement("p");
   message.style.textAlign = "center";
   message.style.color = "#d4af37";
@@ -45,7 +44,6 @@ document.addEventListener("DOMContentLoaded", function () {
   message.textContent = `Showing Founders Drop (Blocks ${visibleRange[0]}–${visibleRange[1]}). The next drop unlocks after ${visibleRange[1]} blocks are sealed.`;
   grid.insertAdjacentElement("afterend", message);
 
-  // Handle block click
   const allBlocks = document.querySelectorAll(".block");
   allBlocks.forEach((block, index) => {
     const blockNumber = index + visibleRange[0];
@@ -54,12 +52,12 @@ document.addEventListener("DOMContentLoaded", function () {
     block.addEventListener("click", () => {
       allBlocks.forEach((b) => b.classList.remove("selected"));
       block.classList.add("selected");
+      selectedBlockNumber = blockNumber;
       modal.classList.remove("hidden");
       console.log(`Clicked block ${blockNumber}`);
     });
   });
 
-  // Close modal
   if (closeButton) {
     closeButton.addEventListener("click", () => {
       modal.classList.add("hidden");
@@ -72,24 +70,66 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Handle form submit
-  if (form) {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const selectedBlock = document.querySelector(".block.selected");
-      if (!selectedBlock) return alert("Please select a block first.");
+  // === PAYPAL INTEGRATION ===
+  let paypalContainer = null;
 
-      const blockNumber = parseInt(selectedBlock.textContent);
-      if (!claimedBlocks.includes(blockNumber)) {
-        claimedBlocks.push(blockNumber);
-        localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
-        selectedBlock.classList.add("claimed");
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    if (!selectedBlockNumber) {
+      alert("Please select a block first.");
+      return;
+    }
+
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const file = document.getElementById("fileUpload").files[0];
+
+    if (!name || !email || !file) {
+      alert("Please complete all fields before checkout.");
+      return;
+    }
+
+    // Create PayPal button container dynamically
+    if (!paypalContainer) {
+      paypalContainer = document.createElement("div");
+      paypalContainer.id = "paypal-button-container";
+      paypalContainer.style.marginTop = "15px";
+      form.insertAdjacentElement("afterend", paypalContainer);
+    }
+
+    // Render PayPal button
+    paypal.Buttons({
+      createOrder: function (data, actions) {
+        return actions.order.create({
+          purchase_units: [{
+            description: `Vault Of Time Block #${selectedBlockNumber}`,
+            amount: { value: blockPrice.toFixed(2) }
+          }]
+        });
+      },
+      onApprove: function (data, actions) {
+        return actions.order.capture().then(function (details) {
+          alert(`Payment successful! Block #${selectedBlockNumber} is now yours, ${details.payer.name.given_name}!`);
+
+          // Mark block as claimed
+          claimedBlocks.push(selectedBlockNumber);
+          localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
+
+          const selectedBlock = document.querySelector(".block.selected");
+          selectedBlock.classList.remove("selected");
+          selectedBlock.classList.add("claimed");
+          selectedBlock.style.cursor = "not-allowed";
+
+          modal.classList.add("hidden");
+        });
+      },
+      onError: function (err) {
+        console.error(err);
+        alert("Payment failed. Please try again.");
       }
-
-      alert(`Block ${blockNumber} claimed! 🕰️`);
-      modal.classList.add("hidden");
-    });
-  }
+    }).render("#paypal-button-container");
+  });
 
   // === SIDE MENU ===
   const menuToggle = document.getElementById("menuToggle");
