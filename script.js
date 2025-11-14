@@ -141,31 +141,10 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("email").addEventListener("input", checkFormReady);
   document.getElementById("fileUpload").addEventListener("change", checkFormReady);
 
-  // === MENU + ACCORDION ===
-  const menuToggle = document.getElementById("menuToggle");
-  const sideMenu = document.getElementById("sideMenu");
-  const closeMenu = document.getElementById("closeMenu");
-  const overlay = document.getElementById("overlay");
-
-  menuToggle.addEventListener("click", () => {
-    sideMenu.classList.add("open");
-    overlay.classList.add("show");
-    menuToggle.classList.add("active");
-  });
-
-  closeMenu.addEventListener("click", () => {
-    sideMenu.classList.remove("open");
-    overlay.classList.remove("show");
-    menuToggle.classList.remove("active");
-  });
-
-  overlay.addEventListener("click", () => {
-    sideMenu.classList.remove("open");
-    overlay.classList.remove("show");
-    menuToggle.classList.remove("active");
-  });
-
+  // === ACCORDION ===
+function initAccordion() {
   const accordionHeaders = document.querySelectorAll(".accordion-header");
+
   accordionHeaders.forEach((header) => {
     header.addEventListener("click", () => {
       const content = header.nextElementSibling;
@@ -181,4 +160,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   });
-});
+}
+
+// Run accordion init after a short delay to ensure all HTML is loaded
+setTimeout(initAccordion, 300);
