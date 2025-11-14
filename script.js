@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   console.log("Vault of Time script loaded ✅");
 
-  // === GRID LOGIC ===
+  // === GRID LOGIC ===========================================================
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
   const closeButton = document.querySelector(".close-button");
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
   message.textContent = `Showing Founders Drop (Blocks ${visibleRange[0]}–${visibleRange[1]}). The next drop unlocks after ${visibleRange[1]} blocks are sealed.`;
   grid.insertAdjacentElement("afterend", message);
 
-  // === BLOCK CLICK ===
+  // === BLOCK CLICK ==========================================================
   document.querySelectorAll(".block").forEach((block, index) => {
     const blockNumber = index + visibleRange[0];
     if (claimedBlocks.includes(blockNumber) || blockNumber === founderBlock) return;
@@ -54,14 +54,15 @@ document.addEventListener("DOMContentLoaded", function () {
       document.querySelectorAll(".block").forEach((b) => b.classList.remove("selected"));
       block.classList.add("selected");
       selectedBlockNumber = blockNumber;
+
       modal.classList.remove("hidden");
-      console.log(`Clicked block ${blockNumber}`);
+
       document.getElementById("blockNumber").value = selectedBlockNumber;
       document.getElementById("selected-block-text").textContent = `Selected Block: #${selectedBlockNumber}`;
     });
   });
 
-  // === MODAL CLOSE ===
+  // === MODAL CLOSE ==========================================================
   if (closeButton) {
     closeButton.addEventListener("click", () => modal.classList.add("hidden"));
   }
@@ -71,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // === PAYPAL LOGIC ===
+  // === PAYPAL + UPLOAD LOGIC ================================================
   const saveBtn = document.getElementById("uploadBtn");
   const readyMsg = document.getElementById("ready-message");
   const paypalContainer = document.getElementById("paypal-button-container");
@@ -83,7 +84,29 @@ document.addEventListener("DOMContentLoaded", function () {
     return name && email && file && selectedBlockNumber;
   }
 
+  // ==== 2MB FILE SIZE VALIDATION ============================================
+  function validateFileSize() {
+    const fileInput = document.getElementById("fileUpload");
+    const file = fileInput.files[0];
+
+    if (!file) return false;
+
+    const maxSize = 2 * 1024 * 1024; // 2 MB
+    if (file.size > maxSize) {
+      alert("❌ Your file is larger than 2 MB. Please upload a smaller file.");
+      fileInput.value = "";
+      return false;
+    }
+    return true;
+  }
+
   function updateGate() {
+    if (!validateFileSize()) {
+      readyMsg.classList.remove("show");
+      paypalContainer.classList.remove("show");
+      return;
+    }
+
     if (canCheckout()) {
       readyMsg.classList.add("show");
       paypalContainer.classList.add("show");
@@ -94,24 +117,28 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // === Render PayPal Button ===
+  // === Render PayPal Button ==================================================
   function renderPayPalButton() {
     paypalContainer.innerHTML = ""; // prevent duplicates
 
     paypal.Buttons({
       style: { color: "gold", shape: "pill", label: "pay", height: 45 },
+
       createOrder: (data, actions) => {
         const label = selectedBlockNumber
           ? `Vault of Time Block #${selectedBlockNumber}`
           : "Vault of Time Block";
+
         return actions.order.create({
           purchase_units: [
             { description: label, amount: { value: blockPrice.toFixed(2) } }
           ]
         });
       },
+
       onApprove: (data, actions) => {
         return actions.order.capture().then((details) => {
+
           alert(`✅ Payment completed by ${details.payer.name.given_name}.
 Your Block #${selectedBlockNumber} is now reserved.`);
 
@@ -127,26 +154,28 @@ Your Block #${selectedBlockNumber} is now reserved.`);
 
           modal.classList.add("hidden");
 
-          // Generate certificate
           const name = document.getElementById("name").value.trim();
           generateCertificatePDF(name, selectedBlockNumber);
         });
       },
+
       onCancel: () => alert("❌ Transaction cancelled."),
       onError: (err) => {
         console.error(err);
         alert("Payment error. Please try again.");
       }
+
     }).render("#paypal-button-container");
   }
 
-  // === EVENT LISTENERS ===
+  // === EVENT LISTENERS =======================================================
   ["input", "change"].forEach(evt => {
     document.getElementById("blockForm").addEventListener(evt, updateGate, true);
   });
+
   saveBtn.addEventListener("click", updateGate);
 
-  // === MENU LOGIC ===
+  // === MENU LOGIC ============================================================
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const closeMenu = document.getElementById("closeMenu");
@@ -172,7 +201,7 @@ Your Block #${selectedBlockNumber} is now reserved.`);
     });
   }
 
-  // === ACCORDION ===
+  // === ACCORDION LOGIC =======================================================
   function initAccordion() {
     const headers = document.querySelectorAll(".accordion-header");
     if (!headers.length) return;
@@ -192,10 +221,9 @@ Your Block #${selectedBlockNumber} is now reserved.`);
       };
     });
   }
-
   setTimeout(initAccordion, 300);
 
-  // === PDF CERTIFICATE ===
+  // === CERTIFICATE GENERATOR ================================================
   function generateCertificatePDF(name, blockNumber) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
@@ -232,17 +260,10 @@ Your Block #${selectedBlockNumber} is now reserved.`);
     doc.setFontSize(14);
     doc.text(`Issued on: ${today}`, pageWidth / 2, 360, { align: "center" });
 
-    const logo = new Image();
-    logo.src = "vault-logo.jpg";
-    logo.onload = () => {
-      const size = 200;
-      doc.addImage(logo, "JPEG", pageWidth - size - 60, pageHeight - size - 60, size, size, "", "FAST");
-      doc.save(`VaultOfTime_Certificate_Block${blockNumber}.pdf`);
-    };
-    logo.onerror = () => doc.save(`VaultOfTime_Certificate_Block${blockNumber}.pdf`);
+    doc.save(`VaultOfTime_Certificate_Block${blockNumber}.pdf`);
   }
 
-  // === NOTICE BANNER LOGIC ===
+  // === NOTICE BANNER LOGIC ===================================================
   const banner = document.getElementById("rulesBanner");
   const ackBtn = document.getElementById("ackRulesBtn");
   const openHowToBtn = document.getElementById("openHowTo");
