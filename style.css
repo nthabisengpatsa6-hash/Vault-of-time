@@ -328,3 +328,20 @@ footer a:hover {
 html {
   scroll-behavior: smooth;
 }
+/* --- TOTAL BLOCKS BANNER --- */
+.total-blocks-banner {
+  background-color: #161b22;
+  color: #d4af37;
+  text-align: center;
+  font-weight: 600;
+  padding: 12px 0;
+  margin: 25px auto;
+  border-top: 1px solid #2f333a;
+  border-bottom: 1px solid #2f333a;
+  width: 100%;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.15);
+}
+
+.total-blocks-banner strong {
+  color: #ffd966;
+}
