@@ -27,18 +27,34 @@
     }
 
     /* PAYPAL UI bits */
-    #paypal-button-container { display:none; opacity:0; transition:opacity .4s ease; margin-top:12px; }
-    #paypal-button-container.show { display:block; opacity:1; }
-    #ready-message { display:none; opacity:0; color:#9be589; font-weight:600; font-size:14px; margin-top:8px; transition:opacity .4s ease, transform .3s ease; transform:translateY(4px); }
-    #ready-message.show { display:block; opacity:1; transform:translateY(0); }
+    #paypal-button-container {
+      display:none;
+      opacity:0;
+      transition:opacity .4s ease;
+      margin-top:12px;
+    }
+    #paypal-button-container.show {
+      display:block;
+      opacity:1;
+    }
+    #ready-message {
+      display:none;
+      opacity:0;
+      color:#9be589;
+      font-weight:600;
+      font-size:14px;
+      margin-top:8px;
+      transition:opacity .4s ease, transform .3s ease;
+      transform:translateY(4px);
+    }
+    #ready-message.show {
+      display:block;
+      opacity:1;
+      transform:translateY(0);
+    }
   </style>
-</head> 
-  
-<!-- PayPal SDK + jsPDF + Main Script -->
-<script src="https://www.paypal.com/sdk/js?client-id=AUK2McH5yTvRCHXypQrwShFriZMsW7Ojf16wtlHAYP8rsK92eio4l65xyVDfC0sZl2WGQWTlFrbZZnP7&currency=USD"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="script.js"></script>
-  
+</head>
+
 <body>
   <!-- MENU TOGGLE + OVERLAY -->
   <div class="menu-toggle" id="menuToggle">☰</div>
@@ -149,27 +165,26 @@
   <div class="total-blocks-banner">
     <p>🪙 The Vault will hold exactly <strong>1,000,000 blocks</strong>. Each block is a permanent digital artifact sealed until 2050.</p>
   </div>
-  
+
   <!-- MODAL -->
   <div class="modal hidden" id="modal">
     <div class="modal-content">
       <span class="close-button">&times;</span>
       <h2>Claim Your Block</h2>
-
       <p id="selected-block-text" style="font-weight:600;color:#f9d26e;"></p>
-
       <p>Fill in your details to reserve your Vault block.</p>
+
       <form id="blockForm" autocomplete="on" novalidate>
         <input type="hidden" id="blockNumber" name="block_number" value="">
-        <input type="text" id="name" name="name" placeholder="Your Name" required style="width:100%;padding:8px;margin:6px 0;border-radius:4px;border:none;">
-        <input type="email" id="email" name="email" placeholder="Your Email" required style="width:100%;padding:8px;margin:6px 0;border-radius:4px;border:none;">
-        <input type="file" id="fileUpload" name="fileUpload" accept="image/*,.txt,.pdf,.mp3,.mp4" required style="width:100%;padding:8px;margin:6px 0;border-radius:4px;border:none;background-color:#161b22;color:#e6edf3;">
+        <input type="text" id="name" name="name" placeholder="Your Name" required>
+        <input type="email" id="email" name="email" placeholder="Your Email" required>
+        <input type="file" id="fileUpload" name="fileUpload" accept="image/*,.txt,.pdf,.mp3,.mp4" required>
 
-        <!-- Gate + PayPal -->
+        <!-- Checkout Section -->
         <div id="ready-message">✅ Ready for checkout</div>
         <div id="paypal-button-container"></div>
 
-        <!-- Make sure this button DOESN'T submit the page -->
+        <!-- Save Details Button -->
         <button type="button" id="uploadBtn" style="background-color:#d4af37;color:#0d1117;border:none;padding:10px 16px;border-radius:5px;cursor:pointer;font-weight:600;margin-top:10px;">
           Save Details
         </button>
@@ -186,7 +201,9 @@
     </p>
   </footer>
 
-  <!-- Main logic -->
+  <!-- === Load scripts at the bottom to fix PayPal timing === -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AUK2McH5yTvRCHXypQrwShFriZMsW7Ojf16wtlHAYP8rsK92eio4l65xyVDfC0sZl2WGQWTlFrbZZnP7&currency=USD"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
