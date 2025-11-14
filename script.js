@@ -10,12 +10,15 @@ document.addEventListener("DOMContentLoaded", function () {
   const totalBlocks = 1000;
   const visibleRange = [1, 100];
   const founderBlock = 1;
-  const blockPrice = 5.00; // USD price per block
+  const blockPrice = 5.00; // USD
 
   const claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   let selectedBlockNumber = null;
 
-  // Generate blocks
+  // 🧹 Clear any previous grid (fix for duplication)
+  grid.innerHTML = "";
+
+  // Generate grid
   for (let i = visibleRange[0]; i <= visibleRange[1]; i++) {
     const block = document.createElement("div");
     block.classList.add("block");
@@ -36,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
     grid.appendChild(block);
   }
 
+  // Message
   const message = document.createElement("p");
   message.style.textAlign = "center";
   message.style.color = "#d4af37";
@@ -70,37 +74,36 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // === PAYPAL INTEGRATION ===
+  // === PAYPAL LOGIC ===
   let paypalContainer = null;
+  const saveBtn = form.querySelector('button[type="submit"]');
 
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
+  function checkFormReady() {
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const file = document.getElementById("fileUpload").files.length > 0;
 
-    if (!selectedBlockNumber) {
-      alert("Please select a block first.");
-      return;
+    if (name && email && file) {
+      saveBtn.textContent = "Proceed to PayPal 💳";
+      saveBtn.style.backgroundColor = "#333";
+      saveBtn.style.cursor = "not-allowed";
+      saveBtn.disabled = true;
+      showPayPalButton();
     }
+  }
 
-    const name = document.getElementById("name").value;
-    const email = document.getElementById("email").value;
-    const file = document.getElementById("fileUpload").files[0];
-
-    if (!name || !email || !file) {
-      alert("Please complete all fields before checkout.");
-      return;
-    }
-
-    // Create PayPal button container dynamically
+  function showPayPalButton() {
     if (!paypalContainer) {
       paypalContainer = document.createElement("div");
       paypalContainer.id = "paypal-button-container";
       paypalContainer.style.marginTop = "15px";
+      paypalContainer.style.opacity = "0";
+      paypalContainer.style.transition = "opacity 0.6s ease"; // ✨ smooth fade-in
       form.insertAdjacentElement("afterend", paypalContainer);
     }
 
-    // Render PayPal button
     paypal.Buttons({
-      createOrder: function (data, actions) {
+      createOrder: (data, actions) => {
         return actions.order.create({
           purchase_units: [{
             description: `Vault Of Time Block #${selectedBlockNumber}`,
@@ -108,11 +111,10 @@ document.addEventListener("DOMContentLoaded", function () {
           }]
         });
       },
-      onApprove: function (data, actions) {
-        return actions.order.capture().then(function (details) {
-          alert(`Payment successful! Block #${selectedBlockNumber} is now yours, ${details.payer.name.given_name}!`);
+      onApprove: (data, actions) => {
+        return actions.order.capture().then((details) => {
+          alert(`✅ Payment successful! Block #${selectedBlockNumber} is now yours, ${details.payer.name.given_name}.`);
 
-          // Mark block as claimed
           claimedBlocks.push(selectedBlockNumber);
           localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
 
@@ -124,14 +126,22 @@ document.addEventListener("DOMContentLoaded", function () {
           modal.classList.add("hidden");
         });
       },
-      onError: function (err) {
+      onError: (err) => {
         console.error(err);
         alert("Payment failed. Please try again.");
       }
     }).render("#paypal-button-container");
-  });
 
-  // === SIDE MENU ===
+    // trigger the fade-in after rendering
+    setTimeout(() => paypalContainer.style.opacity = "1", 200);
+  }
+
+  // Listen for input changes
+  document.getElementById("name").addEventListener("input", checkFormReady);
+  document.getElementById("email").addEventListener("input", checkFormReady);
+  document.getElementById("fileUpload").addEventListener("change", checkFormReady);
+
+  // === MENU + ACCORDION ===
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const closeMenu = document.getElementById("closeMenu");
@@ -155,7 +165,6 @@ document.addEventListener("DOMContentLoaded", function () {
     menuToggle.classList.remove("active");
   });
 
-  // === ACCORDION ===
   const accordionHeaders = document.querySelectorAll(".accordion-header");
   accordionHeaders.forEach((header) => {
     header.addEventListener("click", () => {
