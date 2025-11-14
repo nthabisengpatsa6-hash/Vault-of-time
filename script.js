@@ -241,4 +241,41 @@ Your Block #${selectedBlockNumber} is now reserved.`);
     };
     logo.onerror = () => doc.save(`VaultOfTime_Certificate_Block${blockNumber}.pdf`);
   }
+
+  // === NOTICE BANNER LOGIC ===
+  const banner = document.getElementById("rulesBanner");
+  const ackBtn = document.getElementById("ackRulesBtn");
+  const openHowToBtn = document.getElementById("openHowTo");
+  const openRulesBtn = document.getElementById("openRules");
+
+  if (banner && !localStorage.getItem("vaultRulesAcknowledged")) {
+    banner.classList.remove("hidden");
+  }
+
+  if (ackBtn) {
+    ackBtn.addEventListener("click", () => {
+      banner.classList.add("hidden");
+      localStorage.setItem("vaultRulesAcknowledged", "true");
+    });
+  }
+
+  function openAccordionByText(text) {
+    document.querySelectorAll(".accordion-header").forEach(header => {
+      if (header.textContent.includes(text)) {
+        const content = header.nextElementSibling;
+        content.classList.add("show");
+        header.classList.add("active");
+        sideMenu.classList.add("open");
+        overlay.classList.add("show");
+      }
+    });
+  }
+
+  if (openHowToBtn) {
+    openHowToBtn.addEventListener("click", () => openAccordionByText("How To Buy"));
+  }
+
+  if (openRulesBtn) {
+    openRulesBtn.addEventListener("click", () => openAccordionByText("Vault Rules"));
+  }
 });
