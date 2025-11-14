@@ -1,4 +1,4 @@
-l<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,6 +7,14 @@ l<!DOCTYPE html>
   <link rel="stylesheet" href="style.css" />
 
   <style>
+    /* RESET to remove stray top line / spacing */
+    html, body {
+      margin: 0;
+      padding: 0;
+      border: none;
+      background-color: #0d1117;
+    }
+
     /* CLOCK ANIMATION */
     .clock-icon {
       display:inline-block;
@@ -93,6 +101,13 @@ l<!DOCTYPE html>
       white-space:nowrap;
     }
     .hidden { display:none !important; }
+
+    /* header spacing tweak */
+    h1 {
+      margin-top: 0;
+      padding-top: 10px;
+      text-align:center;
+    }
   </style>
 </head>
 
@@ -136,6 +151,7 @@ l<!DOCTYPE html>
         <button class="accordion-header">⚖️ Vault Rules</button>
         <div class="accordion-content">
           <ul>
+            <li>📦 All uploads must be <strong>under 2 MB</strong> in size.</li>
             <li>❌ No NSFW or illegal content — will be deleted without refund.</li>
             <li>❌ No copyrighted material unless you own it.</li>
             <li>🚫 No hate speech or discriminatory content of any kind.</li>
@@ -157,7 +173,7 @@ l<!DOCTYPE html>
           <p><strong>2. When will The Vault open?</strong><br>In 2050.</p>
           <p><strong>3. What can I store?</strong><br>Anything meaningful — images, letters, or short audio clips.</p>
           <p><strong>4. How is the content stored?</strong><br>Your uploads are kept securely in encrypted off-site cold storage. Even if the creators are gone, the Vault will open in 2050.</p>
-          <p><strong>5. Do you allow partnerships or ads?</strong><br>Yes — email <a href="mailto:hello@vaultoftime.com">hello@vaultoftime.com</a> for sponsorship or advertising info.</p>
+          <p><strong>5. Do you allow partnerships or ads?</strong><br>Yes — email <a href="mailto:hello@vaultoftime.com">hello@vaultoftime.com</a> for sponsorship info.</p>
           <p><strong>6. What happens after I buy a block?</strong><br>Your block locks and dims. Your memory remains hidden until 2050 (except for advertising blocks).</p>
         </div>
       </div>
@@ -245,15 +261,15 @@ l<!DOCTYPE html>
   <!-- FOOTER -->
   <footer>
     <p>
-      <a href="contact.html">📩 Contact Us</a> |
+      <a href="contact.html">📩 Contact Us</a> | 
       <a href="terms.html">📜 Terms & Conditions</a><br>
       <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</small>
     </p>
   </footer>
 
-  <!-- === Load scripts at the bottom to fix PayPal timing === -->
+  <!-- === Scripts === -->
   <script src="https://www.paypal.com/sdk/js?client-id=AUK2McH5yTvRCHXypQrwShFriZMsW7Ojf16wtlHAYP8rsK92eio4l65xyVDfC0sZl2WGQWTlFrbZZnP7&currency=USD"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="script.js"></script>
 </body>
-          </html>
+</html>
