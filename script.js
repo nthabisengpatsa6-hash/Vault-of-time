@@ -1,7 +1,81 @@
-document.addEventListener("DOMContentLoaded", function () {
+// === FIREBASE IMPORTS & SETUP ===============================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+// Your Firebase config (from console)
+const firebaseConfig = {
+  apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
+  authDomain: "vault-of-time-e6c03.firebaseapp.com",
+  projectId: "vault-of-time-e6c03",
+  storageBucket: "vault-of-time-e6c03.firebasestorage.app",
+  messagingSenderId: "941244238426",
+  appId: "1:941244238426:web:80f80b5237b84b1740e663"
+};
+
+// Init Firebase + Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const blocksCollection = collection(db, "blocks");
+
+// This will be our single source of truth for claimed blocks
+let claimedBlocks = [];
+
+// Load existing claimed blocks from Firestore
+async function loadClaimedBlocksFromFirestore() {
+  try {
+    const snapshot = await getDocs(blocksCollection);
+    claimedBlocks = snapshot.docs.map(docSnap => Number(docSnap.id));
+    // Keep a local fallback
+    localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
+    console.log("Loaded claimed blocks from Firestore:", claimedBlocks);
+  } catch (err) {
+    console.error("Error loading claimed blocks from Firestore, falling back to localStorage:", err);
+    claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
+  }
+}
+
+// Check if a specific block is already claimed in Firestore
+async function isBlockClaimedRemote(blockNumber) {
+  try {
+    const snap = await getDoc(doc(blocksCollection, String(blockNumber)));
+    if (snap.exists()) return true;
+    return false;
+  } catch (err) {
+    console.error("Error checking block in Firestore:", err);
+    // Fallback to local cache
+    return claimedBlocks.includes(blockNumber);
+  }
+}
+
+// Save a newly claimed block to Firestore (Option A: minimal data)
+async function saveBlockToFirestore(blockNumber, name, email) {
+  try {
+    await setDoc(doc(blocksCollection, String(blockNumber)), {
+      name,
+      email,
+      purchasedAt: serverTimestamp()
+    });
+    console.log(`Block #${blockNumber} saved to Firestore.`);
+  } catch (err) {
+    console.error("Error saving block to Firestore:", err);
+  }
+}
+
+// ============================================================================
+// MAIN APP LOGIC
+// ============================================================================
+document.addEventListener("DOMContentLoaded", async function () {
   console.log("Vault of Time script loaded ✅");
 
-  // === GRID LOGIC ===========================================================
+  // === BASIC DOM REFS =======================================================
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
   const closeButton = document.querySelector(".close-button");
@@ -12,12 +86,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const founderBlock = 1;
   const blockPrice = 6.00; // USD
 
-  const claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   let selectedBlockNumber = null;
 
+  // === LOAD CLAIMED BLOCKS FROM FIRESTORE FIRST =============================
+  await loadClaimedBlocksFromFirestore();
+
+  // === GRID LOGIC ===========================================================
   grid.innerHTML = "";
 
-  // Generate grid blocks
   for (let i = visibleRange[0]; i <= visibleRange[1]; i++) {
     const block = document.createElement("div");
     block.classList.add("block");
@@ -48,9 +124,24 @@ document.addEventListener("DOMContentLoaded", function () {
   // === BLOCK CLICK ==========================================================
   document.querySelectorAll(".block").forEach((block, index) => {
     const blockNumber = index + visibleRange[0];
+
     if (claimedBlocks.includes(blockNumber) || blockNumber === founderBlock) return;
 
-    block.addEventListener("click", () => {
+    block.addEventListener("click", async () => {
+      // Double-check remotely in case it was taken since page load
+      const alreadyClaimed = await isBlockClaimedRemote(blockNumber);
+      if (alreadyClaimed) {
+        alert("⚠️ This block has just been claimed. Please pick another one.");
+        block.classList.add("claimed");
+        block.classList.remove("selected");
+        block.style.cursor = "not-allowed";
+        if (!claimedBlocks.includes(blockNumber)) {
+          claimedBlocks.push(blockNumber);
+          localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
+        }
+        return;
+      }
+
       document.querySelectorAll(".block").forEach((b) => b.classList.remove("selected"));
       block.classList.add("selected");
       selectedBlockNumber = blockNumber;
@@ -58,7 +149,8 @@ document.addEventListener("DOMContentLoaded", function () {
       modal.classList.remove("hidden");
 
       document.getElementById("blockNumber").value = selectedBlockNumber;
-      document.getElementById("selected-block-text").textContent = `Selected Block: #${selectedBlockNumber}`;
+      document.getElementById("selected-block-text").textContent =
+        `Selected Block: #${selectedBlockNumber}`;
     });
   });
 
@@ -100,7 +192,9 @@ document.addEventListener("DOMContentLoaded", function () {
     return true;
   }
 
+  // Show/hide PayPal button depending on form completeness + size
   function updateGate() {
+    // Validate file size first
     if (!validateFileSize()) {
       readyMsg.classList.remove("show");
       paypalContainer.classList.remove("show");
@@ -121,59 +215,92 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderPayPalButton() {
     paypalContainer.innerHTML = ""; // prevent duplicates
 
-    paypal.Buttons({
-      style: { color: "gold", shape: "pill", label: "pay", height: 45 },
+    (async () => {
+      // Final safety check: has this block been claimed before rendering buttons?
+      const alreadyClaimed = await isBlockClaimedRemote(selectedBlockNumber);
+      if (alreadyClaimed) {
+        alert("⚠️ This block has just been claimed. Please choose a different block.");
+        modal.classList.add("hidden");
 
-      createOrder: (data, actions) => {
-        const label = selectedBlockNumber
-          ? `Vault of Time Block #${selectedBlockNumber}`
-          : "Vault of Time Block";
+        const selectedBlock = document.querySelector(".block.selected");
+        if (selectedBlock) {
+          selectedBlock.classList.remove("selected");
+          selectedBlock.classList.add("claimed");
+          selectedBlock.style.cursor = "not-allowed";
+        }
 
-        return actions.order.create({
-          purchase_units: [
-            { description: label, amount: { value: blockPrice.toFixed(2) } }
-          ]
-        });
-      },
-
-      onApprove: (data, actions) => {
-        return actions.order.capture().then((details) => {
-
-          alert(`✅ Payment completed by ${details.payer.name.given_name}.
-Your Block #${selectedBlockNumber} is now reserved.`);
-
+        if (!claimedBlocks.includes(selectedBlockNumber)) {
           claimedBlocks.push(selectedBlockNumber);
           localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
+        }
 
-          const selectedBlock = document.querySelector(".block.selected");
-          if (selectedBlock) {
-            selectedBlock.classList.remove("selected");
-            selectedBlock.classList.add("claimed");
-            selectedBlock.style.cursor = "not-allowed";
-          }
-
-          modal.classList.add("hidden");
-
-          const name = document.getElementById("name").value.trim();
-          generateCertificatePDF(name, selectedBlockNumber);
-        });
-      },
-
-      onCancel: () => alert("❌ Transaction cancelled."),
-      onError: (err) => {
-        console.error(err);
-        alert("Payment error. Please try again.");
+        return;
       }
 
-    }).render("#paypal-button-container");
+      paypal.Buttons({
+        style: { color: "gold", shape: "pill", label: "pay", height: 45 },
+
+        createOrder: (data, actions) => {
+          const label = selectedBlockNumber
+            ? `Vault of Time Block #${selectedBlockNumber}`
+            : "Vault of Time Block";
+
+          return actions.order.create({
+            purchase_units: [
+              { description: label, amount: { value: blockPrice.toFixed(2) } }
+            ]
+          });
+        },
+
+        onApprove: (data, actions) => {
+          return actions.order.capture().then(async (details) => {
+            alert(`✅ Payment completed by ${details.payer.name.given_name}.
+Your Block #${selectedBlockNumber} is now reserved.`);
+
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+
+            // Save to Firestore
+            await saveBlockToFirestore(selectedBlockNumber, name, email);
+
+            // Update local cache + UI
+            if (!claimedBlocks.includes(selectedBlockNumber)) {
+              claimedBlocks.push(selectedBlockNumber);
+              localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
+            }
+
+            const selectedBlock = document.querySelector(".block.selected");
+            if (selectedBlock) {
+              selectedBlock.classList.remove("selected");
+              selectedBlock.classList.add("claimed");
+              selectedBlock.style.cursor = "not-allowed";
+            }
+
+            modal.classList.add("hidden");
+
+            // Generate PDF certificate
+            generateCertificatePDF(name, selectedBlockNumber);
+          });
+        },
+
+        onCancel: () => alert("❌ Transaction cancelled."),
+        onError: (err) => {
+          console.error(err);
+          alert("Payment error. Please try again.");
+        }
+
+      }).render("#paypal-button-container");
+    })();
   }
 
   // === EVENT LISTENERS =======================================================
   ["input", "change"].forEach(evt => {
-    document.getElementById("blockForm").addEventListener(evt, updateGate, true);
+    form.addEventListener(evt, updateGate, true);
   });
 
-  saveBtn.addEventListener("click", updateGate);
+  if (saveBtn) {
+    saveBtn.addEventListener("click", updateGate);
+  }
 
   // === MENU LOGIC ============================================================
   const menuToggle = document.getElementById("menuToggle");
@@ -231,18 +358,22 @@ Your Block #${selectedBlockNumber} is now reserved.`);
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
+    // Background
     doc.setFillColor(13, 17, 23);
     doc.rect(0, 0, pageWidth, pageHeight, "F");
 
+    // Border
     doc.setDrawColor(212, 175, 55);
     doc.setLineWidth(6);
     doc.rect(30, 30, pageWidth - 60, pageHeight - 60);
 
+    // Title
     doc.setTextColor(212, 175, 55);
     doc.setFont("times", "bold");
     doc.setFontSize(30);
     doc.text("Vault Of Time Certificate of Ownership", pageWidth / 2, 120, { align: "center" });
 
+    // Body
     doc.setFont("times", "normal");
     doc.setFontSize(18);
     doc.text("This certifies that", pageWidth / 2, 200, { align: "center" });
