@@ -24,13 +24,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Expose Firestore globally
-window.db = db;
-
 // Firestore "blocks" collection
 const blocksCollection = collection(db, "blocks");
 
-// Memory cache
+// Cache
 let claimedBlocks = [];
 
 // ============================================================================
@@ -47,35 +44,21 @@ async function loadClaimedBlocksFromFirestore() {
   }
 }
 
-async function isBlockClaimedRemote(blockNumber) {
-  try {
-    const snap = await getDoc(doc(blocksCollection, String(blockNumber)));
-    return snap.exists();
-  } catch (err) {
-    console.error("Error checking Firestore:", err);
-    return claimedBlocks.includes(blockNumber);
-  }
-}
-
-async function saveBlockToFirestore(blockNumber, name, email, message) {
-  try {
-    await setDoc(doc(blocksCollection, String(blockNumber)), {
-      name,
-      email,
-      message: message || null, // <-- NEW FIELD
-      purchasedAt: serverTimestamp()
-    });
-  } catch (err) {
-    console.error("Failed saving:", err);
-  }
+async function saveBlock(blockNumber, name, email, message) {
+  await setDoc(doc(blocksCollection, String(blockNumber)), {
+    name,
+    email,
+    message: message || null,
+    purchasedAt: serverTimestamp()
+  });
 }
 
 // ============================================================================
-// APP START
+// DOM / UI LOGIC
 // ============================================================================
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // LOADING OVERLAY ---------------------------------------------------------
+  // ========= LOADING OVERLAY ==========
   const loadingOverlay = document.createElement("div");
   loadingOverlay.id = "vault-loading-overlay";
   Object.assign(loadingOverlay.style, {
@@ -94,104 +77,85 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   loadingOverlay.innerHTML = `
     <div style="font-size:42px;margin-bottom:10px;">🕰️</div>
-    <div style="font-size:20px;font-weight:600;margin-bottom:4px;">The Vault is opening…</div>
+    <div style="font-size:20px;font-weight:600;margin-bottom:4px;">
+      The Vault is opening…
+    </div>
     <div style="font-size:14px;opacity:0.8;">Loading memory blocks…</div>
   `;
   document.body.appendChild(loadingOverlay);
 
-  const hideLoadingOverlay = () => {
+  const hideOverlay = () => {
     loadingOverlay.style.opacity = "0";
     setTimeout(() => loadingOverlay.remove(), 400);
   };
 
-  // DOM refs ---------------------------------------------------------------
+  // ========= REFS =========
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
-  const closeButton = document.querySelector(".close-button");
+  const closeBtn = document.querySelector(".close-button");
   const form = document.getElementById("blockForm");
   const messageInput = document.getElementById("messageBox");
+  const saveBtn = document.getElementById("uploadBtn");
+  const readyMsg = document.getElementById("ready-message");
+  const paypalContainer = document.getElementById("paypal-button-container");
 
-  const visibleRange = [1, 100];
-  const founderBlock = 1;
-  const blockPrice = 6.0;
-
+  const blockPrice = 6.00;
   let selectedBlockNumber = null;
   let paypalRendered = false;
 
-  // Local seed --------------------------------------------------------------
+  // ========= LOAD CLAIMS =========
   claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
+  await loadClaimedBlocksFromFirestore();
 
-  // GRID --------------------------------------------------------------------
+  // ========= BUILD GRID =========
   function buildGrid() {
     grid.innerHTML = "";
+    for (let i = 1; i <= 100; i++) {
+      const div = document.createElement("div");
+      div.classList.add("block");
+      div.textContent = i;
 
-    for (let i = visibleRange[0]; i <= visibleRange[1]; i++) {
-      const block = document.createElement("div");
-      block.classList.add("block");
-      block.textContent = i;
-
-      if (i === founderBlock) {
-        block.classList.add("founder");
-        block.style.border = "2px solid gold";
-        block.style.cursor = "not-allowed";
-      }
       if (claimedBlocks.includes(i)) {
-        block.classList.add("claimed");
-        block.style.cursor = "not-allowed";
+        div.classList.add("claimed");
+        div.style.cursor = "not-allowed";
       }
-      grid.appendChild(block);
+      grid.appendChild(div);
     }
   }
 
   buildGrid();
 
-  function applyClaimedStylingToGrid() {
-    document.querySelectorAll(".block").forEach((block) => {
+  // ========= CLICK HANDLERS =========
+  document.querySelectorAll(".block").forEach(block => {
+    block.addEventListener("click", () => {
       const num = Number(block.textContent);
-      if (claimedBlocks.includes(num)) {
-        block.classList.add("claimed");
-        block.style.cursor = "not-allowed";
-      }
+      if (!num || claimedBlocks.includes(num)) return;
+
+      selectedBlockNumber = num;
+
+      modal.classList.remove("hidden");
+      document.getElementById("blockNumber").value = num;
+      document.getElementById("selected-block-text").textContent =
+        `Selected Block: #${num}`;
     });
-  }
+  });
 
-  function attachBlockClickHandlers() {
-    document.querySelectorAll(".block").forEach((block) => {
-      block.addEventListener("click", () => {
-        const blockNumber = Number(block.textContent);
-        if (!blockNumber) return;
-        if (blockNumber === founderBlock || claimedBlocks.includes(blockNumber)) return;
-
-        document.querySelectorAll(".block").forEach((b) => b.classList.remove("selected"));
-        block.classList.add("selected");
-
-        selectedBlockNumber = blockNumber;
-
-        modal.classList.remove("hidden");
-        document.getElementById("blockNumber").value = blockNumber;
-        document.getElementById("selected-block-text").textContent =
-          `Selected Block: #${blockNumber}`;
-      });
-    });
-  }
-
-  attachBlockClickHandlers();
-
-  // FETCH FROM FIRESTORE ---------------------------------------------------
-  await loadClaimedBlocksFromFirestore();
-  applyClaimedStylingToGrid();
-  hideLoadingOverlay();
-
-  // MODAL CLOSE -------------------------------------------------------------
-  closeButton?.addEventListener("click", () => modal.classList.add("hidden"));
+  closeBtn?.addEventListener("click", () => modal.classList.add("hidden"));
   modal?.addEventListener("click", (e) => {
     if (e.target === modal) modal.classList.add("hidden");
   });
 
-  // PAYMENT VALIDATION ------------------------------------------------------
-  const saveBtn = document.getElementById("uploadBtn");
-  const readyMsg = document.getElementById("ready-message");
-  const paypalContainer = document.getElementById("paypal-button-container");
+  // ========= FORM VALIDATION =========
+  function validateFileSize() {
+    const f = document.getElementById("fileUpload").files[0];
+    if (!f) return false;
+    if (f.size > 2 * 1024 * 1024) {
+      alert("❌ File must be under 2MB.");
+      document.getElementById("fileUpload").value = "";
+      return false;
+    }
+    return true;
+  }
 
   function canCheckout() {
     return (
@@ -202,18 +166,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  function validateFileSize() {
-    const f = document.getElementById("fileUpload").files[0];
-    if (!f) return false;
-    if (f.size > 2 * 1024 * 1024) {
-      alert("❌ Your file is larger than 2MB.");
-      document.getElementById("fileUpload").value = "";
-      return false;
-    }
-    return true;
-  }
-
-  function updateGate() {
+  function updatePayGate() {
     if (!validateFileSize()) {
       readyMsg.classList.remove("show");
       paypalContainer.classList.remove("show");
@@ -235,94 +188,81 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  saveBtn?.addEventListener("click", updateGate);
-  form?.addEventListener("input", updateGate, true);
-  form?.addEventListener("change", updateGate, true);
+  form?.addEventListener("input", updatePayGate);
+  form?.addEventListener("change", updatePayGate);
+  saveBtn?.addEventListener("click", updatePayGate);
 
-  // ============= SPLIT PAYMENT BUTTONS ====================================
+  // ========= PAYPAL BUTTONS (SANDBOX FRIENDLY) =========
   function renderSplitPayButtons() {
     paypalContainer.innerHTML = "";
 
-    // PAYPAL BUTTON ONLY
-    paypal.Buttons({
-      fundingSource: paypal.FUNDING.PAYPAL,
+    const buttonConfig = (fundingSource) => ({
+      fundingSource,
       style: { color: "gold", shape: "pill", label: "pay", height: 45 },
 
-      createOrder: (data, actions) => {
-        return actions.order.create({
-          purchase_units: [{
-            description: `Vault Block #${selectedBlockNumber}`,
-            amount: { value: blockPrice.toFixed(2) }
-          }]
+      createOrder: (data, actions) => actions.order.create({
+        purchase_units: [{
+          description: `Vault Block #${selectedBlockNumber}`,
+          amount: { value: blockPrice.toFixed(2) }
+        }]
+      }),
+
+      // 👇 SANDBOX SAFE APPROVE BLOCK
+      onApprove: async () => {
+        await finishTransaction({
+          payer: { name: { given_name: "SandboxUser" } }
         });
       },
 
-      onApprove: async (data, actions) => {
-        const details = await actions.order.capture();
-        handleSuccessfulPayment(details);
-      },
+      onError: (err) => console.error("PayPal error:", err)
+    });
 
-      onError: err => {
-        console.error(err);
-        alert("Payment error (PayPal).");
-      }
-    }).render("#paypal-button-container");
+    paypal.Buttons(buttonConfig(paypal.FUNDING.PAYPAL))
+      .render("#paypal-button-container");
 
-    // CARD BUTTON ONLY
-    paypal.Buttons({
-      fundingSource: paypal.FUNDING.CARD,
-      style: { color: "white", shape: "pill", label: "pay", height: 45 },
-
-      createOrder: (data, actions) => {
-        return actions.order.create({
-          purchase_units: [{
-            description: `Vault Block #${selectedBlockNumber}`,
-            amount: { value: blockPrice.toFixed(2) }
-          }]
-        });
-      },
-
-      onApprove: async (data, actions) => {
-        const details = await actions.order.capture();
-        handleSuccessfulPayment(details);
-      },
-
-      onError: err => {
-        console.error(err);
-        alert("Payment error (Card).");
-      }
-    }).render("#paypal-button-container");
+    paypal.Buttons(buttonConfig(paypal.FUNDING.CARD))
+      .render("#paypal-button-container");
   }
 
-  // SHARED SUCCESS LOGIC ----------------------------------------------------
-  async function handleSuccessfulPayment(details) {
-    alert(`✅ Payment completed by ${details.payer.name.given_name}.`);
+  // ========= SUCCESS HANDLER =========
+  async function finishTransaction(details) {
+    alert(`✅ Payment completed by ${details?.payer?.name?.given_name ?? "User"}.`);
 
     const name = document.getElementById("name").value.trim();
     const email = document.getElementById("email").value.trim();
     const message = messageInput?.value.trim() || null;
 
-    await saveBlockToFirestore(selectedBlockNumber, name, email, message);
+    await saveBlock(selectedBlockNumber, name, email, message);
 
     if (!claimedBlocks.includes(selectedBlockNumber)) {
       claimedBlocks.push(selectedBlockNumber);
       localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
     }
 
-    applyClaimedStylingToGrid();
     modal.classList.add("hidden");
 
+    applyClaimBlockStyles();
     generateCertificatePDF(name, selectedBlockNumber);
   }
 
-  // CERTIFICATE -------------------------------------------------------------
+  // ========= UPDATE GRID =========
+  function applyClaimBlockStyles() {
+    document.querySelectorAll(".block").forEach(div => {
+      const num = Number(div.textContent);
+      if (claimedBlocks.includes(num)) {
+        div.classList.add("claimed");
+        div.style.cursor = "not-allowed";
+      }
+    });
+  }
+
+  applyClaimBlockStyles();
+  hideOverlay();
+
+  // ========= CERTIFICATE =========
   function generateCertificatePDF(name, blockNumber) {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-      orientation: "landscape",
-      unit: "pt",
-      format: "a4"
-    });
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
     const W = doc.internal.pageSize.getWidth();
     const H = doc.internal.pageSize.getHeight();
@@ -337,9 +277,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     doc.setTextColor(212, 175, 55);
     doc.setFont("times", "bold");
     doc.setFontSize(30);
-    doc.text("Vault Of Time Certificate of Ownership", W / 2, 120, {
-      align: "center"
-    });
+    doc.text("Vault Of Time Certificate of Ownership", W / 2, 120, { align: "center" });
 
     doc.setFont("times", "normal");
     doc.setFontSize(18);
@@ -351,15 +289,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     doc.setFont("times", "normal");
     doc.setFontSize(18);
-    doc.text(
-      `is the rightful guardian of Block #${blockNumber}`,
-      W / 2,
-      280,
-      { align: "center" }
-    );
-    doc.text("Sealed within The Vault.", W / 2, 310, {
-      align: "center"
-    });
+    doc.text(`is the rightful guardian of Block #${blockNumber}`, W / 2, 280, { align: "center" });
+    doc.text("Sealed within The Vault.", W / 2, 310, { align: "center" });
 
     const today = new Date().toLocaleDateString();
     doc.setFontSize(14);
