@@ -23,11 +23,9 @@ const firebaseConfig = {
 // Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-// Firestore "blocks" collection
 const blocksCollection = collection(db, "blocks");
 
-// Cache
+// Local cache of claimed blocks
 let claimedBlocks = [];
 
 // ============================================================================
@@ -35,8 +33,8 @@ let claimedBlocks = [];
 // ============================================================================
 async function loadClaimedBlocksFromFirestore() {
   try {
-    const snapshot = await getDocs(blocksCollection);
-    claimedBlocks = snapshot.docs.map((d) => Number(d.id));
+    const snap = await getDocs(blocksCollection);
+    claimedBlocks = snap.docs.map(d => Number(d.id));
     localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
   } catch (err) {
     console.error("Error loading Firestore:", err);
@@ -44,23 +42,36 @@ async function loadClaimedBlocksFromFirestore() {
   }
 }
 
-async function saveBlock(blockNumber, name, email, message) {
-  await setDoc(doc(blocksCollection, String(blockNumber)), {
-    name,
-    email,
-    message: message || null,
-    purchasedAt: serverTimestamp()
-  });
+async function saveBlockToFirestore(blockNumber, name, email, message) {
+  try {
+    await setDoc(doc(blocksCollection, String(blockNumber)), {
+      name,
+      email,
+      message: message || null,
+      purchasedAt: serverTimestamp()
+    });
+  } catch (err) {
+    console.error("Failed saving block:", err);
+  }
+}
+
+async function fetchBlockData(blockNumber) {
+  try {
+    const snap = await getDoc(doc(blocksCollection, String(blockNumber)));
+    if (snap.exists()) return snap.data();
+    return null;
+  } catch (err) {
+    console.error("Error fetching block:", err);
+    return null;
+  }
 }
 
 // ============================================================================
-// DOM / UI LOGIC
+// MAIN APP
 // ============================================================================
 document.addEventListener("DOMContentLoaded", async () => {
-
-  // ========= LOADING OVERLAY ==========
+  // ---------- LOADING OVERLAY ----------
   const loadingOverlay = document.createElement("div");
-  loadingOverlay.id = "vault-loading-overlay";
   Object.assign(loadingOverlay.style, {
     position: "fixed",
     inset: "0",
@@ -77,9 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   loadingOverlay.innerHTML = `
     <div style="font-size:42px;margin-bottom:10px;">🕰️</div>
-    <div style="font-size:20px;font-weight:600;margin-bottom:4px;">
-      The Vault is opening…
-    </div>
+    <div style="font-size:20px;font-weight:600;margin-bottom:4px;">The Vault is opening…</div>
     <div style="font-size:14px;opacity:0.8;">Loading memory blocks…</div>
   `;
   document.body.appendChild(loadingOverlay);
@@ -89,68 +98,132 @@ document.addEventListener("DOMContentLoaded", async () => {
     setTimeout(() => loadingOverlay.remove(), 400);
   };
 
-  // ========= REFS =========
+  // ---------- DOM REFS ----------
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
-  const closeBtn = document.querySelector(".close-button");
+  const closeButton = document.querySelector(".close-button");
   const form = document.getElementById("blockForm");
-  const messageInput = document.getElementById("messageBox");
-  const saveBtn = document.getElementById("uploadBtn");
-  const readyMsg = document.getElementById("ready-message");
+  const messageInput = document.getElementById("message"); // 💥 correct ID
+  const viewModal = document.getElementById("viewModal");
+  const viewClose = document.querySelector(".close-view");
+  const viewBlockTitle = document.getElementById("viewBlockTitle");
+  const viewBlockMessage = document.getElementById("viewBlockMessage");
+  const viewBlockMeta = document.getElementById("viewBlockMeta");
+  const viewBlockMedia = document.getElementById("viewBlockMedia");
+
   const paypalContainer = document.getElementById("paypal-button-container");
+  const readyMsg = document.getElementById("ready-message");
+  const uploadBtn = document.getElementById("uploadBtn");
 
-  const blockPrice = 6.00;
+  const blockPrice = 6.0;
   let selectedBlockNumber = null;
-  let paypalRendered = false;
+  let paypalButtonsInstance = null;
 
-  // ========= LOAD CLAIMS =========
+  // ---------- LOAD CLAIMED BLOCKS ----------
   claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   await loadClaimedBlocksFromFirestore();
 
-  // ========= BUILD GRID =========
+  // ---------- BUILD GRID ----------
   function buildGrid() {
     grid.innerHTML = "";
     for (let i = 1; i <= 100; i++) {
-      const div = document.createElement("div");
-      div.classList.add("block");
-      div.textContent = i;
+      const block = document.createElement("div");
+      block.classList.add("block");
+      block.textContent = i;
 
       if (claimedBlocks.includes(i)) {
-        div.classList.add("claimed");
-        div.style.cursor = "not-allowed";
+        block.classList.add("claimed");
+        block.style.cursor = "not-allowed";
       }
-      grid.appendChild(div);
+
+      grid.appendChild(block);
     }
   }
 
   buildGrid();
 
-  // ========= CLICK HANDLERS =========
-  document.querySelectorAll(".block").forEach(block => {
-    block.addEventListener("click", () => {
-      const num = Number(block.textContent);
-      if (!num || claimedBlocks.includes(num)) return;
-
-      selectedBlockNumber = num;
-
-      modal.classList.remove("hidden");
-      document.getElementById("blockNumber").value = num;
-      document.getElementById("selected-block-text").textContent =
-        `Selected Block: #${num}`;
+  function refreshClaimedStyles() {
+    document.querySelectorAll(".block").forEach(div => {
+      const num = Number(div.textContent);
+      if (claimedBlocks.includes(num)) {
+        div.classList.add("claimed");
+        div.style.cursor = "not-allowed";
+        div.classList.remove("selected");
+      }
     });
-  });
+  }
+  refreshClaimedStyles();
 
-  closeBtn?.addEventListener("click", () => modal.classList.add("hidden"));
+  // ---------- BLOCK CLICK HANDLING ----------
+  function attachBlockHandlers() {
+    document.querySelectorAll(".block").forEach(block => {
+      block.addEventListener("click", async () => {
+        const num = Number(block.textContent);
+        if (!num) return;
+
+        // If already claimed -> open view modal
+        if (claimedBlocks.includes(num)) {
+          const data = await fetchBlockData(num);
+
+          viewBlockTitle.textContent = `Block #${num}`;
+          viewBlockMedia.innerHTML = ""; // media coming in V2
+
+          if (data?.message) {
+            viewBlockMessage.textContent = data.message;
+          } else {
+            viewBlockMessage.textContent = "No message has been added to this block yet.";
+          }
+
+          if (data?.name || data?.purchasedAt) {
+            let meta = "";
+            if (data.name) meta += `Claimed by ${data.name}`;
+            if (data.purchasedAt?.toDate) {
+              const d = data.purchasedAt.toDate();
+              meta += meta ? " · " : "";
+              meta += `on ${d.toLocaleDateString()}`;
+            }
+            viewBlockMeta.textContent = meta;
+          } else {
+            viewBlockMeta.textContent = "";
+          }
+
+          viewModal.classList.remove("hidden");
+          return;
+        }
+
+        // If free -> open purchase modal
+        document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
+        block.classList.add("selected");
+
+        selectedBlockNumber = num;
+        document.getElementById("blockNumber").value = num;
+        document.getElementById("selected-block-text").textContent =
+          `Selected Block: #${num}`;
+
+        modal.classList.remove("hidden");
+      });
+    });
+  }
+
+  attachBlockHandlers();
+
+  // ---------- MODAL CLOSE ----------
+  closeButton?.addEventListener("click", () => modal.classList.add("hidden"));
   modal?.addEventListener("click", (e) => {
     if (e.target === modal) modal.classList.add("hidden");
   });
 
-  // ========= FORM VALIDATION =========
+  viewClose?.addEventListener("click", () => viewModal.classList.add("hidden"));
+  viewModal?.addEventListener("click", (e) => {
+    if (e.target === viewModal) viewModal.classList.add("hidden");
+  });
+
+  // ---------- FORM / PAY VALIDATION ----------
   function validateFileSize() {
     const f = document.getElementById("fileUpload").files[0];
     if (!f) return false;
     if (f.size > 2 * 1024 * 1024) {
-      alert("❌ File must be under 2MB.");
+      alert("❌ Your file is larger than 2MB.");
       document.getElementById("fileUpload").value = "";
       return false;
     }
@@ -166,7 +239,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  function updatePayGate() {
+  function updateGate() {
     if (!validateFileSize()) {
       readyMsg.classList.remove("show");
       paypalContainer.classList.remove("show");
@@ -175,91 +248,62 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (canCheckout()) {
       readyMsg.classList.add("show");
-
-      if (!paypalRendered) {
-        paypalRendered = true;
-        renderSplitPayButtons();
-      }
-
       paypalContainer.classList.add("show");
+
+      if (!paypalButtonsInstance && window.paypal) {
+        paypalButtonsInstance = window.paypal.Buttons({
+          // single button – PayPal decides card vs wallet
+          createOrder: (data, actions) => {
+            return actions.order.create({
+              purchase_units: [{
+                description: `Vault Block #${selectedBlockNumber}`,
+                amount: { value: blockPrice.toFixed(2) }
+              }]
+            });
+          },
+          onApprove: async (data, actions) => {
+            const details = await actions.order.capture();
+            await handleSuccessfulPayment(details);
+          },
+          onError: (err) => {
+            console.error("PayPal error:", err);
+            alert("Payment error – please try again.");
+          }
+        });
+
+        paypalButtonsInstance.render("#paypal-button-container");
+      }
     } else {
       readyMsg.classList.remove("show");
       paypalContainer.classList.remove("show");
     }
   }
 
-  form?.addEventListener("input", updatePayGate);
-  form?.addEventListener("change", updatePayGate);
-  saveBtn?.addEventListener("click", updatePayGate);
+  form?.addEventListener("input", updateGate, true);
+  form?.addEventListener("change", updateGate, true);
+  uploadBtn?.addEventListener("click", updateGate);
 
-  // ========= PAYPAL BUTTONS (SANDBOX FRIENDLY) =========
-  function renderSplitPayButtons() {
-    paypalContainer.innerHTML = "";
-
-    const buttonConfig = (fundingSource) => ({
-      fundingSource,
-      style: { color: "gold", shape: "pill", label: "pay", height: 45 },
-
-      createOrder: (data, actions) => actions.order.create({
-        purchase_units: [{
-          description: `Vault Block #${selectedBlockNumber}`,
-          amount: { value: blockPrice.toFixed(2) }
-        }]
-      }),
-
-      // 👇 SANDBOX SAFE APPROVE BLOCK
-      onApprove: async () => {
-        await finishTransaction({
-          payer: { name: { given_name: "SandboxUser" } }
-        });
-      },
-
-      onError: (err) => console.error("PayPal error:", err)
-    });
-
-    paypal.Buttons(buttonConfig(paypal.FUNDING.PAYPAL))
-      .render("#paypal-button-container");
-
-    paypal.Buttons(buttonConfig(paypal.FUNDING.CARD))
-      .render("#paypal-button-container");
-  }
-
-  // ========= SUCCESS HANDLER =========
-  async function finishTransaction(details) {
-    alert(`✅ Payment completed by ${details?.payer?.name?.given_name ?? "User"}.`);
+  // ---------- SUCCESS HANDLER ----------
+  async function handleSuccessfulPayment(details) {
+    alert(`✅ Payment completed by ${details?.payer?.name?.given_name || "payer"}.`);
 
     const name = document.getElementById("name").value.trim();
     const email = document.getElementById("email").value.trim();
     const message = messageInput?.value.trim() || null;
 
-    await saveBlock(selectedBlockNumber, name, email, message);
+    await saveBlockToFirestore(selectedBlockNumber, name, email, message);
 
     if (!claimedBlocks.includes(selectedBlockNumber)) {
       claimedBlocks.push(selectedBlockNumber);
       localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
     }
 
+    refreshClaimedStyles();
     modal.classList.add("hidden");
-
-    applyClaimBlockStyles();
     generateCertificatePDF(name, selectedBlockNumber);
   }
 
-  // ========= UPDATE GRID =========
-  function applyClaimBlockStyles() {
-    document.querySelectorAll(".block").forEach(div => {
-      const num = Number(div.textContent);
-      if (claimedBlocks.includes(num)) {
-        div.classList.add("claimed");
-        div.style.cursor = "not-allowed";
-      }
-    });
-  }
-
-  applyClaimBlockStyles();
-  hideOverlay();
-
-  // ========= CERTIFICATE =========
+  // ---------- CERTIFICATE ----------
   function generateCertificatePDF(name, blockNumber) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
@@ -299,4 +343,45 @@ document.addEventListener("DOMContentLoaded", async () => {
     doc.save(`VaultOfTime_Block${blockNumber}.pdf`);
   }
 
+  // ---------- SIDE MENU ----------
+  const menuToggle = document.getElementById("menuToggle");
+  const sideMenu = document.getElementById("sideMenu");
+  const closeMenu = document.getElementById("closeMenu");
+  const overlay = document.getElementById("overlay");
+
+  menuToggle?.addEventListener("click", () => {
+    sideMenu.classList.add("open");
+    overlay.classList.add("show");
+    menuToggle.classList.add("active");
+  });
+
+  closeMenu?.addEventListener("click", () => {
+    sideMenu.classList.remove("open");
+    overlay.classList.remove("show");
+    menuToggle.classList.remove("active");
+  });
+
+  overlay?.addEventListener("click", () => {
+    sideMenu.classList.remove("open");
+    overlay.classList.remove("show");
+    menuToggle.classList.remove("active");
+  });
+
+  // ---------- ACCORDION ----------
+  document.querySelectorAll(".accordion-header").forEach(header => {
+    header.addEventListener("click", () => {
+      const content = header.nextElementSibling;
+      const isOpen = header.classList.contains("active");
+
+      document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
+      document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
+
+      if (!isOpen) {
+        header.classList.add("active");
+        content.classList.add("show");
+      }
+    });
+  });
+
+  hideOverlay();
 });
