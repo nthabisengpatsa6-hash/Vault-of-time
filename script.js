@@ -58,14 +58,15 @@ async function isBlockClaimedRemote(blockNumber) {
   }
 }
 
-async function saveBlockToFirestore(blockNumber, name, email) {
+async function saveBlockToFirestore(blockNumber, name, email, message) {
   try {
     await setDoc(doc(blocksCollection, String(blockNumber)), {
       name,
       email,
+      message: message || null,
       purchasedAt: serverTimestamp()
     });
-    console.log("Saved block:", blockNumber);
+    console.log(`Saved block #${blockNumber}`);
   } catch (err) {
     console.error("Failed saving:", err);
   }
@@ -99,7 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadingOverlay.innerHTML = `
     <div style="font-size:42px;margin-bottom:10px;">🕰️</div>
     <div style="font-size:20px;font-weight:600;margin-bottom:4px;">The Vault is opening…</div>
-    <div style="font-size:14px;opacity:0.8;">Fetching sealed blocks and preparing your grid.</div>
+    <div style="font-size:14px;opacity:0.8;">Fetching blocks and preparing the grid.</div>
   `;
   document.body.appendChild(loadingOverlay);
 
@@ -220,13 +221,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ========================================================================
-  // PAYPAL + VALIDATION (🔥 UPDATED! No more double renders!)
+  // PAYPAL + VALIDATION
   // ========================================================================
   const saveBtn = document.getElementById("uploadBtn");
   const readyMsg = document.getElementById("ready-message");
   const paypalContainer = document.getElementById("paypal-button-container");
 
-  let paypalRendered = false; // <-- Prevents duplicates
+  let paypalRendered = false;
 
   function canCheckout() {
     return (
@@ -241,7 +242,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const f = document.getElementById("fileUpload").files[0];
     if (!f) return false;
     if (f.size > 2 * 1024 * 1024) {
-      alert("❌ Your file is larger than 2MB.");
+      alert("❌ File too large (max 2MB).");
       document.getElementById("fileUpload").value = "";
       return false;
     }
@@ -275,7 +276,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   form?.addEventListener("change", updateGate, true);
 
   // ========================================================================
-  // PAYPAL BUTTON – SINGLE RENDER ONLY
+  // PAYPAL BUTTON — NOW SAVES MESSAGE TOO
   // ========================================================================
   function renderPayPalButton() {
     paypalContainer.innerHTML = "";
@@ -300,8 +301,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const name = document.getElementById("name").value.trim();
         const email = document.getElementById("email").value.trim();
+        const message = document.getElementById("message").value.trim() || null;
 
-        await saveBlockToFirestore(selectedBlockNumber, name, email);
+        await saveBlockToFirestore(selectedBlockNumber, name, email, message);
 
         if (!claimedBlocks.includes(selectedBlockNumber)) {
           claimedBlocks.push(selectedBlockNumber);
