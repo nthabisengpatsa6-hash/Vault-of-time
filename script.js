@@ -66,7 +66,7 @@ async function saveBlockToFirestore(blockNumber, name, email, message) {
       message: message || null,
       purchasedAt: serverTimestamp()
     });
-    console.log(`Saved block #${blockNumber}`);
+    console.log("Saved block:", blockNumber);
   } catch (err) {
     console.error("Failed saving:", err);
   }
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadingOverlay.innerHTML = `
     <div style="font-size:42px;margin-bottom:10px;">🕰️</div>
     <div style="font-size:20px;font-weight:600;margin-bottom:4px;">The Vault is opening…</div>
-    <div style="font-size:14px;opacity:0.8;">Fetching blocks and preparing the grid.</div>
+    <div style="font-size:14px;opacity:0.8;">Fetching sealed blocks and preparing your grid.</div>
   `;
   document.body.appendChild(loadingOverlay);
 
@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ========================================================================
-  // PAYPAL + VALIDATION
+  // PAYPAL + VALIDATION (NO DUPES)
   // ========================================================================
   const saveBtn = document.getElementById("uploadBtn");
   const readyMsg = document.getElementById("ready-message");
@@ -242,7 +242,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const f = document.getElementById("fileUpload").files[0];
     if (!f) return false;
     if (f.size > 2 * 1024 * 1024) {
-      alert("❌ File too large (max 2MB).");
+      alert("❌ Your file is larger than 2MB.");
       document.getElementById("fileUpload").value = "";
       return false;
     }
@@ -276,7 +276,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   form?.addEventListener("change", updateGate, true);
 
   // ========================================================================
-  // PAYPAL BUTTON — NOW SAVES MESSAGE TOO
+  // PAYPAL BUTTON – NOW SAVES MESSAGE TOO
   // ========================================================================
   function renderPayPalButton() {
     paypalContainer.innerHTML = "";
@@ -301,7 +301,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const name = document.getElementById("name").value.trim();
         const email = document.getElementById("email").value.trim();
-        const message = document.getElementById("message").value.trim() || null;
+        const message = document.getElementById("message").value.trim();
 
         await saveBlockToFirestore(selectedBlockNumber, name, email, message);
 
@@ -312,8 +312,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         applyClaimedStylingToGrid();
         modal.classList.add("hidden");
-
-        generateCertificatePDF(name, selectedBlockNumber);
       },
 
       onCancel: () => alert("❌ Transaction cancelled."),
@@ -371,91 +369,4 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
   setTimeout(initAccordion, 200);
-
-  // ========================================================================
-  // CERTIFICATE
-  // ========================================================================
-  function generateCertificatePDF(name, blockNumber) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-      orientation: "landscape",
-      unit: "pt",
-      format: "a4"
-    });
-
-    const W = doc.internal.pageSize.getWidth();
-    const H = doc.internal.pageSize.getHeight();
-
-    doc.setFillColor(13, 17, 23);
-    doc.rect(0, 0, W, H, "F");
-
-    doc.setDrawColor(212, 175, 55);
-    doc.setLineWidth(6);
-    doc.rect(30, 30, W - 60, H - 60);
-
-    doc.setTextColor(212, 175, 55);
-    doc.setFont("times", "bold");
-    doc.setFontSize(30);
-    doc.text("Vault Of Time Certificate of Ownership", W / 2, 120, {
-      align: "center"
-    });
-
-    doc.setFont("times", "normal");
-    doc.setFontSize(18);
-    doc.text("This certifies that", W / 2, 200, { align: "center" });
-
-    doc.setFont("times", "bolditalic");
-    doc.setFontSize(26);
-    doc.text(name, W / 2, 240, { align: "center" });
-
-    doc.setFont("times", "normal");
-    doc.setFontSize(18);
-    doc.text(
-      `is the rightful guardian of Block #${blockNumber}`,
-      W / 2,
-      280,
-      { align: "center" }
-    );
-    doc.text("Sealed within The Vault until 2050.", W / 2, 310, {
-      align: "center"
-    });
-
-    const today = new Date().toLocaleDateString();
-    doc.setFontSize(14);
-    doc.text(`Issued on: ${today}`, W / 2, 360, { align: "center" });
-
-    doc.save(`VaultOfTime_Certificate_Block${blockNumber}.pdf`);
-  }
-
-  // ========================================================================
-  // RULES BANNER
-  // ========================================================================
-  const banner = document.getElementById("rulesBanner");
-  const ackBtn = document.getElementById("ackRulesBtn");
-  const openHowToBtn = document.getElementById("openHowTo");
-  const openRulesBtn = document.getElementById("openRules");
-
-  if (banner && !localStorage.getItem("vaultRulesAcknowledged")) {
-    banner.classList.remove("hidden");
-  }
-
-  ackBtn?.addEventListener("click", () => {
-    banner.classList.add("hidden");
-    localStorage.setItem("vaultRulesAcknowledged", "true");
-  });
-
-  function openAccordionByText(txt) {
-    document.querySelectorAll(".accordion-header").forEach((header) => {
-      if (header.textContent.includes(txt)) {
-        const content = header.nextElementSibling;
-        content.classList.add("show");
-        header.classList.add("active");
-        sideMenu.classList.add("open");
-        overlay.classList.add("show");
-      }
-    });
-  }
-
-  openHowToBtn?.addEventListener("click", () => openAccordionByText("How To Buy"));
-  openRulesBtn?.addEventListener("click", () => openAccordionByText("Vault Rules"));
 });
