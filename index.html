@@ -24,72 +24,108 @@
     .clock-icon.reverse {
       animation:tick-reverse 1.2s infinite steps(2,start), clock-glow 3s ease-in-out 1;
     }
-    @keyframes tick{0%{transform:rotate(0)}50%{transform:rotate(6deg)}100%{transform:rotate(0)}}
-    @keyframes tick-reverse{0%{transform:rotate(0)}50%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
-    @keyframes clock-glow{
+
+    @keyframes tick {0%{transform:rotate(0)}50%{transform:rotate(6deg)}100%{transform:rotate(0)}}
+    @keyframes tick-reverse {0%{transform:rotate(0)}50%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
+
+    @keyframes clock-glow {
       0%{text-shadow:0 0 0 rgba(212,175,55,0);opacity:.4;transform:scale(1)}
       50%{text-shadow:0 0 20px rgba(212,175,55,.9),0 0 40px rgba(212,175,55,.6);opacity:1;transform:scale(1.1)}
       100%{text-shadow:0 0 6px rgba(212,175,55,.8);opacity:.85;transform:scale(1)}
     }
 
-    #paypal-button-container { display:none; opacity:0; transition:opacity .4s ease; margin-top:12px; }
-    #paypal-button-container.show { display:block; opacity:1; }
-    #ready-message {
-      display:none; opacity:0; color:#9be589; font-weight:600; font-size:14px;
-      margin-top:8px; transition:opacity .4s ease, transform .3s ease; transform:translateY(4px);
+    #paypal-button-container {
+      display:none;
+      opacity:0;
+      transition:opacity .4s ease;
+      margin-top:12px;
     }
-    #ready-message.show { display:block; opacity:1; transform:translateY(0); }
+    #paypal-button-container.show {
+      display:block;
+      opacity:1;
+    }
+
+    #ready-message {
+      display:none;
+      opacity:0;
+      color:#9be589;
+      font-weight:600;
+      font-size:14px;
+      margin-top:8px;
+      transition:opacity .4s ease, transform .3s ease;
+      transform:translateY(4px);
+    }
+    #ready-message.show {
+      display:block;
+      opacity:1;
+      transform:translateY(0);
+    }
 
     .notice-banner {
-      background:#1f232b; border:1px solid #d4af37; color:#e6edf3;
-      padding:10px 14px; border-radius:10px; max-width:980px;
-      margin:12px auto 14px; display:flex; gap:12px; align-items:center;
-      justify-content:space-between; box-shadow:0 6px 18px rgba(0,0,0,.25);
+      background:#1f232b;
+      border:1px solid #d4af37;
+      color:#e6edf3;
+      padding:10px 14px;
+      border-radius:10px;
+      max-width:980px;
+      margin:12px auto 14px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      box-shadow:0 6px 18px rgba(0,0,0,.25);
     }
-    .notice-banner .notice-text { line-height:1.3; font-size:14px; text-align:left; }
-    .notice-banner .linklike { background:none; border:none; color:#f9d26e; text-decoration:underline; cursor:pointer;
-      padding:0 2px; font-weight:600; }
+
+    .notice-banner .notice-text {
+      line-height:1.3;
+      font-size:14px;
+      text-align:left;
+    }
+
+    .notice-banner .linklike {
+      background:none;
+      border:none;
+      color:#f9d26e;
+      text-decoration:underline;
+      cursor:pointer;
+      padding:0 2px;
+      font-weight:600;
+    }
 
     #ackRulesBtn {
-      background:#d4af37; color:#0d1117; border:none; padding:8px 12px;
-      border-radius:8px; cursor:pointer; font-weight:700;
+      background:#d4af37;
+      color:#0d1117;
+      border:none;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:700;
+      white-space:nowrap;
     }
+
     .hidden { display:none !important; }
-
-    h1 { margin-top: 0; padding-top: 10px; text-align:center; }
-
-    textarea#message {
-      width: 100%;
-      height: 90px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: 1px solid #444;
-      background: #151b24;
-      color: #eee;
-      padding: 8px;
-      font-size: 14px;
-      resize: vertical;
-    }
+    h1 { margin-top:0; padding-top:10px; text-align:center; }
   </style>
 </head>
 
 <body>
+  <!-- MENU TOGGLE + OVERLAY -->
   <div class="menu-toggle" id="menuToggle">☰</div>
   <div class="overlay" id="overlay"></div>
 
+  <!-- SIDE MENU -->
   <nav class="side-menu" id="sideMenu">
     <button id="closeMenu">&times;</button>
     <h2>Vault Menu</h2>
 
     <div class="accordion">
-
       <!-- ABOUT -->
       <div class="accordion-item">
         <button class="accordion-header">📜 About The Vault Of Time</button>
         <div class="accordion-content">
-          <p>The Vault of Time is a living digital wall where people leave memories, grief, love, celebration, art, protest, and fragments of their lives — permanently etched into the grid.</p>
-          <p>It’s proof that we were here — we lived, we dreamed, we mattered.</p>
-          <p><strong>Only 1,000,000 blocks will ever exist.</strong> Once the grid is full, it becomes a public archive.</p>
+          <p>The Vault Of Time is an internet capsule where people collectively store memories, hopes for the future, messages to their future selves, and the moments that define them.</p>
+          <p>It is a monument to human experience — proof that even in chaos, humans remember, create, and hope.</p>
+          <p><strong>Only 1,000,000 blocks will ever exist.</strong> Once the final block is claimed, the Vault locks until 2050.</p>
         </div>
       </div>
 
@@ -100,22 +136,27 @@
           <ol>
             <li><strong>Rename your upload</strong> to match your block number (e.g. block29, block87).</li>
             <li>Select your block on the grid.</li>
-            <li>Enter name & email.</li>
+            <li>Enter your name and email.</li>
             <li>Upload your file (max 2MB).</li>
-            <li>(Optional) Write a message or dedication.</li>
-            <li>Checkout via PayPal.</li>
+            <li>(Optional) Add a message or story.</li>
+            <li>Proceed to checkout via PayPal.</li>
           </ol>
-          <p>🧱 You have 7 days to edit or delete — after that, your block becomes permanent.</p>
+
+          <p>🧱 You have 7 days after purchase to edit or delete your upload. After that, it is sealed.</p>
 
           <hr style="border:0;border-top:1px solid #333;margin:15px 0;">
 
-          <h3 style="color:#f9d26e;margin-bottom:8px;">📣 Advertising Allowed</h3>
+          <h3 style="color:#f9d26e;margin-bottom:8px;">📣 Advertising</h3>
+          <p>Brands, creators, and individuals may purchase blocks for advertising:</p>
+
           <ul>
-            <li>📢 Ads are visible immediately.</li>
-            <li>🧩 Brands can buy multiple blocks.</li>
-            <li>🎨 Logos & campaigns appear on the wall.</li>
-            <li>🚫 Must follow Vault rules.</li>
+            <li>📢 Ads appear immediately on the grid.</li>
+            <li>🧩 You may buy groups of blocks to form banners.</li>
+            <li>🎨 Custom visuals fully supported.</li>
+            <li>🚫 Ads must follow Vault Rules.</li>
           </ul>
+
+          <p>Bookings: <a href="mailto:hello@vaultoftime.com">hello@vaultoftime.com</a></p>
         </div>
       </div>
 
@@ -124,14 +165,12 @@
         <button class="accordion-header">⚖️ Vault Rules</button>
         <div class="accordion-content">
           <ul>
-            <li>📦 Uploads must be under 2MB.</li>
-            <li>❌ No NSFW or illegal content.</li>
-            <li>❌ No copyrighted material you don’t own.</li>
-            <li>🚫 No hate speech or violent incitement.</li>
-            <li>🚫 No confessions to crimes.</li>
-            <li>🕒 You get 7 days to edit.</li>
-            <li>💸 All sales final.</li>
-            <li>🔓 Your block remains public.</li>
+            <li>📦 Upload must be under 2MB.</li>
+            <li>❌ No illegal or hateful content.</li>
+            <li>❌ No copyrighted content you don’t own.</li>
+            <li>🕒 Editable for 7 days.</li>
+            <li>💸 All transactions final.</li>
+            <li>🪙 Content stored until Vault opens.</li>
           </ul>
         </div>
       </div>
@@ -140,44 +179,49 @@
       <div class="accordion-item">
         <button class="accordion-header">❓ FAQ</button>
         <div class="accordion-content">
-          <p><strong>What is this?</strong><br>
-          A public memory wall — a space for art, grief, joy, love, protest, and legacy.</p>
+          <p><strong>What is the Vault?</strong><br>
+            A global digital monument — a place where millions store history, grief, joy, memory, protest, and love.</p>
 
-          <p><strong>Can people see my upload?</strong><br>
-          Yes — all uploads are part of the live grid.</p>
+          <p><strong>When does it open?</strong><br>
+            Public release in <strong>2050</strong>. Ad blocks are visible immediately.</p>
 
           <p><strong>What can I upload?</strong><br>
-          Images, letters, drawings, poems, audio clips, or short videos (max 2MB).</p>
+            Image, poem, letter, tribute, art, audio snippet — anything meaningful and under 2MB.</p>
 
-          <p><strong>Can I edit it later?</strong><br>
-          Yes — for 7 days. Then it's locked in.</p>
+          <p><strong>Can I edit?</strong><br>
+            Yes — for 7 days. Then it locks.</p>
 
           <p><strong>How many blocks exist?</strong><br>
-          Exactly <strong>1,000,000</strong> — no more.</p>
+            Only <strong>1,000,000</strong>. Ever.</p>
         </div>
       </div>
 
-      <!-- PRIVACY POLICY -->
+      <!-- PRIVACY -->
       <div class="accordion-item">
-        <button class="accordion-header">🛡️ Privacy Policy</button>
+        <button class="accordion-header">🔐 Privacy Policy</button>
         <div class="accordion-content">
-          <p><strong>Last updated:</strong> November 2025</p>
-
-          <p>
-            We collect only the data needed to process your block purchase and display your content on the Vault.
-          </p>
-
+          <p><strong>We respect your privacy.</strong></p>
           <ul>
-            <li>We store your name, email, and upload.</li>
-            <li>We never sell or share your data with advertisers.</li>
-            <li>Your email is never made public.</li>
-            <li>We comply with POPIA & global privacy standards.</li>
-            <li>You may request deletion of your personal data anytime.</li>
+            <li>Your name & email are stored securely.</li>
+            <li>We never sell or share personal data.</li>
+            <li>Uploads are stored securely until display.</li>
+            <li>You may request deletion within 7 days.</li>
           </ul>
+          <p>Contact: <a href="mailto:hello@vaultoftime.com">hello@vaultoftime.com</a></p>
+        </div>
+      </div>
 
-          <p>
-            Contact: <a href="mailto:hello@vaultoftime.com">hello@vaultoftime.com</a>
-          </p>
+      <!-- TERMS -->
+      <div class="accordion-item">
+        <button class="accordion-header">📜 Terms & Conditions</button>
+        <div class="accordion-content">
+          <p><strong>Last Updated:</strong> Nov 2025</p>
+          <ul>
+            <li>All purchases final after 7 days.</li>
+            <li>Illegal content will be removed.</li>
+            <li>We store your upload until Vault opens to public.</li>
+          </ul>
+          <p>Vault Of Time (Pty) Ltd — Reg: 2025/875420/07</p>
         </div>
       </div>
 
@@ -192,45 +236,53 @@
     </div>
 
     <p style="font-size:12px;color:#777;margin-top:25px;">
-      © 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07
+      © 2025 Vault Of Time (Pty) Ltd — Reg: 2025/875420/07
     </p>
   </nav>
 
-  <h1>
-    <span class="clock-icon">🕰️</span> The Vault of Time <span class="clock-icon reverse">🕰️</span>
-  </h1>
+  <!-- HEADER -->
+  <h1><span class="clock-icon">🕰️</span> The Vault of Time <span class="clock-icon reverse">🕰️</span></h1>
 
+  <!-- NOTICE BANNER -->
   <div id="rulesBanner" class="notice-banner hidden">
     <div class="notice-text">
-      ⚠️ Before buying, please read
-      <button type="button" class="linklike" id="openHowTo">How to Buy</button> and
+      ⚠️ Before you buy: please read
+      <button type="button" class="linklike" id="openHowTo">How to Buy</button>
+      and
       <button type="button" class="linklike" id="openRules">Vault Rules</button>.
     </div>
     <button type="button" id="ackRulesBtn">I understand</button>
   </div>
 
+  <!-- GRID -->
   <div class="grid-container" id="grid"></div>
 
+  <!-- BLOCK COUNT -->
   <div class="total-blocks-banner">
-    <p>🪙 A total of <strong>1,000,000 blocks</strong> will ever exist. Each one becomes part of the permanent archive.</p>
+    <p>🪙 The Vault will hold <strong>1,000,000 blocks</strong>. Each one is sealed in time.</p>
   </div>
 
+  <!-- MODAL -->
   <div class="modal hidden" id="modal">
     <div class="modal-content">
       <span class="close-button">&times;</span>
       <h2>Claim Your Block</h2>
       <p id="selected-block-text" style="font-weight:600;color:#f9d26e;"></p>
-      <p>Leave your mark on the wall.</p>
+      <p>Fill in your details to reserve your Vault block.</p>
 
       <form id="blockForm" autocomplete="on" novalidate>
         <input type="hidden" id="blockNumber" name="block_number">
+
         <input type="text" id="name" placeholder="Your Name" required>
         <input type="email" id="email" placeholder="Your Email" required>
+
         <input type="file" id="fileUpload" accept="image/*,.txt,.pdf,.mp3,.mp4" required>
 
         <textarea id="message"
-          placeholder="Optional: Write a message or dedication (max 500 chars)"
-          maxlength="500"></textarea>
+          placeholder="Optional message or story..."
+          maxlength="500"
+          style="margin-top:10px;height:80px;background:#0f1218;color:#e6edf3;border:1px solid #333;border-radius:6px;padding:8px;font-size:14px;">
+        </textarea>
 
         <div id="ready-message">✅ Ready for checkout</div>
         <div id="paypal-button-container"></div>
@@ -243,16 +295,22 @@
     </div>
   </div>
 
+  <!-- FOOTER -->
   <footer>
     <p>
-      <a href="contact.html">📩 Contact Us</a> | 
-      <a href="terms.html">📜 Terms & Conditions</a><br>
-      <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</small>
+      <a href="contact.html">📩 Contact Us</a> |
+      <a href="terms.html">📜 Terms</a><br>
+      <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd</small>
     </p>
   </footer>
 
+  <!-- PAYPAL SDK -->
   <script src="https://www.paypal.com/sdk/js?client-id=AUK2McH5yTvRCHXypQrwShFriZMsW7Ojf16wtlHAYP8rsK92eio4l65xyVDfC0sZl2WGQWTlFrbZZnP7&currency=USD"></script>
+
+  <!-- PDF Gen -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- MAIN SCRIPT -->
   <script type="module" src="script.js"></script>
 </body>
   </html>
