@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css" />
 
   <style>
-    /* RESET to remove stray top line / spacing */
     html, body {
       margin: 0;
       padding: 0;
@@ -15,7 +14,6 @@
       background-color: #0d1117;
     }
 
-    /* CLOCK ANIMATION */
     .clock-icon {
       display:inline-block;
       transform-origin:bottom center;
@@ -34,7 +32,6 @@
       100%{text-shadow:0 0 6px rgba(212,175,55,.8);opacity:.85;transform:scale(1)}
     }
 
-    /* PAYPAL UI bits */
     #paypal-button-container {
       display:none;
       opacity:0;
@@ -61,7 +58,6 @@
       transform:translateY(0);
     }
 
-    /* NOTICE BANNER STYLING */
     .notice-banner {
       background:#1f232b;
       border:1px solid #d4af37;
@@ -107,15 +103,27 @@
       padding-top: 10px;
       text-align:center;
     }
+
+    /* NEW: Message field */
+    textarea#message {
+      width: 100%;
+      height: 90px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #151b24;
+      color: #eee;
+      padding: 8px;
+      font-size: 14px;
+      resize: vertical;
+    }
   </style>
 </head>
 
 <body>
-  <!-- MENU TOGGLE + OVERLAY -->
   <div class="menu-toggle" id="menuToggle">☰</div>
   <div class="overlay" id="overlay"></div>
 
-  <!-- SIDE MENU -->
   <nav class="side-menu" id="sideMenu">
     <button id="closeMenu">&times;</button>
     <h2>Vault Menu</h2>
@@ -126,9 +134,15 @@
       <div class="accordion-item">
         <button class="accordion-header">📜 About The Vault Of Time</button>
         <div class="accordion-content">
-          <p>The Vault Of Time is an internet capsule where people collectively store memories, hopes for the future, messages to their future selves, and the moments that define them.</p>
-          <p>It is a monument to human experience — proof that even in chaos, humans remember, create, and hope.</p>
-          <p><strong>Only 1,000,000 blocks will ever exist.</strong> Once the final block is claimed, the Vault locks until 2050.</p>
+          <p>
+            The Vault of Time is a living digital wall where people leave memories, art, tributes, messages, poems, protests, and fragments of their lives — permanently etched into the grid.
+          </p>
+          <p>
+            It’s a collective monument — proof that we were here, we loved, we hurt, we survived, we mattered.
+          </p>
+          <p>
+            <strong>Only 1,000,000 blocks will ever exist.</strong> Once the grid is full, it becomes a permanent public archive.
+          </p>
         </div>
       </div>
 
@@ -141,21 +155,21 @@
             <li>Select your block on the grid.</li>
             <li>Enter your name and email.</li>
             <li>Upload your file (max 2MB).</li>
-            <li>Proceed to checkout via PayPal.</li>
-            <li>Receive your official Block Owner Certificate.</li>
+            <li>(Optional) Write a message or dedication.</li>
+            <li>Checkout via PayPal.</li>
           </ol>
 
-          <p>🧱 You have 7 days after purchase to edit or delete your upload. After that, it is sealed until 2050.</p>
+          <p>🧱 You have 7 days after purchase to edit or delete your upload. After that, it's permanently part of the wall.</p>
 
           <hr style="border:0;border-top:1px solid #333;margin:15px 0;">
 
           <h3 style="color:#f9d26e;margin-bottom:8px;">📣 Advertising on The Vault</h3>
-          <p>Brands, creators, and individuals may purchase blocks specifically for advertising:</p>
+          <p>Brands, creators, and individuals may purchase blocks for ads:</p>
 
           <ul>
-            <li>📢 <strong>Ad content becomes visible immediately</strong> on the grid.</li>
-            <li>🧩 Advertisers may buy groups of blocks to form banners or mosaics.</li>
-            <li>🎨 Their design appears directly on the grid.</li>
+            <li>📢 Ad content is visible immediately on the grid.</li>
+            <li>🧩 Advertisers may buy multiple blocks to form banners or mosaics.</li>
+            <li>🎨 Their design appears directly on the wall.</li>
             <li>🚫 Ads must follow Vault Rules.</li>
           </ul>
 
@@ -175,8 +189,7 @@
             <li>🚫 No confessions to crimes.</li>
             <li>🕒 Editable for 7 days after purchase.</li>
             <li>💸 All transactions final.</li>
-            <li>🪙 Content stored until 2050.</li>
-            <li>🔒 Non-ad content remains hidden until the Vault opens.</li>
+            <li>🔓 All non-ad content remains publicly visible.</li>
           </ul>
         </div>
       </div>
@@ -186,83 +199,22 @@
         <button class="accordion-header">❓ FAQ</button>
         <div class="accordion-content">
           <p><strong>What is the Vault?</strong><br>
-            The Vault of Time is a global digital monument — a place where millions of people store memories, messages, art, and fragments of their life story for 2050.</p>
+            The Vault of Time is a public digital wall — a living archive where millions of people leave memories, messages, grief, hope, and art.</p>
 
-          <p><strong>When does it open?</strong><br>
-            The Vault unlocks publicly in <strong>2050</strong>.</p>
+          <p><strong>Is it public?</strong><br>
+            Yes. Anyone can browse blocks — click one to see the image, click again to read the message.</p>
 
           <p><strong>What can I upload?</strong><br>
-            Images, letters, drawings, poems, small audio clips, short videos (under 2MB).</p>
+            Images, letters, notes, drawings, poems, small audio clips, or short videos under 2MB.</p>
 
-          <p><strong>Where is the content stored?</strong><br>
-            Secure encrypted cold storage.</p>
+          <p><strong>Where is it stored?</strong><br>
+            Your uploads are securely stored and publicly visible. Your message becomes part of shared digital history.</p>
 
-          <p><strong>Can I edit my block?</strong><br>
-            Yes — editing allowed for 7 days after purchase.</p>
-
-          <p><strong>Can brands advertise?</strong><br>
-            Yes — advertising blocks appear immediately.<br>
-            Contact: <a href="mailto:hello@vaultoftime.com">hello@vaultoftime.com</a></p>
+          <p><strong>Can I edit?</strong><br>
+            Yes — 7-day editing window after purchase. After that, your block is permanent.</p>
 
           <p><strong>How many blocks exist?</strong><br>
-            Exactly <strong>1,000,000</strong>, ever.</p>
-        </div>
-      </div>
-
-      <!-- TERMS -->
-      <div class="accordion-item">
-        <button class="accordion-header">📜 Terms & Conditions</button>
-        <div class="accordion-content">
-          <p><strong>Last Updated:</strong> November 2025</p>
-          <ul>
-            <li>Transactions final once sealed.</li>
-            <li>7 days to edit/delete uploads.</li>
-            <li>Illegal content will be removed.</li>
-            <li>By uploading, you grant storage rights until 2050.</li>
-            <li>We are not liable for external disasters.</li>
-            <li>Personal data never shared externally.</li>
-          </ul>
-          <p>Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</p>
-        </div>
-      </div>
-
-      <!-- PRIVACY POLICY (NEW) -->
-      <div class="accordion-item">
-        <button class="accordion-header">🔐 Privacy Policy</button>
-        <div class="accordion-content">
-          <p><strong>Last Updated:</strong> November 2025</p>
-
-          <p>The Vault Of Time (Pty) Ltd is committed to protecting your personal information. This policy explains how we collect, use, store, and protect your data.</p>
-
-          <h4 style="color:#f9d26e;">1. Information We Collect</h4>
-          <ul>
-            <li>🔸 Name and email address (for purchase and certificate issuance)</li>
-            <li>🔸 Uploaded file content (stored securely until 2050)</li>
-            <li>🔸 Payment details processed securely by PayPal — we do <strong>not</strong> store card information</li>
-          </ul>
-
-          <h4 style="color:#f9d26e;">2. How Your Data Is Used</h4>
-          <ul>
-            <li>✔ To reserve and associate your name with your chosen block</li>
-            <li>✔ To generate your digital ownership certificate</li>
-            <li>✔ To comply with legal obligations (e.g., financial regulations)</li>
-          </ul>
-
-          <h4 style="color:#f9d26e;">3. How We Store Your Content</h4>
-          <p>Your uploads are stored in encrypted, secure cold storage. Non-advertising content remains sealed until 2050.</p>
-
-          <h4 style="color:#f9d26e;">4. Sharing of Personal Information</h4>
-          <p>We do <strong>not</strong> sell or share your data with third parties.</p>
-          <p>Your email and name are never made public on the grid.</p>
-
-          <h4 style="color:#f9d26e;">5. Your Rights</h4>
-          <ul>
-            <li>✔ Request correction of your details</li>
-            <li>✔ Request deletion within the 7-day edit window</li>
-            <li>✔ Contact us anytime: <a href="mailto:hello@vaultoftime.com">hello@vaultoftime.com</a></li>
-          </ul>
-
-          <p>By using this site, you consent to the practices described in this Privacy Policy.</p>
+            There will only ever be <strong>1,000,000 blocks</strong>.</p>
         </div>
       </div>
 
@@ -274,7 +226,6 @@
           <p><a href="https://www.tiktok.com/@officialvaultoftime" target="_blank">TikTok</a></p>
         </div>
       </div>
-
     </div>
 
     <p style="font-size:12px;color:#777;margin-top:25px;">
@@ -282,12 +233,10 @@
     </p>
   </nav>
 
-  <!-- HEADER -->
   <h1>
     <span class="clock-icon">🕰️</span> The Vault of Time <span class="clock-icon reverse">🕰️</span>
   </h1>
 
-  <!-- NOTICE BANNER -->
   <div id="rulesBanner" class="notice-banner hidden">
     <div class="notice-text">
       ⚠️ Before you buy: please read
@@ -298,27 +247,26 @@
     <button type="button" id="ackRulesBtn">I understand</button>
   </div>
 
-  <!-- GRID -->
   <div class="grid-container" id="grid"></div>
 
-  <!-- TOTAL BLOCKS BANNER -->
   <div class="total-blocks-banner">
-    <p>🪙 The Vault will hold exactly <strong>1,000,000 blocks</strong>. Each block is sealed until 2050.</p>
+    <p>🪙 The Vault will hold exactly <strong>1,000,000 blocks</strong>. Each block becomes part of the public archive.</p>
   </div>
 
-  <!-- MODAL -->
   <div class="modal hidden" id="modal">
     <div class="modal-content">
       <span class="close-button">&times;</span>
       <h2>Claim Your Block</h2>
       <p id="selected-block-text" style="font-weight:600;color:#f9d26e;"></p>
-      <p>Fill in your details to reserve your Vault block.</p>
+      <p>Fill in your details and leave your mark.</p>
 
       <form id="blockForm" autocomplete="on" novalidate>
         <input type="hidden" id="blockNumber" name="block_number">
         <input type="text" id="name" placeholder="Your Name" required>
         <input type="email" id="email" placeholder="Your Email" required>
         <input type="file" id="fileUpload" accept="image/*,.txt,.pdf,.mp3,.mp4" required>
+
+        <textarea id="message" placeholder="Optional: Write a message or describe what this block means to you (max 500 chars)" maxlength="500"></textarea>
 
         <div id="ready-message">✅ Ready for checkout</div>
         <div id="paypal-button-container"></div>
@@ -330,7 +278,6 @@
     </div>
   </div>
 
-  <!-- FOOTER -->
   <footer>
     <p>
       <a href="contact.html">📩 Contact Us</a> | 
@@ -339,12 +286,8 @@
     </p>
   </footer>
 
-  <!-- PAYPAL -->
   <script src="https://www.paypal.com/sdk/js?client-id=AUK2McH5yTvRCHXypQrwShFriZMsW7Ojf16wtlHAYP8rsK92eio4l65xyVDfC0sZl2WGQWTlFrbZZnP7&currency=USD"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- MAIN SCRIPT -->
   <script type="module" src="script.js"></script>
-
 </body>
         </html>
