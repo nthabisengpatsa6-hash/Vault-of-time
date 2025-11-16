@@ -31,11 +31,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
-
 const blocksCollection = collection(db, "blocks");
 
-// Memory cache
 let claimedBlocks = [];
+let selectedBlockNumber = null;
+let storedFormData = null;
+const blockPrice = 6.00;
 
 // ============================================================================
 // FIRESTORE HELPERS
@@ -45,193 +46,73 @@ async function loadClaimedBlocksFromFirestore() {
     const snap = await getDocs(blocksCollection);
     claimedBlocks = snap.docs.map(d => Number(d.id));
     localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
-  } catch (err) {
-    console.error("Firestore load error:", err);
+  } catch {
     claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   }
 }
 
 async function fetchBlockData(blockNumber) {
-  try {
-    const snap = await getDoc(doc(blocksCollection, String(blockNumber)));
-    return snap.exists() ? snap.data() : null;
-  } catch (err) {
-    console.error("Block fetch error:", err);
-    return null;
-  }
+  const snap = await getDoc(doc(blocksCollection, String(blockNumber)));
+  return snap.exists() ? snap.data() : null;
 }
 
-async function saveBlockToFirestore(blockNumber, name, email, message, mediaURL, mediaType) {
-  try {
-    await setDoc(doc(blocksCollection, String(blockNumber)), {
-      message: message || null,
-      mediaURL: mediaURL || null,
-      mediaType: mediaType || null,
-      purchasedAt: serverTimestamp()
-    });
-  } catch (err) {
-    console.error("Failed to save block:", err);
-  }
+async function saveBlockToFirestore(blockNumber, message, mediaURL, mediaType) {
+  await setDoc(doc(blocksCollection, String(blockNumber)), {
+    message: message || null,
+    mediaURL: mediaURL || null,
+    mediaType: mediaType || null,
+    purchasedAt: serverTimestamp()
+  });
 }
 
 // ============================================================================
-// APP START
+// MAIN APP
 // ============================================================================
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // LOADING OVERLAY
-  const loadingOverlay = document.createElement("div");
-  Object.assign(loadingOverlay.style, {
-    position: "fixed",
-    inset: "0",
-    background: "radial-gradient(circle, #141922 0%, #05070b 55%, #020308 100%)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "column",
-    color: "#f9d26e",
-    zIndex: 9999,
-    transition: "opacity .4s"
-  });
-  loadingOverlay.innerHTML = `
-    <div style="font-size:42px;">🕰️</div>
-    <div style="margin-top:5px;">Opening the Vault...</div>
-  `;
-  document.body.appendChild(loadingOverlay);
-
-  const hideOverlay = () => {
-    loadingOverlay.style.opacity = "0";
-    setTimeout(() => loadingOverlay.remove(), 400);
-  };
-
-  // DOM refs
-  const grid = document.getElementById("grid");
-  const modal = document.getElementById("modal");
-  const closeButton = document.querySelector(".close-button");
-  const form = document.getElementById("blockForm");
-  const messageInput = document.getElementById("message");
-  const viewModal = document.getElementById("viewModal");
-  const viewClose = document.querySelector(".close-view");
-  const viewBlockTitle = document.getElementById("viewBlockTitle");
-  const viewBlockMessage = document.getElementById("viewBlockMessage");
-  const viewBlockMeta = document.getElementById("viewBlockMeta");
-  const viewBlockMedia = document.getElementById("viewBlockMedia");
-
-  const paypalContainer = document.getElementById("paypal-button-container");
-  const readyMsg = document.getElementById("ready-message");
-  const uploadBtn = document.getElementById("uploadBtn");
-
-  let selectedBlockNumber = null;
-  let paypalRendered = false;
-  const blockPrice = 6.0;
+  // URL CHECK — PAYPAL RETURN
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("paypalSuccess") === "true") {
+    const block = Number(params.get("block"));
+    await finalizeCheckout(block);
+    return;
+  }
 
   // Load claimed blocks
   claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   await loadClaimedBlocksFromFirestore();
 
-  // GRID — 1 to 100
-  function buildGrid() {
-    grid.innerHTML = "";
-    for (let i = 1; i <= 100; i++) {
-      const block = document.createElement("div");
-      block.classList.add("block");
-      block.textContent = i;
+  // DOM refs
+  const grid = document.getElementById("grid");
+  const modal = document.getElementById("modal");
+  const messageInput = document.getElementById("message");
+  const paypalContainer = document.getElementById("paypal-button-container");
+  const uploadBtn = document.getElementById("uploadBtn");
 
-      if (claimedBlocks.includes(i)) {
-        block.classList.add("claimed");
-        block.style.cursor = "not-allowed";
-      }
-      grid.appendChild(block);
+  // Build grid
+  grid.innerHTML = "";
+  for (let i = 1; i <= 100; i++) {
+    const div = document.createElement("div");
+    div.classList.add("block");
+    div.textContent = i;
+    if (claimedBlocks.includes(i)) {
+      div.classList.add("claimed");
+      div.style.cursor = "not-allowed";
     }
-  }
-  buildGrid();
-
-  function styleClaimed() {
-    document.querySelectorAll(".block").forEach(b => {
-      const num = Number(b.textContent);
-      if (claimedBlocks.includes(num)) {
-        b.classList.add("claimed");
-        b.classList.remove("selected");
-      }
-    });
-  }
-  styleClaimed();
-
-  // Block click handling
-  function attachBlockHandlers() {
-    document.querySelectorAll(".block").forEach(block => {
-      block.addEventListener("click", async () => {
-        const num = Number(block.textContent);
-        if (!num) return;
-
-        // CLAIMED — view mode
-        if (claimedBlocks.includes(num)) {
-          const data = await fetchBlockData(num);
-
-          viewBlockTitle.textContent = `Block #${num}`;
-          viewBlockMessage.textContent = data?.message || "";
-
-          viewBlockMedia.innerHTML = "";
-          if (data?.mediaURL && data?.mediaType) {
-            if (data.mediaType.startsWith("image/")) {
-              viewBlockMedia.innerHTML = `<img src="${data.mediaURL}" alt="Block Media" />`;
-            } else if (data.mediaType === "application/pdf") {
-              viewBlockMedia.innerHTML = `<iframe id="viewBlockPDF" src="${data.mediaURL}"></iframe>`;
-            } else if (data.mediaType.startsWith("audio/")) {
-              viewBlockMedia.innerHTML = `<audio controls src="${data.mediaURL}"></audio>`;
-            } else if (data.mediaType.startsWith("video/")) {
-              viewBlockMedia.innerHTML = `<video controls src="${data.mediaURL}"></video>`;
-            } else {
-              viewBlockMedia.innerHTML = `<p>📎 File stored — but preview not supported.</p>`;
-            }
-          }
-
-          if (data?.purchasedAt?.toDate) {
-            const d = data.purchasedAt.toDate();
-            viewBlockMeta.textContent = `Sealed on ${d.toLocaleDateString()}`;
-          } else {
-            viewBlockMeta.textContent = "";
-          }
-
-          viewModal.classList.remove("hidden");
-          return;
-        }
-
-        // FREE — claim mode
-        document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
-        block.classList.add("selected");
-
-        selectedBlockNumber = num;
-        document.getElementById("blockNumber").value = num;
-        document.getElementById("selected-block-text").textContent = `Selected Block: #${num}`;
-
-        modal.classList.remove("hidden");
-      });
-    });
-  }
-  attachBlockHandlers();
-
-  // Close modals
-  closeButton.addEventListener("click", () => modal.classList.add("hidden"));
-  modal.addEventListener("click", e => {
-    if (e.target === modal) modal.classList.add("hidden");
-  });
-  viewClose.addEventListener("click", () => viewModal.classList.add("hidden"));
-  viewModal.addEventListener("click", e => {
-    if (e.target === viewModal) viewModal.classList.add("hidden");
-  });
-
-  // File validation
-  function validateFileSize() {
-    const f = document.getElementById("fileUpload").files[0];
-    if (!f) return false;
-    if (f.size > 2 * 1024 * 1024) {
-      alert("That file is too large (2MB max).");
-      return false;
-    }
-    return true;
+    div.addEventListener("click", () => handleBlockClick(i));
+    grid.appendChild(div);
   }
 
+  function handleBlockClick(num) {
+    if (claimedBlocks.includes(num)) return;
+
+    selectedBlockNumber = num;
+    document.getElementById("blockNumber").value = num;
+    document.getElementById("selected-block-text").textContent = `Selected Block: #${num}`;
+    modal.classList.remove("hidden");
+  }
+
+  // File + form validation
   function canCheckout() {
     return (
       document.getElementById("name").value.trim() &&
@@ -241,117 +122,93 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  // Show PayPal when ready
-  function updateGate() {
+  function validateFileSize() {
+    const f = document.getElementById("fileUpload").files[0];
+    if (!f) return false;
+    return f.size <= 2 * 1024 * 1024;
+  }
+
+  // When ready, show PayPal
+  uploadBtn.addEventListener("click", () => {
     if (!validateFileSize()) {
-      readyMsg.classList.remove("show");
+      alert("File too large (2MB max)");
       return;
     }
     if (canCheckout()) {
-      readyMsg.classList.add("show");
+      renderPayPalRedirectButton();
+    }
+  });
 
-      if (!paypalRendered && window.paypal) {
-        paypalRendered = true;
-        window.paypal.Buttons({
-          style: {
-            color: "gold",
-            label: "pay"
-          },
-          createOrder: (data, actions) => {
-            return actions.order.create({
-              purchase_units: [
-                {
-                  description: `Vault Block #${selectedBlockNumber}`,
-                  amount: { value: blockPrice.toFixed(2) }
-                }
-              ]
-            });
-          },
-          onApprove: async (data, actions) => {
-            const details = await actions.order.capture();
-            await paymentSuccess(details);
-          },
-          onError: err => {
-            console.error(err);
-            alert("Payment problem. Please try again.");
+  // REDIRECT-BASED PAYPAL BUTTON
+  function renderPayPalRedirectButton() {
+    paypalContainer.innerHTML = "";
+
+    paypal.Buttons({
+      style: {
+        color: "gold",
+        shape: "pill",
+        label: "pay",
+        height: 45
+      },
+
+      createOrder: (data, actions) => {
+        // STORE FORM DATA
+        storedFormData = {
+          name: document.getElementById("name").value.trim(),
+          email: document.getElementById("email").value.trim(),
+          message: messageInput.value.trim() || null
+        };
+
+        sessionStorage.setItem("vaultForm", JSON.stringify(storedFormData));
+
+        return actions.order.create({
+          purchase_units: [{
+            description: `Vault Block #${selectedBlockNumber}`,
+            amount: { value: blockPrice.toFixed(2) }
+          }],
+          application_context: {
+            shipping_preference: "NO_SHIPPING",
+            return_url: `${window.location.origin}${window.location.pathname}?paypalSuccess=true&block=${selectedBlockNumber}`,
+            cancel_url: `${window.location.origin}${window.location.pathname}`
           }
-        }).render("#paypal-button-container");
+        });
+      },
+
+      onApprove: (data, actions) => {
+        return actions.redirect();
       }
 
-      paypalContainer.classList.add("show");
-    }
+    }).render("#paypal-button-container");
   }
 
-  uploadBtn.addEventListener("click", updateGate);
-  form.addEventListener("input", updateGate, true);
-  form.addEventListener("change", updateGate, true);
+  // FINALIZE AFTER REDIRECT BACK
+  async function finalizeCheckout(blockNumber) {
+    const formData = JSON.parse(sessionStorage.getItem("vaultForm"));
+    if (!formData) return alert("Error: Missing form data.");
 
-  // Successful payment
-  async function paymentSuccess(details) {
-    alert(`🪙 Block sealed: #${selectedBlockNumber}`);
-
-    const name = document.getElementById("name").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const message = messageInput.value.trim() || null;
-    const file = document.getElementById("fileUpload").files[0];
-
+    const file = document.getElementById("fileUpload")?.files[0];
     let mediaURL = null;
     let mediaType = null;
 
     if (file) {
-      const storageRef = ref(storage, `blocks/${selectedBlockNumber}/${file.name}`);
+      const storageRef = ref(storage, `blocks/${blockNumber}/${file.name}`);
       await uploadBytes(storageRef, file);
       mediaURL = await getDownloadURL(storageRef);
       mediaType = file.type;
     }
 
     await saveBlockToFirestore(
-      selectedBlockNumber,
-      name,
-      email,
-      message,
+      blockNumber,
+      formData.message,
       mediaURL,
       mediaType
     );
 
-    claimedBlocks.push(selectedBlockNumber);
+    claimedBlocks.push(blockNumber);
     localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
 
-    styleClaimed();
-    modal.classList.add("hidden");
+    alert(`Block #${blockNumber} sealed!`);
+
+    window.location.href = window.location.pathname;
   }
-
-  // Accordion
-  document.querySelectorAll(".accordion-header").forEach(header => {
-    header.addEventListener("click", () => {
-      const open = header.classList.contains("active");
-      document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
-      document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
-      if (!open) {
-        header.classList.add("active");
-        header.nextElementSibling.classList.add("show");
-      }
-    });
-  });
-
-  // Menu
-  const menuToggle = document.getElementById("menuToggle");
-  const sideMenu = document.getElementById("sideMenu");
-  const closeMenu = document.getElementById("closeMenu");
-  const overlay = document.getElementById("overlay");
-
-  menuToggle.addEventListener("click", () => {
-    sideMenu.classList.add("open");
-    overlay.classList.add("show");
-  });
-  closeMenu.addEventListener("click", () => {
-    sideMenu.classList.remove("open");
-    overlay.classList.remove("show");
-  });
-  overlay.addEventListener("click", () => {
-    sideMenu.classList.remove("open");
-    overlay.classList.remove("show");
-  });
-
-  hideOverlay();
 });
