@@ -27,7 +27,6 @@ const firebaseConfig = {
   appId: "1:941244238426:web:80f80b5237b84b1740e663"
 };
 
-// Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
@@ -36,10 +35,11 @@ const blocksCollection = collection(db, "blocks");
 let claimedBlocks = [];
 let selectedBlockNumber = null;
 let storedFormData = null;
+
 const blockPrice = 6.00;
 
 // ============================================================================
-// FIRESTORE HELPERS
+// FIRESTORE
 // ============================================================================
 async function loadClaimedBlocksFromFirestore() {
   try {
@@ -51,13 +51,13 @@ async function loadClaimedBlocksFromFirestore() {
   }
 }
 
-async function fetchBlockData(blockNumber) {
-  const snap = await getDoc(doc(blocksCollection, String(blockNumber)));
+async function fetchBlockData(num) {
+  const snap = await getDoc(doc(blocksCollection, String(num)));
   return snap.exists() ? snap.data() : null;
 }
 
-async function saveBlockToFirestore(blockNumber, message, mediaURL, mediaType) {
-  await setDoc(doc(blocksCollection, String(blockNumber)), {
+async function saveBlock(num, message, mediaURL, mediaType) {
+  await setDoc(doc(blocksCollection, String(num)), {
     message: message || null,
     mediaURL: mediaURL || null,
     mediaType: mediaType || null,
@@ -66,11 +66,11 @@ async function saveBlockToFirestore(blockNumber, message, mediaURL, mediaType) {
 }
 
 // ============================================================================
-// MAIN APP
+// MAIN
 // ============================================================================
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // URL CHECK — PAYPAL RETURN
+  // 1 — Check URL for PayPal redirect FIRST
   const params = new URLSearchParams(window.location.search);
   if (params.get("paypalSuccess") === "true") {
     const block = Number(params.get("block"));
@@ -78,18 +78,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Load claimed blocks
+  // 2 — Safe load claimed blocks
   claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   await loadClaimedBlocksFromFirestore();
 
-  // DOM refs
+  // 3 — DOM refs
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
-  const messageInput = document.getElementById("message");
+  const msgInput = document.getElementById("message");
   const paypalContainer = document.getElementById("paypal-button-container");
   const uploadBtn = document.getElementById("uploadBtn");
 
-  // Build grid
+  // 4 — Build Grid
   grid.innerHTML = "";
   for (let i = 1; i <= 100; i++) {
     const div = document.createElement("div");
@@ -98,65 +98,50 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (claimedBlocks.includes(i)) {
       div.classList.add("claimed");
       div.style.cursor = "not-allowed";
+    } else {
+      div.addEventListener("click", () => selectBlock(i));
     }
-    div.addEventListener("click", () => handleBlockClick(i));
     grid.appendChild(div);
   }
 
-  function handleBlockClick(num) {
-    if (claimedBlocks.includes(num)) return;
-
+  function selectBlock(num) {
     selectedBlockNumber = num;
     document.getElementById("blockNumber").value = num;
     document.getElementById("selected-block-text").textContent = `Selected Block: #${num}`;
     modal.classList.remove("hidden");
   }
 
-  // File + form validation
-  function canCheckout() {
+  // 5 — Validate form + file
+  function validate() {
     return (
       document.getElementById("name").value.trim() &&
       document.getElementById("email").value.trim() &&
-      document.getElementById("fileUpload").files.length > 0 &&
-      selectedBlockNumber
+      document.getElementById("fileUpload").files.length > 0
     );
   }
 
-  function validateFileSize() {
+  function validateFile() {
     const f = document.getElementById("fileUpload").files[0];
-    if (!f) return false;
-    return f.size <= 2 * 1024 * 1024;
+    return f && f.size <= 2 * 1024 * 1024;
   }
 
-  // When ready, show PayPal
+  // 6 — Show PayPal button
   uploadBtn.addEventListener("click", () => {
-    if (!validateFileSize()) {
-      alert("File too large (2MB max)");
-      return;
-    }
-    if (canCheckout()) {
-      renderPayPalRedirectButton();
-    }
+    if (!validateFile()) return alert("File too large (max 2MB)");
+    if (!validate()) return;
+
+    renderPayPalButton();
   });
 
-  // REDIRECT-BASED PAYPAL BUTTON
-  function renderPayPalRedirectButton() {
+  function renderPayPalButton() {
     paypalContainer.innerHTML = "";
-
     paypal.Buttons({
-      style: {
-        color: "gold",
-        shape: "pill",
-        label: "pay",
-        height: 45
-      },
-
+      style: { color: "gold", shape: "pill", label: "pay", height: 45 },
       createOrder: (data, actions) => {
-        // STORE FORM DATA
         storedFormData = {
           name: document.getElementById("name").value.trim(),
           email: document.getElementById("email").value.trim(),
-          message: messageInput.value.trim() || null
+          message: msgInput.value.trim()
         };
 
         sessionStorage.setItem("vaultForm", JSON.stringify(storedFormData));
@@ -168,47 +153,46 @@ document.addEventListener("DOMContentLoaded", async () => {
           }],
           application_context: {
             shipping_preference: "NO_SHIPPING",
-            return_url: `${window.location.origin}${window.location.pathname}?paypalSuccess=true&block=${selectedBlockNumber}`,
-            cancel_url: `${window.location.origin}${window.location.pathname}`
+            return_url: `${location.origin}${location.pathname}?paypalSuccess=true&block=${selectedBlockNumber}`,
+            cancel_url: `${location.origin}${location.pathname}`
           }
         });
       },
-
-      onApprove: (data, actions) => {
-        return actions.redirect();
-      }
-
+      onApprove: (data, actions) => actions.redirect()
     }).render("#paypal-button-container");
   }
 
-  // FINALIZE AFTER REDIRECT BACK
-  async function finalizeCheckout(blockNumber) {
+  // ========================================================================
+  // FINALIZE — Only called AFTER redirect back
+  // ========================================================================
+  async function finalizeCheckout(blockNum) {
     const formData = JSON.parse(sessionStorage.getItem("vaultForm"));
-    if (!formData) return alert("Error: Missing form data.");
+    if (!formData) {
+      alert("Error: Missing block data.");
+      return location.replace(location.pathname);
+    }
 
-    const file = document.getElementById("fileUpload")?.files[0];
     let mediaURL = null;
     let mediaType = null;
+    const uploadField = document.getElementById("fileUpload");
 
-    if (file) {
-      const storageRef = ref(storage, `blocks/${blockNumber}/${file.name}`);
-      await uploadBytes(storageRef, file);
-      mediaURL = await getDownloadURL(storageRef);
+    // Only upload if the file still exists
+    if (uploadField && uploadField.files.length > 0) {
+      const file = uploadField.files[0];
+      const storagePath = ref(storage, `blocks/${blockNum}/${file.name}`);
+
+      await uploadBytes(storagePath, file);
+      mediaURL = await getDownloadURL(storagePath);
       mediaType = file.type;
     }
 
-    await saveBlockToFirestore(
-      blockNumber,
-      formData.message,
-      mediaURL,
-      mediaType
-    );
+    await saveBlock(blockNum, formData.message, mediaURL, mediaType);
 
-    claimedBlocks.push(blockNumber);
+    claimedBlocks.push(blockNum);
     localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
 
-    alert(`Block #${blockNumber} sealed!`);
+    alert(`Block #${blockNum} sealed in the Vault.`);
 
-    window.location.href = window.location.pathname;
+    location.replace(location.pathname);
   }
 });
