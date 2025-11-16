@@ -10,6 +10,13 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
+
 // Firebase Config -------------------------------------------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
@@ -23,8 +30,9 @@ const firebaseConfig = {
 // Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-// Expose Firestore globally
+// Expose Firestore globally (if you ever need it elsewhere)
 window.db = db;
 
 // Firestore "blocks" collection
@@ -32,6 +40,7 @@ const blocksCollection = collection(db, "blocks");
 
 // Memory cache
 let claimedBlocks = [];
+let blockDataMap = {}; // { [blockNumber]: { name, email, message, mediaUrl, mediaType, ... } }
 
 // ============================================================================
 // FIRESTORE HELPERS
@@ -39,7 +48,18 @@ let claimedBlocks = [];
 async function loadClaimedBlocksFromFirestore() {
   try {
     const snapshot = await getDocs(blocksCollection);
-    claimedBlocks = snapshot.docs.map((d) => Number(d.id));
+
+    claimedBlocks = [];
+    blockDataMap = {};
+
+    snapshot.forEach((d) => {
+      const idNum = Number(d.id);
+      if (!Number.isNaN(idNum)) {
+        claimedBlocks.push(idNum);
+        blockDataMap[idNum] = { blockNumber: idNum, ...d.data() };
+      }
+    });
+
     localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
     console.log("Loaded claimed:", claimedBlocks);
   } catch (err) {
@@ -48,6 +68,7 @@ async function loadClaimedBlocksFromFirestore() {
   }
 }
 
+// Remote check before taking money
 async function isBlockClaimedRemote(blockNumber) {
   try {
     const snap = await getDoc(doc(blocksCollection, String(blockNumber)));
@@ -58,12 +79,43 @@ async function isBlockClaimedRemote(blockNumber) {
   }
 }
 
-async function saveBlockToFirestore(blockNumber, name, email, message) {
+// Upload file to Firebase Storage and return { url, mediaType }
+async function uploadFileForBlock(blockNumber, file) {
+  if (!file) return { url: null, mediaType: null };
+
+  const timestamp = Date.now();
+  const cleanName = file.name.replace(/\s+/g, "_");
+  const storageRef = ref(
+    storage,
+    `blocks/block_${blockNumber}/${timestamp}_${cleanName}`
+  );
+
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
+
+  // Derive a simple media type bucket
+  let mediaType = "other";
+  if (file.type.startsWith("image/")) mediaType = "image";
+  else if (file.type.startsWith("audio/")) mediaType = "audio";
+  else if (file.type.startsWith("video/")) mediaType = "video";
+  else if (file.type === "application/pdf" || cleanName.toLowerCase().endsWith(".pdf"))
+    mediaType = "pdf";
+  else if (file.type.startsWith("text/") || cleanName.toLowerCase().endsWith(".txt"))
+    mediaType = "text";
+
+  return { url, mediaType };
+}
+
+// Save block data in Firestore
+async function saveBlockToFirestore(blockNumber, { name, email, message, mediaUrl, mediaType, originalFileName }) {
   try {
     await setDoc(doc(blocksCollection, String(blockNumber)), {
       name,
       email,
-      message: message || null,
+      message: message || "",
+      mediaUrl: mediaUrl || null,
+      mediaType: mediaType || null,
+      originalFileName: originalFileName || null,
       purchasedAt: serverTimestamp()
     });
     console.log("Saved block:", blockNumber);
@@ -100,7 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadingOverlay.innerHTML = `
     <div style="font-size:42px;margin-bottom:10px;">🕰️</div>
     <div style="font-size:20px;font-weight:600;margin-bottom:4px;">The Vault is opening…</div>
-    <div style="font-size:14px;opacity:0.8;">Fetching sealed blocks and preparing your grid.</div>
+    <div style="font-size:14px;opacity:0.8;">Fetching claimed blocks and preparing your grid.</div>
   `;
   document.body.appendChild(loadingOverlay);
 
@@ -117,6 +169,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const closeButton = document.querySelector(".close-button");
   const form = document.getElementById("blockForm");
 
+  const viewModal = document.getElementById("viewModal");
+  const viewModalContent = document.getElementById("viewModalContent");
+  const closeViewBtn = viewModalContent?.querySelector(".close-view");
+  const viewBlockTitle = document.getElementById("viewBlockTitle");
+  const viewBlockMedia = document.getElementById("viewBlockMedia");
+  const viewBlockMessage = document.getElementById("viewBlockMessage");
+  const viewBlockMeta = document.getElementById("viewBlockMeta");
+
   const visibleRange = [1, 100];
   const founderBlock = 1;
   const blockPrice = 6.0;
@@ -124,7 +184,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let selectedBlockNumber = null;
 
   // ------------------------------------------------------------------------
-  // SEED FROM LOCAL FIRST
+  // SEED FROM LOCAL FIRST (for instant grid)
   // ------------------------------------------------------------------------
   claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
 
@@ -146,7 +206,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       if (claimedBlocks.includes(i)) {
         block.classList.add("claimed");
-        block.style.cursor = "not-allowed";
+        block.style.cursor = "pointer";
       }
 
       grid.appendChild(block);
@@ -159,7 +219,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       msg.style.color = "#d4af37";
       msg.style.marginTop = "1rem";
       msg.style.fontWeight = "600";
-      msg.textContent = `Showing Founders Drop (Blocks ${visibleRange[0]}–${visibleRange[1]}).`;
+      msg.textContent = `Showing Founders Grid (Blocks ${visibleRange[0]}–${visibleRange[1]}).`;
       grid.insertAdjacentElement("afterend", msg);
     }
   }
@@ -172,13 +232,97 @@ document.addEventListener("DOMContentLoaded", async () => {
   function applyClaimedStylingToGrid() {
     document.querySelectorAll(".block").forEach((block) => {
       const num = Number(block.textContent);
+      if (num === founderBlock) return;
+
       if (claimedBlocks.includes(num)) {
         block.classList.add("claimed");
         block.classList.remove("selected");
-        block.style.cursor = "not-allowed";
+        block.style.cursor = "pointer";
       }
     });
   }
+
+  // ------------------------------------------------------------------------
+  // VIEW MODAL LOGIC
+  // ------------------------------------------------------------------------
+  function openViewModal(blockNumber) {
+    const data = blockDataMap[blockNumber] || {};
+
+    if (!viewModal || !viewModalContent) return;
+
+    viewBlockTitle.textContent = `Block #${blockNumber}`;
+
+    // Message
+    const msg = (data.message || "").trim();
+    viewBlockMessage.textContent = msg
+      ? msg
+      : "No message has been added to this block yet.";
+
+    // Meta
+    let owner = data.name || "Anonymous";
+    let dateText = "Date unknown";
+    if (data.purchasedAt && typeof data.purchasedAt.toDate === "function") {
+      dateText = data.purchasedAt.toDate().toLocaleString();
+    }
+    viewBlockMeta.textContent = `By ${owner} • Claimed on ${dateText}`;
+
+    // Media
+    viewBlockMedia.innerHTML = "";
+    const url = data.mediaUrl;
+    const type = data.mediaType;
+
+    if (!url) {
+      const p = document.createElement("p");
+      p.textContent = "This block has no media file attached.";
+      viewBlockMedia.appendChild(p);
+    } else if (type === "image") {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = data.originalFileName || `Block ${blockNumber} image`;
+      viewBlockMedia.appendChild(img);
+    } else if (type === "audio") {
+      const audio = document.createElement("audio");
+      audio.controls = true;
+      audio.src = url;
+      viewBlockMedia.appendChild(audio);
+    } else if (type === "video") {
+      const video = document.createElement("video");
+      video.controls = true;
+      video.src = url;
+      video.style.maxHeight = "300px";
+      viewBlockMedia.appendChild(video);
+    } else if (type === "pdf") {
+      const iframe = document.createElement("iframe");
+      iframe.id = "viewBlockPDF";
+      iframe.src = url;
+      iframe.setAttribute("title", `Block ${blockNumber} PDF`);
+      viewBlockMedia.appendChild(iframe);
+    } else if (type === "text") {
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.textContent = "Open text file in a new tab";
+      viewBlockMedia.appendChild(link);
+    } else {
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.textContent = "Open attached file";
+      viewBlockMedia.appendChild(link);
+    }
+
+    viewModal.classList.remove("hidden");
+  }
+
+  function closeViewModal() {
+    if (!viewModal) return;
+    viewModal.classList.add("hidden");
+  }
+
+  closeViewBtn?.addEventListener("click", closeViewModal);
+  viewModal?.addEventListener("click", (e) => {
+    if (e.target === viewModal) closeViewModal();
+  });
 
   // ------------------------------------------------------------------------
   // BLOCK CLICK HANDLERS
@@ -188,13 +332,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       block.addEventListener("click", () => {
         const blockNumber = Number(block.textContent);
         if (!blockNumber) return;
-        if (blockNumber === founderBlock || claimedBlocks.includes(blockNumber)) return;
 
-        document.querySelectorAll(".block").forEach((b) => b.classList.remove("selected"));
+        // Founder behavior: view only if we decide to use it; for now: no action
+        if (blockNumber === founderBlock) return;
+
+        // If claimed -> open view modal
+        if (claimedBlocks.includes(blockNumber)) {
+          openViewModal(blockNumber);
+          return;
+        }
+
+        // If unclaimed -> open purchase modal
+        document
+          .querySelectorAll(".block")
+          .forEach((b) => b.classList.remove("selected"));
         block.classList.add("selected");
 
         selectedBlockNumber = blockNumber;
-
         modal.classList.remove("hidden");
         document.getElementById("blockNumber").value = blockNumber;
         document.getElementById("selected-block-text").textContent =
@@ -213,7 +367,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   hideLoadingOverlay();
 
   // ========================================================================
-  // MODAL CLOSE
+  // MODAL CLOSE (BUY MODAL)
   // ========================================================================
   closeButton?.addEventListener("click", () => modal.classList.add("hidden"));
   modal?.addEventListener("click", (e) => {
@@ -221,7 +375,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ========================================================================
-  // PAYPAL + VALIDATION (NO DUPES)
+  // PAYPAL + VALIDATION (single render)
   // ========================================================================
   const saveBtn = document.getElementById("uploadBtn");
   const readyMsg = document.getElementById("ready-message");
@@ -276,7 +430,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   form?.addEventListener("change", updateGate, true);
 
   // ========================================================================
-  // PAYPAL BUTTON – NOW SAVES MESSAGE TOO
+  // PAYPAL BUTTON – SINGLE RENDER ONLY
   // ========================================================================
   function renderPayPalButton() {
     paypalContainer.innerHTML = "";
@@ -302,16 +456,48 @@ document.addEventListener("DOMContentLoaded", async () => {
         const name = document.getElementById("name").value.trim();
         const email = document.getElementById("email").value.trim();
         const message = document.getElementById("message").value.trim();
+        const fileInput = document.getElementById("fileUpload");
+        const file = fileInput.files[0];
 
-        await saveBlockToFirestore(selectedBlockNumber, name, email, message);
+        // Upload file to Storage
+        const { url, mediaType } = await uploadFileForBlock(
+          selectedBlockNumber,
+          file
+        );
 
+        // Save metadata in Firestore
+        await saveBlockToFirestore(selectedBlockNumber, {
+          name,
+          email,
+          message,
+          mediaUrl: url,
+          mediaType,
+          originalFileName: file?.name || null
+        });
+
+        // Update local caches
         if (!claimedBlocks.includes(selectedBlockNumber)) {
           claimedBlocks.push(selectedBlockNumber);
-          localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
         }
 
+        blockDataMap[selectedBlockNumber] = {
+          blockNumber: selectedBlockNumber,
+          name,
+          email,
+          message,
+          mediaUrl: url,
+          mediaType,
+          originalFileName: file?.name || null,
+          // purchasedAt will be serverTimestamp; viewer will handle it when reloaded
+        };
+
+        localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
         applyClaimedStylingToGrid();
+
         modal.classList.add("hidden");
+
+        // Optionally: auto-open the viewer after purchase
+        openViewModal(selectedBlockNumber);
       },
 
       onCancel: () => alert("❌ Transaction cancelled."),
