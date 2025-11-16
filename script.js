@@ -10,6 +10,13 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
+
 // Firebase Config -------------------------------------------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
@@ -23,6 +30,8 @@ const firebaseConfig = {
 // Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
+
 const blocksCollection = collection(db, "blocks");
 
 // Memory cache
@@ -52,12 +61,12 @@ async function fetchBlockData(blockNumber) {
   }
 }
 
-async function saveBlockToFirestore(blockNumber, name, email, message) {
+async function saveBlockToFirestore(blockNumber, name, email, message, mediaURL, mediaType) {
   try {
     await setDoc(doc(blocksCollection, String(blockNumber)), {
-      name,
-      email,
       message: message || null,
+      mediaURL: mediaURL || null,
+      mediaType: mediaType || null,
       purchasedAt: serverTimestamp()
     });
   } catch (err) {
@@ -120,7 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   await loadClaimedBlocksFromFirestore();
 
-  // GRID — 1 to 100 only
+  // GRID — 1 to 100
   function buildGrid() {
     grid.innerHTML = "";
     for (let i = 1; i <= 100; i++) {
@@ -137,7 +146,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   buildGrid();
 
-  // Ensure styling updates
   function styleClaimed() {
     document.querySelectorAll(".block").forEach(b => {
       const num = Number(b.textContent);
@@ -149,26 +157,47 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   styleClaimed();
 
-  // Block interactions
+  // Block click handling
   function attachBlockHandlers() {
     document.querySelectorAll(".block").forEach(block => {
       block.addEventListener("click", async () => {
         const num = Number(block.textContent);
         if (!num) return;
 
-        // Claimed: view mode
+        // CLAIMED — view mode
         if (claimedBlocks.includes(num)) {
           const data = await fetchBlockData(num);
 
           viewBlockTitle.textContent = `Block #${num}`;
+          viewBlockMessage.textContent = data?.message || "";
+
           viewBlockMedia.innerHTML = "";
-          viewBlockMessage.textContent = data?.message || "(no message)";
-          viewBlockMeta.textContent = data?.name ? `Claimed by ${data.name}` : "";
+          if (data?.mediaURL && data?.mediaType) {
+            if (data.mediaType.startsWith("image/")) {
+              viewBlockMedia.innerHTML = `<img src="${data.mediaURL}" alt="Block Media" />`;
+            } else if (data.mediaType === "application/pdf") {
+              viewBlockMedia.innerHTML = `<iframe id="viewBlockPDF" src="${data.mediaURL}"></iframe>`;
+            } else if (data.mediaType.startsWith("audio/")) {
+              viewBlockMedia.innerHTML = `<audio controls src="${data.mediaURL}"></audio>`;
+            } else if (data.mediaType.startsWith("video/")) {
+              viewBlockMedia.innerHTML = `<video controls src="${data.mediaURL}"></video>`;
+            } else {
+              viewBlockMedia.innerHTML = `<p>📎 File stored — but preview not supported.</p>`;
+            }
+          }
+
+          if (data?.purchasedAt?.toDate) {
+            const d = data.purchasedAt.toDate();
+            viewBlockMeta.textContent = `Sealed on ${d.toLocaleDateString()}`;
+          } else {
+            viewBlockMeta.textContent = "";
+          }
+
           viewModal.classList.remove("hidden");
           return;
         }
 
-        // Free: claim mode
+        // FREE — claim mode
         document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
         block.classList.add("selected");
 
@@ -225,10 +254,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         paypalRendered = true;
         window.paypal.Buttons({
           style: {
-            shape: "pill",
             color: "gold",
-            label: "pay",
-            layout: "vertical"
+            label: "pay"
           },
           createOrder: (data, actions) => {
             return actions.order.create({
@@ -261,13 +288,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Successful payment
   async function paymentSuccess(details) {
-    alert(`🪙 Block purchased by ${details.payer.name.given_name}!`);
+    alert(`🪙 Block sealed: #${selectedBlockNumber}`);
 
     const name = document.getElementById("name").value.trim();
     const email = document.getElementById("email").value.trim();
     const message = messageInput.value.trim() || null;
+    const file = document.getElementById("fileUpload").files[0];
 
-    await saveBlockToFirestore(selectedBlockNumber, name, email, message);
+    let mediaURL = null;
+    let mediaType = null;
+
+    if (file) {
+      const storageRef = ref(storage, `blocks/${selectedBlockNumber}/${file.name}`);
+      await uploadBytes(storageRef, file);
+      mediaURL = await getDownloadURL(storageRef);
+      mediaType = file.type;
+    }
+
+    await saveBlockToFirestore(
+      selectedBlockNumber,
+      name,
+      email,
+      message,
+      mediaURL,
+      mediaType
+    );
+
     claimedBlocks.push(selectedBlockNumber);
     localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
 
@@ -275,7 +321,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     modal.classList.add("hidden");
   }
 
-  // Accordion restore
+  // Accordion
   document.querySelectorAll(".accordion-header").forEach(header => {
     header.addEventListener("click", () => {
       const open = header.classList.contains("active");
@@ -288,7 +334,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // Menu works
+  // Menu
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const closeMenu = document.getElementById("closeMenu");
