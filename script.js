@@ -1,8 +1,7 @@
 console.log("Vault JS active");
+
 // === FIREBASE IMPORTS ================================
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 
 import {
   getFirestore,
@@ -38,7 +37,6 @@ async function loadClaimedBlocks() {
     localStorage.setItem("claimed", JSON.stringify(claimed));
   } catch (err) {
     console.error("Error loading claimed blocks:", err);
-    // fall back to whatever is in localStorage
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   }
 }
@@ -70,7 +68,7 @@ async function fetchBlock(num) {
 
 // === MAIN APP ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-  // Core DOM elements
+
   const blockForm = document.getElementById("blockForm");
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
@@ -78,15 +76,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const viewClose = document.querySelector(".close-view");
   const closeBtn = document.querySelector(".close-button");
 
+  const readyMsg = document.getElementById("ready-message");
+
   const nameInput = document.getElementById("name");
   const emailInput = document.getElementById("email");
   const messageInput = document.getElementById("message");
   const fileInput = document.getElementById("fileUpload");
 
-  const readyMsg = document.getElementById("ready-message");
-  const payButton = document.getElementById("payButton");
-
-  // Menu + overlay
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const overlay = document.getElementById("overlay");
@@ -94,21 +90,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let selected = null;
 
-  // Restore claimed from localStorage first
   claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
-  // Then try to load from Firestore (will overwrite claimed if successful)
   await loadClaimedBlocks();
 
-  // === GRID ========================================
   function renderGrid() {
-    if (!grid) return;
     grid.innerHTML = "";
+
     for (let i = 1; i <= 100; i++) {
       const div = document.createElement("div");
       div.className = "block";
       div.textContent = i;
-      // Remove skeletons once real blocks render
-document.querySelectorAll(".loading-block").forEach(el => el.remove());
 
       if (claimed.includes(i)) {
         div.classList.add("claimed");
@@ -117,14 +108,10 @@ document.querySelectorAll(".loading-block").forEach(el => el.remove());
       div.onclick = async () => {
         if (claimed.includes(i)) {
           const data = await fetchBlock(i);
-          const titleEl = document.getElementById("viewBlockTitle");
-          const msgEl = document.getElementById("viewBlockMessage");
-          const mediaEl = document.getElementById("viewBlockMedia");
-
-          if (titleEl) titleEl.textContent = `Block #${i}`;
-          if (msgEl) msgEl.textContent = data?.message || "";
-          if (mediaEl) mediaEl.innerHTML = "";
-          if (viewModal) viewModal.classList.remove("hidden");
+          document.getElementById("viewBlockTitle").textContent = `Block #${i}`;
+          document.getElementById("viewBlockMessage").textContent = data?.message || "";
+          document.getElementById("viewBlockMedia").innerHTML = "";
+          viewModal.classList.remove("hidden");
           return;
         }
 
@@ -132,12 +119,10 @@ document.querySelectorAll(".loading-block").forEach(el => el.remove());
         div.classList.add("selected");
 
         selected = i;
-        const blockNumberInput = document.getElementById("blockNumber");
-        const selectedText = document.getElementById("selected-block-text");
 
-        if (blockNumberInput) blockNumberInput.value = i;
-        if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
-        if (modal) modal.classList.remove("hidden");
+        document.getElementById("blockNumber").value = i;
+        document.getElementById("selected-block-text").textContent = `Selected Block: #${i}`;
+        modal.classList.remove("hidden");
       };
 
       grid.appendChild(div);
@@ -146,64 +131,49 @@ document.querySelectorAll(".loading-block").forEach(el => el.remove());
 
   renderGrid();
 
-  // === CLOSE MODALS =================================
-  if (closeBtn && modal) {
+  if (closeBtn) {
     closeBtn.onclick = () => modal.classList.add("hidden");
   }
-  if (viewClose && viewModal) {
+
+  if (viewClose) {
     viewClose.onclick = () => viewModal.classList.add("hidden");
   }
 
-  // === SIDE MENU TOGGLE =============================
   function closeMenu() {
-    if (sideMenu) sideMenu.classList.remove("open");
-    if (overlay) overlay.classList.remove("show");
-    if (menuToggle) menuToggle.classList.remove("active");
+    sideMenu.classList.remove("open");
+    overlay.classList.remove("show");
+    menuToggle.classList.remove("active");
   }
 
-  if (menuToggle && sideMenu && overlay) {
-    menuToggle.addEventListener("click", () => {
-      sideMenu.classList.add("open");
-      overlay.classList.add("show");
-      menuToggle.classList.add("active");
-    });
-  }
+  menuToggle.addEventListener("click", () => {
+    sideMenu.classList.add("open");
+    overlay.classList.add("show");
+    menuToggle.classList.add("active");
+  });
 
-  if (closeMenuBtn) {
-    closeMenuBtn.addEventListener("click", closeMenu);
-  }
+  closeMenuBtn.addEventListener("click", closeMenu);
+  overlay.addEventListener("click", closeMenu);
 
-  if (overlay) {
-    overlay.addEventListener("click", closeMenu);
-  }
-
-  // === ACCORDION (MATCHES YOUR CSS) =================
+  // Accordion
   document.querySelectorAll(".accordion-header").forEach(header => {
     header.addEventListener("click", () => {
       const content = header.nextElementSibling;
       const isOpen = header.classList.contains("active");
 
-      // Close all
       document.querySelectorAll(".accordion-header").forEach(h => {
         h.classList.remove("active");
-        const c = h.nextElementSibling;
-        if (c && c.classList) c.classList.remove("show");
+        h.nextElementSibling.classList.remove("show");
       });
 
-      // Re-open if it was closed
-      if (!isOpen && content && content.classList) {
+      if (!isOpen) {
         header.classList.add("active");
         content.classList.add("show");
       }
     });
   });
 
-  // === VALIDATION ===================================
   function valid() {
     return (
-      nameInput &&
-      emailInput &&
-      fileInput &&
       nameInput.value.trim() &&
       emailInput.value.trim() &&
       fileInput.files.length > 0 &&
@@ -212,66 +182,29 @@ document.querySelectorAll(".loading-block").forEach(el => el.remove());
   }
 
   function updateGate() {
-    if (!readyMsg || !payButton) return;
+    const paypalDiv = document.getElementById("paypal-container-L4UK67HLWZ324");
+    if (!paypalDiv) return;
+
     if (valid()) {
-      readyMsg.classList.add("show");
-      payButton.style.display = "block";
+      readyMsg.classList.remove("hidden");
+      paypalDiv.style.display = "block";
+      showPayPalButton();
     }
   }
 
-  const uploadBtn = document.getElementById("uploadBtn");
-  if (uploadBtn) {
-    uploadBtn.onclick = updateGate;
-  }
-  if (blockForm) {
-    blockForm.addEventListener("input", updateGate, true);
-  }
+  document.getElementById("uploadBtn").onclick = updateGate;
+  blockForm.addEventListener("input", updateGate, true);
 
-  // === TEMP PAYMENT (NO PAYPAL WHILE WE STABILISE) ==
-  if (payButton) {
-    payButton.onclick = async () => {
-      if (!selected) {
-        alert("Please select a block first.");
-        return;
-      }
-
-      if (!nameInput.value.trim() || !emailInput.value.trim()) {
-        alert("Please fill in your name and email.");
-        return;
-      }
-
-      alert("🟡 Payment system is being upgraded.\nYour block will be reserved now.");
-
-      await saveBlock(
-        selected,
-        nameInput.value,
-        emailInput.value,
-        messageInput.value
-      );
-
-      claimed.push(selected);
-      localStorage.setItem("claimed", JSON.stringify(claimed));
-
-      if (modal) modal.classList.add("hidden");
-      renderGrid();
-    };
-  }
 });
 
-// === LOADER – SIMPLE & ROBUST =======================
+// Loader
 window.addEventListener("load", () => {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
-  if (!loader || !main) return;
-
-  // Show loader briefly, then reveal main content
   setTimeout(() => {
     loader.classList.add("vault-loader-hide");
     main.classList.add("vault-main-visible");
-
-    setTimeout(() => {
-      loader.remove();
-    }, 600);
+    setTimeout(() => loader.remove(), 600);
   }, 1500);
 });
