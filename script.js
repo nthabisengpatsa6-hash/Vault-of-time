@@ -47,7 +47,7 @@ async function saveBlock(blockNumber, name, email, message) {
       purchasedAt: serverTimestamp()
     });
   } catch (err) {
-    console.error("Failed to save block:", err);
+    console.error("Error saving block:", err);
   }
 }
 
@@ -63,7 +63,7 @@ async function fetchBlock(blockNumber) {
 // === MAIN APP ========================================
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // === LOADING OVERLAY ===============================
+  // === LOAD SCREEN ===============================
   const overlay = document.createElement("div");
   overlay.style = `
     position: fixed;
@@ -89,7 +89,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     setTimeout(() => overlay.remove(), 400);
   };
 
-  // === DOM REFS ======================================
+  // === REDIRECT HANDLER ===========================
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("paid") === "true") {
+    const block = Number(urlParams.get("block"));
+    alert("Payment complete! Your block is now part of the Vault.");
+    if (!claimedBlocks.includes(block)) {
+      claimedBlocks.push(block);
+      localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
+    }
+  }
+
+  // === DOM REFS ==================================
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
   const viewModal = document.getElementById("viewModal");
@@ -101,23 +112,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   const emailInput = document.getElementById("email");
   const messageInput = document.getElementById("message");
   const fileInput = document.getElementById("fileUpload");
-  const form = document.getElementById("blockForm"); // FIXED
 
   const viewBlockTitle = document.getElementById("viewBlockTitle");
   const viewBlockMessage = document.getElementById("viewBlockMessage");
 
   const paypalContainer = document.getElementById("paypal-button-container");
   const readyMsg = document.getElementById("ready-message");
+  const uploadBtn = document.getElementById("uploadBtn");
 
   let selected = null;
   let paypalRendered = false;
   const blockPrice = 6.0;
 
-  // === FIRESTORE LOAD ================================
+  // === FIRESTORE LOAD ============================
   claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   await loadClaimedBlocks();
 
-  // === GRID ==========================================
+  // === GRID ==========================
   function buildGrid() {
     grid.innerHTML = "";
     for (let i = 1; i <= 100; i++) {
@@ -142,7 +153,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // === BLOCK CLICK ==================================
+  // === BLOCK CLICK ===============================
   grid.addEventListener("click", async e => {
     if (!e.target.classList.contains("block")) return;
     const num = Number(e.target.textContent);
@@ -164,11 +175,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     modal.classList.remove("hidden");
   });
 
-  // === MODAL CLOSE ===================================
-  closeBtn.onclick = () => modal.classList.add("hidden");
-  viewClose.onclick = () => viewModal.classList.add("hidden");
+  // === MODAL CLOSE ===============================
+  closeBtn.addEventListener("click", () => modal.classList.add("hidden"));
+  viewClose.addEventListener("click", () => viewModal.classList.add("hidden"));
 
-  // === FORM VALIDATION ===============================
+  // === FORM VALIDATION ===========================
   function valid() {
     return (
       nameInput.value.trim() &&
@@ -189,32 +200,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function updateGate() {
-    if (!fileOK()) {
-      readyMsg.classList.remove("show");
-      paypalContainer.classList.remove("show");
-      return;
-    }
-
+    if (!fileOK()) return;
     if (valid()) {
       readyMsg.classList.add("show");
-
       if (!paypalRendered) {
         paypalRendered = true;
         renderPayPal();
       }
-
       paypalContainer.classList.add("show");
     }
   }
 
-  document.getElementById("uploadBtn").onclick = updateGate;
+  uploadBtn.addEventListener("click", updateGate);
+  document.getElementById("blockForm").addEventListener("input", updateGate);
 
-  if (form) {
-    form.addEventListener("input", updateGate, true);
-    form.addEventListener("change", updateGate, true);
-  }
-
-  // === PAYPAL BUTTON =================================
+  // === PAYPAL: REDIRECT MODE =====================
   function renderPayPal() {
     paypal.Buttons({
       style: { shape: "pill", color: "gold", layout: "horizontal" },
@@ -224,23 +224,30 @@ document.addEventListener("DOMContentLoaded", async () => {
           purchase_units: [{
             description: `Vault Block #${selected}`,
             amount: { value: blockPrice.toFixed(2) }
-          }]
+          }],
+          application_context: {
+            shipping_preference: "NO_SHIPPING",
+            user_action: "PAY_NOW",
+            return_url: window.location.origin + "/?paid=true&block=" + selected,
+            cancel_url: window.location.origin + "/?cancel=true"
+          }
         });
       },
 
       onApprove: async (data, actions) => {
-        const details = await actions.order.capture();
-        await paymentSuccess(details);
+        const order = await actions.order.capture();
+        await paymentSuccess(order);
       },
 
-      onError: err => {
-        console.error("PayPal error:", err);
-        alert("Payment failed — please try again.");
+      onError(err) {
+        console.error("PayPal Error:", err);
+        alert("Payment failed. Please try again.");
       }
+
     }).render("#paypal-button-container");
   }
 
-  // === PAYMENT SUCCESS ===============================
+  // === SUCCESS ==================================
   async function paymentSuccess(details) {
     const name = nameInput.value.trim();
     const email = emailInput.value.trim();
@@ -254,7 +261,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     refreshGrid();
   }
 
-  // === ACCORDION =====================================
+  // === ACCORDION ================================
   document.querySelectorAll(".accordion-header").forEach(h => {
     h.addEventListener("click", () => {
       const open = h.classList.contains("active");
@@ -267,7 +274,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // === MENU ==========================================
+  // === MENU =====================================
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const menuOverlay = document.getElementById("overlay");
