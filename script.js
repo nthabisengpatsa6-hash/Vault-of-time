@@ -72,8 +72,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const payButton = document.getElementById("payButton");
 
   let selected = null;
-  const price = 6.0;
-  const seller = "hello@vaultoftime.com";
+  const seller = "hello@vaultoftime.com"; // STILL USED IN RECEIPTS
+  const hostedButtonId = "L4UK67HLWZ324"; // 🎉 YOUR BUTTON ID
 
   claimed = JSON.parse(localStorage.getItem("claimed")) || [];
   await load();
@@ -141,11 +141,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // === PAYMENT BUTTON ===============================
   payButton.onclick = async () => {
-    const url =
-      `https://www.paypal.com/ncp/payment/${seller}?amount=${price}&currency=USD&item_name=Vault+Block+%23${selected}`;
+    if (!selected) return;
 
-    window.open(url, "_blank");
+    // Sanitize user input
+    const block = encodeURIComponent(selected);
+    const name = encodeURIComponent(nameInput.value);
+    const email = encodeURIComponent(emailInput.value);
 
+    // 🟡 NEW HOSTED BUTTON URL METHOD
+    const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=${hostedButtonId}&custom=${block}`;
+
+    window.open(paypalUrl, "_blank");
+
+    // Simulate confirmation until webhooks come later
     setTimeout(async () => {
       await saveBlock(
         selected,
