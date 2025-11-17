@@ -72,7 +72,7 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Clock + inner styles (unchanged) */
+    /* Clock + inner styles */
     .clock-icon {
       display:inline-block;
       transform-origin:bottom center;
@@ -101,9 +101,13 @@
     #vault-main-content.vault-main-visible {
       opacity: 1;
     }
+
+    #paypal-container-L4UK67HLWZ324 {
+      margin-top: 16px;
+      display:none;
+    }
   </style>
 </head>
-
 
 <body>
 
@@ -254,11 +258,9 @@
 
       <button type="button" id="uploadBtn">Save Details</button>
 
-      <div id="ready-message">✅ Ready for checkout</div>
+      <div id="ready-message" class="hidden">✅ Ready for checkout</div>
 
-      <button type="button" id="payButton" class="pay-now-button">
-        💳 Pay $6 Securely
-      </button>
+      <div id="paypal-container-L4UK67HLWZ324"></div>
     </form>
   </div>
 </div>
@@ -274,13 +276,24 @@
 
 <footer>
   <p>
-    <a href="contact.html">📩 Contact Us</a> | 
+    <a href="contact.html">📩 Contact Us</a> |
     <a href="terms.html">📜 Terms & Conditions</a><br>
     <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</small>
   </p>
 </footer>
 
 </div><!-- END MAIN CONTENT -->
+
+<!-- PAYPAL API -->
+<script src="https://www.paypal.com/sdk/js?client-id=BAABdDlBK6bnCOG7pqGOgVVz7vDF4yhg3-PvS8ZwAbxXJMmGgjMnYAQSkaXOrSwXReJlgWIw62sTpXTksU&components=hosted-buttons&enable-funding=card&currency=USD"></script>
+
+<script>
+function showPayPalButton() {
+  paypal.HostedButtons({
+    hostedButtonId: "L4UK67HLWZ324",
+  }).render("#paypal-container-L4UK67HLWZ324");
+}
+</script>
 
 <script type="module" src="script.js"></script>
 </body>
