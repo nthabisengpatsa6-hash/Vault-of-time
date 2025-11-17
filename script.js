@@ -72,8 +72,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const payButton = document.getElementById("payButton");
 
   let selected = null;
-  const seller = "hello@vaultoftime.com"; // STILL USED IN RECEIPTS
-  const hostedButtonId = "L4UK67HLWZ324"; // 🎉 YOUR BUTTON ID
 
   claimed = JSON.parse(localStorage.getItem("claimed")) || [];
   await load();
@@ -139,51 +137,56 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("uploadBtn").onclick = updateGate;
   blockForm.addEventListener("input", updateGate, true);
 
-  // === PAYMENT BUTTON ===============================
+  // === TEMP PAYMENT (PAYPAL DISABLED FOR NOW) ========
   payButton.onclick = async () => {
-    if (!selected) return;
+    alert("🟡 Payment system is being upgraded.\nYour block will be reserved now.");
 
-    // Sanitize user input
-    const block = encodeURIComponent(selected);
-    const name = encodeURIComponent(nameInput.value);
-    const email = encodeURIComponent(emailInput.value);
+    await saveBlock(
+      selected,
+      nameInput.value,
+      emailInput.value,
+      messageInput.value
+    );
 
-    // 🟡 NEW HOSTED BUTTON URL METHOD
-    const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=${hostedButtonId}&custom=${block}`;
+    claimed.push(selected);
+    localStorage.setItem("claimed", JSON.stringify(claimed));
 
-    window.open(paypalUrl, "_blank");
-
-    // Simulate confirmation until webhooks come later
-    setTimeout(async () => {
-      await saveBlock(
-        selected,
-        nameInput.value,
-        emailInput.value,
-        messageInput.value
-      );
-
-      claimed.push(selected);
-      localStorage.setItem("claimed", JSON.stringify(claimed));
-
-      modal.classList.add("hidden");
-      renderGrid();
-    }, 4000);
+    modal.classList.add("hidden");
+    renderGrid();
   };
+
+  // === ACCORDION FIX ================================
+  document.querySelectorAll(".accordion-header").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const content = btn.nextElementSibling;
+      content.style.maxHeight = content.style.maxHeight ? null : content.scrollHeight + "px";
+    });
+  });
+
 });
 
 
-// === VAULT LOADING SCREEN LOGIC ======================
+// === FIXED LOADER TIMING ============================
 window.addEventListener("load", () => {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
   if (!loader || !main) return;
 
-  setTimeout(() => {
+  Promise.all([
+    new Promise(res => setTimeout(res, 1200)),
+    new Promise(res => {
+      const check = setInterval(() => {
+        if (document.querySelectorAll(".block").length > 0) {
+          clearInterval(check);
+          res();
+        }
+      }, 100);
+    })
+  ]).then(() => {
     loader.classList.add("vault-loader-hide");
     main.classList.add("vault-main-visible");
 
-    // fully remove loader after fade
     setTimeout(() => loader.remove(), 700);
-  }, 1200);
+  });
 });
