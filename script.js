@@ -155,17 +155,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderGrid();
   };
 
-  // === ACCORDION FIX ================================
+// === ACCORDION FIX (matches your CSS) ===
 document.querySelectorAll(".accordion-header").forEach(header => {
   header.addEventListener("click", () => {
     const content = header.nextElementSibling;
-    const expanded = header.classList.contains("open");
+    const isOpen = header.classList.contains("active");
 
-    // Close all accordion sections
+    // Close ALL accordion sections
     document.querySelectorAll(".accordion-header").forEach(h => {
-      h.classList.remove("open");
-      h.nextElementSibling.style.maxHeight = null;
+      h.classList.remove("active");
+      h.nextElementSibling.classList.remove("show");
     });
+
+    // Re-open this one (if it was closed)
+    if (!isOpen) {
+      header.classList.add("active");
+      content.classList.add("show");
+    }
+  });
+});
 
     // Toggle current one
     if (!expanded) {
