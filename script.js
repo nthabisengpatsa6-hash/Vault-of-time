@@ -184,27 +184,19 @@ document.querySelectorAll(".accordion-header").forEach(header => {
 });
 
 
-// === FIXED LOADER TIMING ============================
+// === LOADER (failsafe) ============================
 window.addEventListener("load", () => {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
   if (!loader || !main) return;
 
-  Promise.all([
-    new Promise(res => setTimeout(res, 1200)),
-    new Promise(res => {
-      const check = setInterval(() => {
-        if (document.querySelectorAll(".block").length > 0) {
-          clearInterval(check);
-          res();
-        }
-      }, 100);
-    })
-  ]).then(() => {
+  // Always show loader at least 1.2s
+  setTimeout(() => {
     loader.classList.add("vault-loader-hide");
     main.classList.add("vault-main-visible");
 
+    // fully remove loader after fade
     setTimeout(() => loader.remove(), 700);
-  });
+  }, 1500);
 });
