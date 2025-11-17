@@ -72,7 +72,7 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Clock + inner styles (kept exactly as before) */
+    /* Clock + inner styles (unchanged) */
     .clock-icon {
       display:inline-block;
       transform-origin:bottom center;
@@ -92,82 +92,12 @@
       50%{text-shadow:0 0 40px rgba(212,175,55,.6);transform:scale(1.1)}
     }
 
-    /* Keep these internal styles */
     .hidden { display:none !important; }
 
-    #ready-message {
-      display:none;
-      opacity:0;
-      color:#9be589;
-      font-weight:600;
-      font-size:14px;
-      transform:translateY(4px);
-      transition:.3s ease;
-    }
-
-    #ready-message.show {
-      display:block;
-      opacity:1;
-      transform:none;
-    }
-
-    .pay-now-button {
-      margin-top: 10px;
-      background: #f9d26e;
-      color: #111;
-      font-weight: bold;
-      padding: 12px;
-      border-radius: 8px;
-      border: none;
-      width: 100%;
-      font-size: 16px;
-      cursor: pointer;
-      display: none;
-    }
-
-    #viewModal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.7);
-      display: flex;
-      align-items:center;
-      justify-content:center;
-      z-index: 99999;
-    }
-
-    #viewModalContent {
-      background:#11161f;
-      border:1px solid #d4af37;
-      border-radius:10px;
-      padding:20px;
-      max-width:600px;
-      width:90%;
-      color:white;
-      position:relative;
-      text-align:center;
-    }
-
-    .close-view {
-      position:absolute;
-      right:12px;
-      top:10px;
-      cursor:pointer;
-      color:#d4af37;
-      font-size:22px;
-    }
-
-    #viewBlockMedia img {
-      max-width:100%;
-      max-height:300px;
-      border-radius:6px;
-    }
-
-    /* Hide main content at start */
     #vault-main-content {
       opacity: 0;
       transition: opacity 0.6s ease;
     }
-
     #vault-main-content.vault-main-visible {
       opacity: 1;
     }
@@ -175,11 +105,9 @@
 </head>
 
 
-
-
 <body>
 
-<!-- 🔐 VAULT LOADING SCREEN -->
+<!-- 🔐 LOADER -->
 <div id="vault-loader">
   <div class="vault-loader-inner">
     <div class="vault-circle"></div>
@@ -188,10 +116,8 @@
   </div>
 </div>
 
-
-<!-- 🔓 MAIN CONTENT START -->
+<!-- 🔓 MAIN CONTENT -->
 <div id="vault-main-content">
-
 
 <div class="menu-toggle" id="menuToggle">☰</div>
 <div class="overlay" id="overlay"></div>
@@ -202,53 +128,104 @@
 
   <div class="accordion">
 
+    <!-- ABOUT -->
     <div class="accordion-item">
       <button class="accordion-header">📜 About The Vault</button>
       <div class="accordion-content">
         <p>The Vault Of Time is a living digital monument — a global wall where humanity leaves proof that we were here.</p>
-        <p>People use blocks to remember loved ones, make art, speak truth, leave warnings, plant seeds of hope, or simply say: “I existed.”</p>
-        <p>This project was created during a time when the world felt uncertain — a reminder that our voices matter, even if the future is unclear.</p>
+        <p>People use blocks to:</p>
+        <ul>
+          <li>Remember loved ones</li>
+          <li>Create small works of art</li>
+          <li>Leave advice, warnings, or poetry</li>
+          <li>Say “I was here” — for the future to see</li>
+        </ul>
         <p><strong>Exactly 1,000,000 blocks will ever exist.</strong></p>
-        <p>One day, when someone looks back, they’ll know exactly who we were — and what we cared about.</p>
+        <p>A time capsule — built one block at a time.</p>
       </div>
     </div>
 
+    <!-- HOW TO BUY -->
     <div class="accordion-item">
-      <button class="accordion-header">💰 How To Buy</button>
+      <button class="accordion-header">💳 How To Buy</button>
       <div class="accordion-content">
         <ol>
-          <li>Select your block.</li>
+          <li>Pick a block.</li>
           <li>Enter your name & email.</li>
-          <li>(Optional) Write a message — tribute, memory, note, poem, etc.</li>
-          <li>Upload your image (max 2MB).</li>
+          <li>(Optional) Write a message.</li>
+          <li>Upload an image (max 2MB).</li>
           <li>Pay <strong>$6</strong> securely by card.</li>
         </ol>
-        <p>🧱 You can edit your block for 7 days.</p>
+        <p>🧱 Your block becomes part of the Vault forever.</p>
+        <p>⏳ You may edit your block for 7 days.</p>
+        <p>💵 All transactions are final.</p>
       </div>
     </div>
 
+    <!-- FAQ -->
+    <div class="accordion-item">
+      <button class="accordion-header">❓ Frequently Asked Questions</button>
+      <div class="accordion-content">
+        <p><strong>What if someone bought the block I want?</strong><br>
+        Then it’s sealed. Blocks cannot be replaced or taken.</p>
+
+        <p><strong>Can I change my block later?</strong><br>
+        Yes — you have 7 days to edit image or text.</p>
+
+        <p><strong>Is the Vault permanent?</strong><br>
+        Yes. Once sealed, your block becomes part of a permanent archive.</p>
+
+        <p><strong>Do I need PayPal?</strong><br>
+        No — you can pay by card using PayPal’s secure processor.</p>
+      </div>
+    </div>
+
+    <!-- RULES -->
     <div class="accordion-item">
       <button class="accordion-header">⚖️ Vault Rules</button>
       <div class="accordion-content">
         <ul>
-          <li>📦 Max upload size: 2MB</li>
-          <li>❌ No hate speech</li>
-          <li>❌ No porn, gore, illegal content</li>
-          <li>🕒 Editable 7 days only</li>
+          <li>❌ No hate speech or harassment.</li>
+          <li>❌ No NSFW, violent, or illegal content.</li>
+          <li>❌ No confessions to crimes.</li>
+          <li>❌ No copyrighted content unless you own the rights.</li>
+          <li>🕊️ Keep your block meaningful or creative.</li>
+          <li>🧱 All transactions are final once a block is sealed.</li>
         </ul>
+        <p>By submitting, you agree to the Vault’s Terms & Conditions.</p>
       </div>
     </div>
 
+    <!-- PRIVACY -->
     <div class="accordion-item">
       <button class="accordion-header">🔐 Privacy Policy</button>
       <div class="accordion-content">
         <p>We only collect:</p>
         <ul>
-          <li>Name</li>
-          <li>Email</li>
-          <li>Your upload</li>
+          <li>Your name</li>
+          <li>Your email</li>
+          <li>Your upload / message</li>
         </ul>
-        <p>We never sell or share your data.</p>
+
+        <p>We do NOT:</p>
+        <ul>
+          <li>Sell your data</li>
+          <li>Share your info with advertisers</li>
+          <li>Store card details</li>
+        </ul>
+
+        <p>Payments are handled securely by PayPal.</p>
+        <p>Need help? Email: <strong>hello@vaultoftime.com</strong></p>
+      </div>
+    </div>
+
+    <!-- LEGAL -->
+    <div class="accordion-item">
+      <button class="accordion-header">📇 Legal Info</button>
+      <div class="accordion-content">
+        <p><strong>Company:</strong> Vault of Time (Pty) Ltd</p>
+        <p><strong>Reg No:</strong> 2025/875420/07</p>
+        <p><strong>Jurisdiction:</strong> South Africa</p>
       </div>
     </div>
   </div>
@@ -260,21 +237,7 @@
   <span class="clock-icon reverse">🕰️</span>
 </h1>
 
-<div class="grid-container" id="grid">
-  <!-- Temporary skeleton loading blocks -->
-  <div class="loading-block"></div>
-  <div class="loading-block"></div>
-  <div class="loading-block"></div>
-  <div class="loading-block"></div>
-  <div class="loading-block"></div>
-  <div class="loading-block"></div>
-  <div class="loading-block"></div>
-  <div class="loading-block"></div>
-  <div class="loading-block"></div>
-  <div class="loading-block"></div>
-  <div class="loading-block"></div>
-  <div class="loading-block"></div>
-</div>
+<div class="grid-container" id="grid"></div>
 
 <div class="modal hidden" id="modal">
   <div class="modal-content">
@@ -313,12 +276,11 @@
   <p>
     <a href="contact.html">📩 Contact Us</a> | 
     <a href="terms.html">📜 Terms & Conditions</a><br>
-    <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd</small>
+    <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</small>
   </p>
 </footer>
 
 </div><!-- END MAIN CONTENT -->
-
 
 <script type="module" src="script.js"></script>
 </body>
