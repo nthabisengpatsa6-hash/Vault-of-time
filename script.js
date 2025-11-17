@@ -184,19 +184,32 @@ document.querySelectorAll(".accordion-header").forEach(header => {
 });
 
 
-// === LOADER (failsafe) ============================
+// === UNBREAKABLE LOADER FAILSAFE ===
 window.addEventListener("load", () => {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
-  if (!loader || !main) return;
+  // If elements exist, reveal main even if everything else breaks
+  if (loader) {
+    setTimeout(() => {
+      loader.style.opacity = "0";
+      loader.style.pointerEvents = "none";
+      setTimeout(() => loader.remove(), 600);
+    }, 1500);
+  }
 
-  // Always show loader at least 1.2s
-  setTimeout(() => {
-    loader.classList.add("vault-loader-hide");
-    main.classList.add("vault-main-visible");
-
-    // fully remove loader after fade
-    setTimeout(() => loader.remove(), 700);
-  }, 1500);
+  if (main) {
+    setTimeout(() => {
+      main.style.opacity = "1";
+    }, 1200);
+  }
 });
+
+// Absolute fallback if everything else fails
+setTimeout(() => {
+  const loader = document.getElementById("vault-loader");
+  const main = document.getElementById("vault-main-content");
+
+  if (loader) loader.remove();
+  if (main) main.style.opacity = "1";
+}, 4000);
