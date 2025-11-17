@@ -1,4 +1,3 @@
-alert("Vault script is running!");
 // === FIREBASE IMPORTS ================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
@@ -47,7 +46,9 @@ async function saveBlock(blockNumber, name, email, message) {
       message: message || null,
       purchasedAt: serverTimestamp()
     });
-  } catch (err) {}
+  } catch (err) {
+    console.error("Failed to save block:", err);
+  }
 }
 
 async function fetchBlock(blockNumber) {
@@ -100,6 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const emailInput = document.getElementById("email");
   const messageInput = document.getElementById("message");
   const fileInput = document.getElementById("fileUpload");
+  const form = document.getElementById("blockForm"); // FIXED
 
   const viewBlockTitle = document.getElementById("viewBlockTitle");
   const viewBlockMessage = document.getElementById("viewBlockMessage");
@@ -187,21 +189,32 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function updateGate() {
-    if (!fileOK()) return;
+    if (!fileOK()) {
+      readyMsg.classList.remove("show");
+      paypalContainer.classList.remove("show");
+      return;
+    }
+
     if (valid()) {
       readyMsg.classList.add("show");
+
       if (!paypalRendered) {
         paypalRendered = true;
         renderPayPal();
       }
+
       paypalContainer.classList.add("show");
     }
   }
 
   document.getElementById("uploadBtn").onclick = updateGate;
-  form.addEventListener("input", updateGate, true);
 
-  // === PAYPAL BUTTON (NEW TAB MODE) ==================
+  if (form) {
+    form.addEventListener("input", updateGate, true);
+    form.addEventListener("change", updateGate, true);
+  }
+
+  // === PAYPAL BUTTON =================================
   function renderPayPal() {
     paypal.Buttons({
       style: { shape: "pill", color: "gold", layout: "horizontal" },
@@ -211,12 +224,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           purchase_units: [{
             description: `Vault Block #${selected}`,
             amount: { value: blockPrice.toFixed(2) }
-          }],
-          application_context: {
-            shipping_preference: "NO_SHIPPING",
-            return_url: window.location.href,
-            cancel_url: window.location.href
-          }
+          }]
         });
       },
 
@@ -225,14 +233,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         await paymentSuccess(details);
       },
 
-      onClick: () => {
-        // forces PayPal to open in a new tab
-        window.open("about:blank");
-      },
-
       onError: err => {
-        console.error(err);
-        alert("Payment failed — try again.");
+        console.error("PayPal error:", err);
+        alert("Payment failed — please try again.");
       }
     }).render("#paypal-button-container");
   }
