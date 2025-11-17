@@ -75,6 +75,7 @@ function getParam(param) {
 
 // === MAIN APP ========================================
 document.addEventListener("DOMContentLoaded", async () => {
+  
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
   const viewModal = document.getElementById("viewModal");
@@ -139,7 +140,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   renderGrid();
 
-  // CLOSE MODAL
+  // === RULES ACKNOWLEDGEMENT ==========================
+  const banner = document.getElementById("rules-banner");
+  const ackBtn = document.getElementById("acknowledgeBtn");
+
+  if (!localStorage.getItem("vaultRulesOk")) {
+    banner.style.display = "block";
+    grid.style.opacity = "0.3";
+    grid.style.pointerEvents = "none";
+  }
+
+  ackBtn.onclick = () => {
+    localStorage.setItem("vaultRulesOk", "true");
+    banner.style.display = "none";
+    grid.style.opacity = "1";
+    grid.style.pointerEvents = "auto";
+  };
+
+  // CLOSE MODALS
   closeBtn.onclick = () => modal.classList.add("hidden");
   viewClose.onclick = () => viewModal.classList.add("hidden");
 
@@ -220,10 +238,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (pending.blockNumber) {
       await saveBlock(pending);
-
       claimed.push(pending.blockNumber);
       localStorage.setItem("claimed", JSON.stringify(claimed));
-
       localStorage.removeItem("pendingBlock");
 
       alert(`Block #${pending.blockNumber} has been sealed in the Vault.`);
@@ -233,7 +249,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// === LOADER (unchanged) ============================
+// === LOADER ==========================================
 window.addEventListener("load", () => {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
