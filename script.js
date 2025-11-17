@@ -56,7 +56,7 @@ async function fetchBlock(num) {
 
 // === MAIN APP ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-  const blockForm = document.getElementById("blockForm"); // FIX ADDED
+  const blockForm = document.getElementById("blockForm");
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
   const viewModal = document.getElementById("viewModal");
@@ -161,4 +161,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       renderGrid();
     }, 4000);
   };
+});
+
+
+// === VAULT LOADING SCREEN LOGIC ======================
+window.addEventListener("load", () => {
+  const loader = document.getElementById("vault-loader");
+  const main = document.getElementById("vault-main-content");
+
+  if (!loader || !main) return;
+
+  setTimeout(() => {
+    loader.classList.add("vault-loader-hide");
+    main.classList.add("vault-main-visible");
+
+    // fully remove loader after fade
+    setTimeout(() => loader.remove(), 700);
+  }, 1200);
 });
