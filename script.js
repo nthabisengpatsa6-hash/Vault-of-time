@@ -1,3 +1,5 @@
+console.log("Vault script loaded");
+
 // === FIREBASE IMPORTS ================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
@@ -10,7 +12,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-// === FIREBASE CONFIG =================================
+// === FIREBASE CONFIG ================================
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
   authDomain: "vault-of-time-e6c03.firebaseapp.com",
@@ -24,46 +26,46 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const blocksCollection = collection(db, "blocks");
 
+// === STATE ==========================================
 let claimedBlocks = [];
+let selectedBlock = null;
+const blockPrice = 6.0;
+const RETURN_URL = "https://vaultoftime.com";
+const CANCEL_URL = "https://vaultoftime.com";
 
-// === FIRESTORE HELPERS ===============================
+// === FIRESTORE LOAD ================================
 async function loadClaimedBlocks() {
   try {
     const snap = await getDocs(blocksCollection);
     claimedBlocks = snap.docs.map(d => Number(d.id));
     localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
   } catch (err) {
-    console.error("Error loading:", err);
     claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   }
 }
 
-async function saveBlock(blockNumber, name, email, message) {
+async function fetchBlock(number) {
   try {
-    await setDoc(doc(blocksCollection, String(blockNumber)), {
-      name,
-      email,
-      message: message || null,
-      purchasedAt: serverTimestamp()
-    });
-  } catch (err) {
-    console.error("Failed to save block:", err);
-  }
-}
-
-async function fetchBlock(blockNumber) {
-  try {
-    const snap = await getDoc(doc(blocksCollection, String(blockNumber)));
+    const snap = await getDoc(doc(blocksCollection, String(number)));
     return snap.exists() ? snap.data() : null;
   } catch {
     return null;
   }
 }
 
-// === MAIN APP ========================================
+async function saveBlock(number, name, email, message) {
+  await setDoc(doc(blocksCollection, String(number)), {
+    name,
+    email,
+    message: message || null,
+    purchasedAt: serverTimestamp()
+  });
+}
+
+// === APP ============================================
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // === LOADING OVERLAY ===============================
+  // === LOADING OVERLAY ===========================
   const overlay = document.createElement("div");
   overlay.style = `
     position: fixed;
@@ -89,7 +91,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setTimeout(() => overlay.remove(), 400);
   };
 
-  // === DOM REFS ======================================
+  // === DOM REFS =================================
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
   const viewModal = document.getElementById("viewModal");
@@ -102,30 +104,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   const messageInput = document.getElementById("message");
   const fileInput = document.getElementById("fileUpload");
 
+  const readyMsg = document.getElementById("ready-message");
+  const payContainer = document.getElementById("paypal-button-container");
+
   const viewBlockTitle = document.getElementById("viewBlockTitle");
   const viewBlockMessage = document.getElementById("viewBlockMessage");
+  const viewBlockMedia = document.getElementById("viewBlockMedia");
 
-  const paypalContainer = document.getElementById("paypal-button-container");
-  const readyMsg = document.getElementById("ready-message");
-
-  let selected = null;
-  let paypalRendered = false;
-  const blockPrice = 6.0;
-
-  // === FIRESTORE LOAD ================================
+  // === LOAD BLOCKS ==============================
   claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   await loadClaimedBlocks();
 
-  // === GRID ==========================================
+  // === BUILD GRID ===============================
   function buildGrid() {
     grid.innerHTML = "";
     for (let i = 1; i <= 100; i++) {
       const div = document.createElement("div");
       div.className = "block";
       div.textContent = i;
-      if (claimedBlocks.includes(i)) {
-        div.classList.add("claimed");
-      }
+      if (claimedBlocks.includes(i)) div.classList.add("claimed");
       grid.appendChild(div);
     }
   }
@@ -134,46 +131,43 @@ document.addEventListener("DOMContentLoaded", async () => {
   function refreshGrid() {
     document.querySelectorAll(".block").forEach(b => {
       const num = Number(b.textContent);
-      if (claimedBlocks.includes(num)) {
-        b.classList.add("claimed");
-        b.classList.remove("selected");
-      }
+      if (claimedBlocks.includes(num)) b.classList.add("claimed");
     });
   }
 
-  // === BLOCK CLICK ==================================
+  // === SELECT BLOCK ==============================
   grid.addEventListener("click", async e => {
     if (!e.target.classList.contains("block")) return;
+
     const num = Number(e.target.textContent);
 
     if (claimedBlocks.includes(num)) {
       const data = await fetchBlock(num);
       viewBlockTitle.textContent = `Block #${num}`;
       viewBlockMessage.textContent = data?.message || "(no message)";
+      viewBlockMedia.innerHTML = ""; // image support coming soon
       viewModal.classList.remove("hidden");
       return;
     }
 
     document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
     e.target.classList.add("selected");
-    selected = num;
-
-    document.getElementById("blockNumber").value = num;
+    selectedBlock = num;
     document.getElementById("selected-block-text").textContent = `Selected Block: #${num}`;
     modal.classList.remove("hidden");
   });
 
-  // === MODAL CLOSE ===================================
+  // === CLOSE MODALS ==============================
   closeBtn.onclick = () => modal.classList.add("hidden");
   viewClose.onclick = () => viewModal.classList.add("hidden");
 
-  // === FORM VALIDATION ===============================
+  // === FORM LOGIC ================================
   function valid() {
     return (
       nameInput.value.trim() &&
       emailInput.value.trim() &&
       fileInput.files.length > 0 &&
-      selected
+      selectedBlock
     );
   }
 
@@ -181,7 +175,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const f = fileInput.files[0];
     if (!f) return false;
     if (f.size > 2 * 1024 * 1024) {
-      alert("File too large (2MB max).");
+      alert("File too large (2MB max)");
       return false;
     }
     return true;
@@ -191,80 +185,68 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!fileOK()) return;
     if (valid()) {
       readyMsg.classList.add("show");
-      if (!paypalRendered) {
-        paypalRendered = true;
-        renderPayPal();
-      }
-      paypalContainer.classList.add("show");
+      payContainer.classList.add("show");
     }
   }
 
   document.getElementById("uploadBtn").onclick = updateGate;
-  blockForm.addEventListener("input", updateGate, true);
+  document.getElementById("blockForm").addEventListener("input", updateGate, true);
 
-  // === PAYPAL BUTTON: FIXED REDIRECT MODE ============
-  function renderPayPal() {
-    paypal.Buttons({
-      style: { shape: "pill", color: "gold", layout: "horizontal" },
+  // === PAYPAL REDIRECT MODE ======================
+  payContainer.innerHTML = `
+    <button id="payNowButton" style="
+      background:#ffc439;
+      border:none;
+      border-radius:6px;
+      padding:12px 18px;
+      font-size:16px;
+      font-weight:600;
+      cursor:pointer;
+      width:100%;
+      margin-top:8px;
+    ">Pay $6 Securely</button>
+  `;
 
-      createOrder: (data, actions) => {
-        return actions.order.create({
-          purchase_units: [{
-            description: `Vault Block #${selected}`,
-            amount: { value: blockPrice.toFixed(2) }
-          }],
-          application_context: {
-            shipping_preference: "NO_SHIPPING"
-          }
-        });
+  document.getElementById("payNowButton").onclick = async () => {
+    if (!valid()) return;
+
+    const resp = await fetch("https://api-m.sandbox.paypal.com/v2/checkout/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${btoa("sb:sb")}`
       },
+      body: JSON.stringify({
+        intent: "CAPTURE",
+        purchase_units: [{
+          amount: { value: blockPrice.toFixed(2) }
+        }],
+        application_context: {
+          return_url: RETURN_URL,
+          cancel_url: CANCEL_URL
+        }
+      })
+    });
 
-      onApprove: async (data, actions) => {
-        const order = await actions.order.capture();
+    const data = await resp.json();
+    const approval = data.links.find(l => l.rel === "approve");
+    window.open(approval.href, "_blank");
+  };
 
-        // SAVE BLOCK FIRST
-        await paymentSuccess(order);
-
-        // THEN FORCE REDIRECT
-        window.location.href = `/?paid=true&block=${selected}`;
-      },
-
-      onError(err) {
-        console.error("PayPal Error:", err);
-        alert("Payment failed. Please try again.");
-      }
-
-    }).render("#paypal-button-container");
-  }
-
-  // === PAYMENT SUCCESS ===============================
-  async function paymentSuccess(details) {
-    const name = nameInput.value.trim();
-    const email = emailInput.value.trim();
-    const msg = messageInput.value.trim();
-
-    await saveBlock(selected, name, email, msg);
-    claimedBlocks.push(selected);
-    localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
-
-    modal.classList.add("hidden");
-    refreshGrid();
-  }
-
-  // === ACCORDION =====================================
+  // === ACCORDION ================================
   document.querySelectorAll(".accordion-header").forEach(h => {
     h.addEventListener("click", () => {
-      const open = h.classList.contains("active");
-      document.querySelectorAll(".accordion-header").forEach(a => a.classList.remove("active"));
-      document.querySelectorAll(".accordion-content").forEach(a => a.classList.remove("show"));
-      if (!open) {
+      const isOpen = h.classList.contains("active");
+      document.querySelectorAll(".accordion-header").forEach(x => x.classList.remove("active"));
+      document.querySelectorAll(".accordion-content").forEach(x => x.classList.remove("show"));
+      if (!isOpen) {
         h.classList.add("active");
         h.nextElementSibling.classList.add("show");
       }
     });
   });
 
-  // === MENU ==========================================
+  // === MENU =====================================
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const menuOverlay = document.getElementById("overlay");
