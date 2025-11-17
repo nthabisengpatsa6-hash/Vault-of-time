@@ -1,5 +1,4 @@
 console.log("Vault JS active");
-
 // === FIREBASE IMPORTS ================================
 import {
   initializeApp
@@ -32,30 +31,46 @@ const blocksCollection = collection(db, "blocks");
 let claimed = [];
 
 // === LOAD CLAIMED BLOCKS =============================
-async function load() {
-  const snap = await getDocs(blocksCollection);
-  claimed = snap.docs.map(d => Number(d.id));
-  localStorage.setItem("claimed", JSON.stringify(claimed));
+async function loadClaimedBlocks() {
+  try {
+    const snap = await getDocs(blocksCollection);
+    claimed = snap.docs.map(d => Number(d.id));
+    localStorage.setItem("claimed", JSON.stringify(claimed));
+  } catch (err) {
+    console.error("Error loading claimed blocks:", err);
+    // fall back to whatever is in localStorage
+    claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
+  }
 }
 
 // === SAVE BLOCK ======================================
 async function saveBlock(num, name, email, msg) {
-  await setDoc(doc(blocksCollection, String(num)), {
-    name,
-    email,
-    message: msg || null,
-    purchasedAt: serverTimestamp()
-  });
+  try {
+    await setDoc(doc(blocksCollection, String(num)), {
+      name,
+      email,
+      message: msg || null,
+      purchasedAt: serverTimestamp()
+    });
+  } catch (err) {
+    console.error("Error saving block:", err);
+  }
 }
 
 // === FETCH BLOCK =====================================
 async function fetchBlock(num) {
-  const snap = await getDoc(doc(blocksCollection, String(num)));
-  return snap.exists() ? snap.data() : null;
+  try {
+    const snap = await getDoc(doc(blocksCollection, String(num)));
+    return snap.exists() ? snap.data() : null;
+  } catch (err) {
+    console.error("Error fetching block:", err);
+    return null;
+  }
 }
 
 // === MAIN APP ========================================
 document.addEventListener("DOMContentLoaded", async () => {
+  // Core DOM elements
   const blockForm = document.getElementById("blockForm");
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
@@ -71,13 +86,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   const readyMsg = document.getElementById("ready-message");
   const payButton = document.getElementById("payButton");
 
+  // Menu + overlay
+  const menuToggle = document.getElementById("menuToggle");
+  const sideMenu = document.getElementById("sideMenu");
+  const overlay = document.getElementById("overlay");
+  const closeMenuBtn = document.getElementById("closeMenu");
+
   let selected = null;
 
-  claimed = JSON.parse(localStorage.getItem("claimed")) || [];
-  await load();
+  // Restore claimed from localStorage first
+  claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
+  // Then try to load from Firestore (will overwrite claimed if successful)
+  await loadClaimedBlocks();
 
   // === GRID ========================================
   function renderGrid() {
+    if (!grid) return;
     grid.innerHTML = "";
     for (let i = 1; i <= 100; i++) {
       const div = document.createElement("div");
@@ -91,10 +115,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       div.onclick = async () => {
         if (claimed.includes(i)) {
           const data = await fetchBlock(i);
-          document.getElementById("viewBlockTitle").textContent = `Block #${i}`;
-          document.getElementById("viewBlockMessage").textContent = data.message || "";
-          document.getElementById("viewBlockMedia").innerHTML = "";
-          viewModal.classList.remove("hidden");
+          const titleEl = document.getElementById("viewBlockTitle");
+          const msgEl = document.getElementById("viewBlockMessage");
+          const mediaEl = document.getElementById("viewBlockMedia");
+
+          if (titleEl) titleEl.textContent = `Block #${i}`;
+          if (msgEl) msgEl.textContent = data?.message || "";
+          if (mediaEl) mediaEl.innerHTML = "";
+          if (viewModal) viewModal.classList.remove("hidden");
           return;
         }
 
@@ -102,9 +130,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         div.classList.add("selected");
 
         selected = i;
-        document.getElementById("blockNumber").value = i;
-        document.getElementById("selected-block-text").textContent = `Selected Block: #${i}`;
-        modal.classList.remove("hidden");
+        const blockNumberInput = document.getElementById("blockNumber");
+        const selectedText = document.getElementById("selected-block-text");
+
+        if (blockNumberInput) blockNumberInput.value = i;
+        if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
+        if (modal) modal.classList.remove("hidden");
       };
 
       grid.appendChild(div);
@@ -114,12 +145,63 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderGrid();
 
   // === CLOSE MODALS =================================
-  closeBtn.onclick = () => modal.classList.add("hidden");
-  viewClose.onclick = () => viewModal.classList.add("hidden");
+  if (closeBtn && modal) {
+    closeBtn.onclick = () => modal.classList.add("hidden");
+  }
+  if (viewClose && viewModal) {
+    viewClose.onclick = () => viewModal.classList.add("hidden");
+  }
+
+  // === SIDE MENU TOGGLE =============================
+  function closeMenu() {
+    if (sideMenu) sideMenu.classList.remove("open");
+    if (overlay) overlay.classList.remove("show");
+    if (menuToggle) menuToggle.classList.remove("active");
+  }
+
+  if (menuToggle && sideMenu && overlay) {
+    menuToggle.addEventListener("click", () => {
+      sideMenu.classList.add("open");
+      overlay.classList.add("show");
+      menuToggle.classList.add("active");
+    });
+  }
+
+  if (closeMenuBtn) {
+    closeMenuBtn.addEventListener("click", closeMenu);
+  }
+
+  if (overlay) {
+    overlay.addEventListener("click", closeMenu);
+  }
+
+  // === ACCORDION (MATCHES YOUR CSS) =================
+  document.querySelectorAll(".accordion-header").forEach(header => {
+    header.addEventListener("click", () => {
+      const content = header.nextElementSibling;
+      const isOpen = header.classList.contains("active");
+
+      // Close all
+      document.querySelectorAll(".accordion-header").forEach(h => {
+        h.classList.remove("active");
+        const c = h.nextElementSibling;
+        if (c && c.classList) c.classList.remove("show");
+      });
+
+      // Re-open if it was closed
+      if (!isOpen && content && content.classList) {
+        header.classList.add("active");
+        content.classList.add("show");
+      }
+    });
+  });
 
   // === VALIDATION ===================================
   function valid() {
     return (
+      nameInput &&
+      emailInput &&
+      fileInput &&
       nameInput.value.trim() &&
       emailInput.value.trim() &&
       fileInput.files.length > 0 &&
@@ -128,88 +210,66 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function updateGate() {
+    if (!readyMsg || !payButton) return;
     if (valid()) {
       readyMsg.classList.add("show");
       payButton.style.display = "block";
     }
   }
 
-  document.getElementById("uploadBtn").onclick = updateGate;
-  blockForm.addEventListener("input", updateGate, true);
+  const uploadBtn = document.getElementById("uploadBtn");
+  if (uploadBtn) {
+    uploadBtn.onclick = updateGate;
+  }
+  if (blockForm) {
+    blockForm.addEventListener("input", updateGate, true);
+  }
 
-  // === TEMP PAYMENT (PAYPAL DISABLED FOR NOW) ========
-  payButton.onclick = async () => {
-    alert("🟡 Payment system is being upgraded.\nYour block will be reserved now.");
+  // === TEMP PAYMENT (NO PAYPAL WHILE WE STABILISE) ==
+  if (payButton) {
+    payButton.onclick = async () => {
+      if (!selected) {
+        alert("Please select a block first.");
+        return;
+      }
 
-    await saveBlock(
-      selected,
-      nameInput.value,
-      emailInput.value,
-      messageInput.value
-    );
+      if (!nameInput.value.trim() || !emailInput.value.trim()) {
+        alert("Please fill in your name and email.");
+        return;
+      }
 
-    claimed.push(selected);
-    localStorage.setItem("claimed", JSON.stringify(claimed));
+      alert("🟡 Payment system is being upgraded.\nYour block will be reserved now.");
 
-    modal.classList.add("hidden");
-    renderGrid();
-  };
+      await saveBlock(
+        selected,
+        nameInput.value,
+        emailInput.value,
+        messageInput.value
+      );
 
-// === ACCORDION FIX (matches your CSS) ===
-document.querySelectorAll(".accordion-header").forEach(header => {
-  header.addEventListener("click", () => {
-    const content = header.nextElementSibling;
-    const isOpen = header.classList.contains("active");
+      claimed.push(selected);
+      localStorage.setItem("claimed", JSON.stringify(claimed));
 
-    // Close ALL accordion sections
-    document.querySelectorAll(".accordion-header").forEach(h => {
-      h.classList.remove("active");
-      h.nextElementSibling.classList.remove("show");
-    });
-
-    // Re-open this one (if it was closed)
-    if (!isOpen) {
-      header.classList.add("active");
-      content.classList.add("show");
-    }
-  });
+      if (modal) modal.classList.add("hidden");
+      renderGrid();
+    };
+  }
 });
 
-    // Toggle current one
-    if (!expanded) {
-      header.classList.add("open");
-      content.style.maxHeight = content.scrollHeight + "px";
-    }
-  });
-});
-
-
-// === UNBREAKABLE LOADER FAILSAFE ===
+// === LOADER – SIMPLE & ROBUST =======================
 window.addEventListener("load", () => {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
-  // If elements exist, reveal main even if everything else breaks
-  if (loader) {
-    setTimeout(() => {
-      loader.style.opacity = "0";
-      loader.style.pointerEvents = "none";
-      setTimeout(() => loader.remove(), 600);
-    }, 1500);
-  }
+  if (!loader || !main) return;
 
-  if (main) {
+  // Show loader briefly, then reveal main content
+  setTimeout(() => {
+    loader.classList.add("vault-loader-hide");
+    main.classList.add("vault-main-visible");
+
     setTimeout(() => {
-      main.style.opacity = "1";
-    }, 1200);
-  }
+      loader.remove();
+    }, 600);
+  }, 1500);
 });
-
-// Absolute fallback if everything else fails
-setTimeout(() => {
-  const loader = document.getElementById("vault-loader");
-  const main = document.getElementById("vault-main-content");
-
-  if (loader) loader.remove();
-  if (main) main.style.opacity = "1";
-}, 4000);
