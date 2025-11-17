@@ -1,7 +1,9 @@
-console.log("Vault JS active");
+console.log("Vault JS running");
 
 // === FIREBASE IMPORTS ================================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 
 import {
   getFirestore,
@@ -42,12 +44,12 @@ async function loadClaimedBlocks() {
 }
 
 // === SAVE BLOCK ======================================
-async function saveBlock(num, name, email, msg) {
+async function saveBlock(pending) {
   try {
-    await setDoc(doc(blocksCollection, String(num)), {
-      name,
-      email,
-      message: msg || null,
+    await setDoc(doc(blocksCollection, String(pending.blockNumber)), {
+      name: pending.name,
+      email: pending.email,
+      message: pending.message || "",
       purchasedAt: serverTimestamp()
     });
   } catch (err) {
@@ -66,23 +68,29 @@ async function fetchBlock(num) {
   }
 }
 
+// === HELPER: URL PARAM ===============================
+function getParam(param) {
+  return new URLSearchParams(window.location.search).get(param);
+}
+
 // === MAIN APP ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-
-  const blockForm = document.getElementById("blockForm");
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
   const viewModal = document.getElementById("viewModal");
-  const viewClose = document.querySelector(".close-view");
-  const closeBtn = document.querySelector(".close-button");
 
-  const readyMsg = document.getElementById("ready-message");
+  const closeBtn = document.querySelector(".close-button");
+  const viewClose = document.querySelector(".close-view");
 
   const nameInput = document.getElementById("name");
   const emailInput = document.getElementById("email");
   const messageInput = document.getElementById("message");
   const fileInput = document.getElementById("fileUpload");
 
+  const readyMsg = document.getElementById("ready-message");
+  const payButton = document.getElementById("payButton");
+
+  // === MENU ELEMENTS ===
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const overlay = document.getElementById("overlay");
@@ -90,12 +98,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let selected = null;
 
+  // Load claimed blocks
   claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   await loadClaimedBlocks();
 
+  // === GRID ========================================
   function renderGrid() {
     grid.innerHTML = "";
-
     for (let i = 1; i <= 100; i++) {
       const div = document.createElement("div");
       div.className = "block";
@@ -119,7 +128,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         div.classList.add("selected");
 
         selected = i;
-
         document.getElementById("blockNumber").value = i;
         document.getElementById("selected-block-text").textContent = `Selected Block: #${i}`;
         modal.classList.remove("hidden");
@@ -131,14 +139,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   renderGrid();
 
-  if (closeBtn) {
-    closeBtn.onclick = () => modal.classList.add("hidden");
-  }
+  // CLOSE MODAL
+  closeBtn.onclick = () => modal.classList.add("hidden");
+  viewClose.onclick = () => viewModal.classList.add("hidden");
 
-  if (viewClose) {
-    viewClose.onclick = () => viewModal.classList.add("hidden");
-  }
-
+  // === MENU ===
   function closeMenu() {
     sideMenu.classList.remove("open");
     overlay.classList.remove("show");
@@ -154,16 +159,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   closeMenuBtn.addEventListener("click", closeMenu);
   overlay.addEventListener("click", closeMenu);
 
-  // Accordion
+  // ACCORDION
   document.querySelectorAll(".accordion-header").forEach(header => {
     header.addEventListener("click", () => {
       const content = header.nextElementSibling;
       const isOpen = header.classList.contains("active");
 
-      document.querySelectorAll(".accordion-header").forEach(h => {
-        h.classList.remove("active");
-        h.nextElementSibling.classList.remove("show");
-      });
+      document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
+      document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
 
       if (!isOpen) {
         header.classList.add("active");
@@ -172,6 +175,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
+  // VALIDATION
   function valid() {
     return (
       nameInput.value.trim() &&
@@ -182,29 +186,64 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function updateGate() {
-    const paypalDiv = document.getElementById("paypal-container-L4UK67HLWZ324");
-    if (!paypalDiv) return;
-
     if (valid()) {
-      readyMsg.classList.remove("hidden");
-      paypalDiv.style.display = "block";
-      showPayPalButton();
+      readyMsg.classList.add("show");
+      payButton.style.display = "block";
     }
   }
 
   document.getElementById("uploadBtn").onclick = updateGate;
-  blockForm.addEventListener("input", updateGate, true);
+  document.getElementById("blockForm").addEventListener("input", updateGate, true);
 
+  // === PAY BUTTON =================================
+  payButton.onclick = () => {
+    if (!valid()) return alert("Complete all fields first.");
+
+    const pending = {
+      blockNumber: selected,
+      name: nameInput.value,
+      email: emailInput.value,
+      message: messageInput.value
+    };
+
+    localStorage.setItem("pendingBlock", JSON.stringify(pending));
+
+    window.open(
+      "https://www.sandbox.paypal.com/ncp/payment/L4UK67HLWZ324",
+      "_blank"
+    );
+  };
+
+  // === PAYMENT RETURN LOGIC ========================
+  if (getParam("paid") === "true") {
+    const pending = JSON.parse(localStorage.getItem("pendingBlock") || "{}");
+
+    if (pending.blockNumber) {
+      await saveBlock(pending);
+
+      claimed.push(pending.blockNumber);
+      localStorage.setItem("claimed", JSON.stringify(claimed));
+
+      localStorage.removeItem("pendingBlock");
+
+      alert(`Block #${pending.blockNumber} has been sealed in the Vault.`);
+
+      window.location = "https://vaultoftime.com";
+    }
+  }
 });
 
-// Loader
+// === LOADER (unchanged) ============================
 window.addEventListener("load", () => {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
+  if (!loader || !main) return;
+
   setTimeout(() => {
     loader.classList.add("vault-loader-hide");
     main.classList.add("vault-main-visible");
+
     setTimeout(() => loader.remove(), 600);
-  }, 1500);
+  }, 1200);
 });
