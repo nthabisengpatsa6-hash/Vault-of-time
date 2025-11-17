@@ -107,6 +107,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const div = document.createElement("div");
       div.className = "block";
       div.textContent = i;
+      // Remove skeletons once real blocks render
+document.querySelectorAll(".loading-block").forEach(el => el.remove());
 
       if (claimed.includes(i)) {
         div.classList.add("claimed");
