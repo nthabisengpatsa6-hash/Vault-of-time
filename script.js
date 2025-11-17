@@ -1,7 +1,10 @@
-console.log("Vault of Time loaded");
+console.log("Vault JS active");
 
-// === FIREBASE IMPORTS ======================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+// === FIREBASE IMPORTS ================================
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -12,7 +15,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-// === FIREBASE CONFIG ======================
+// === FIREBASE CONFIG =================================
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
   authDomain: "vault-of-time-e6c03.firebaseapp.com",
@@ -26,234 +29,135 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const blocksCollection = collection(db, "blocks");
 
-let claimedBlocks = [];
+let claimed = [];
 
-// === FIRESTORE ============================
-async function loadClaimedBlocks() {
-  try {
-    const snap = await getDocs(blocksCollection);
-    claimedBlocks = snap.docs.map(d => Number(d.id));
-    localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
-  } catch (err) {
-    claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
-  }
+// === LOAD CLAIMED BLOCKS =============================
+async function load() {
+  const snap = await getDocs(blocksCollection);
+  claimed = snap.docs.map(d => Number(d.id));
+  localStorage.setItem("claimed", JSON.stringify(claimed));
 }
 
-async function saveBlock(blockNumber, name, email, message) {
-  await setDoc(doc(blocksCollection, String(blockNumber)), {
+// === SAVE BLOCK ======================================
+async function saveBlock(num, name, email, msg) {
+  await setDoc(doc(blocksCollection, String(num)), {
     name,
     email,
-    message: message || null,
+    message: msg || null,
     purchasedAt: serverTimestamp()
   });
 }
 
+// === FETCH BLOCK =====================================
 async function fetchBlock(num) {
-  try {
-    const snap = await getDoc(doc(blocksCollection, String(num)));
-    return snap.exists() ? snap.data() : null;
-  } catch {
-    return null;
-  }
+  const snap = await getDoc(doc(blocksCollection, String(num)));
+  return snap.exists() ? snap.data() : null;
 }
 
-// === DOM LOAD =============================
+// === MAIN APP ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-
-  // LOADING SPLASH
-  const splash = document.createElement("div");
-  splash.style = `
-    position:fixed;inset:0;display:flex;
-    flex-direction:column;align-items:center;justify-content:center;
-    background:radial-gradient(circle,#141922,#05070b);
-    z-index:9999;color:#f9d26e;font-size:20px;
-    transition:opacity .4s;
-  `;
-  splash.innerHTML = `<div style="font-size:50px">🕰️</div><div>Opening the Vault…</div>`;
-  document.body.appendChild(splash);
-  const hideSplash = () => {
-    splash.style.opacity = "0";
-    setTimeout(() => splash.remove(), 350);
-  };
-
-  // DOM refs
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
   const viewModal = document.getElementById("viewModal");
-
+  const viewClose = document.querySelector(".close-view");
   const closeBtn = document.querySelector(".close-button");
-  const viewCloseBtn = document.querySelector(".close-view");
 
-  const blockNumInput = document.getElementById("blockNumber");
   const nameInput = document.getElementById("name");
   const emailInput = document.getElementById("email");
   const messageInput = document.getElementById("message");
   const fileInput = document.getElementById("fileUpload");
-  const readyMsg = document.getElementById("ready-message");
-  const paypalContainer = document.getElementById("paypal-button-container");
 
-  const viewTitle = document.getElementById("viewBlockTitle");
-  const viewMsg = document.getElementById("viewBlockMessage");
+  const readyMsg = document.getElementById("ready-message");
+  const payButton = document.getElementById("payButton");
 
   let selected = null;
-  const blockPrice = 6.00;
-  const paypalEmail = "hello@vaultoftime.com";
+  const price = 6.0;
+  const seller = "hello@vaultoftime.com";
 
-  // Load claimed
-  claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
-  await loadClaimedBlocks();
+  claimed = JSON.parse(localStorage.getItem("claimed")) || [];
+  await load();
 
-  // GRID
-  function buildGrid() {
+  // === GRID ========================================
+  function renderGrid() {
     grid.innerHTML = "";
     for (let i = 1; i <= 100; i++) {
       const div = document.createElement("div");
       div.className = "block";
       div.textContent = i;
 
-      if (claimedBlocks.includes(i)) div.classList.add("claimed");
+      if (claimed.includes(i)) {
+        div.classList.add("claimed");
+      }
+
+      div.onclick = async () => {
+        if (claimed.includes(i)) {
+          const data = await fetchBlock(i);
+          document.getElementById("viewBlockTitle").textContent = `Block #${i}`;
+          document.getElementById("viewBlockMessage").textContent = data.message || "";
+          document.getElementById("viewBlockMedia").innerHTML = "";
+          viewModal.classList.remove("hidden");
+          return;
+        }
+
+        document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
+        div.classList.add("selected");
+
+        selected = i;
+        document.getElementById("blockNumber").value = i;
+        document.getElementById("selected-block-text").textContent = `Selected Block: #${i}`;
+        modal.classList.remove("hidden");
+      };
 
       grid.appendChild(div);
     }
   }
-  buildGrid();
 
-  function refreshGrid() {
-    document.querySelectorAll(".block").forEach(b => {
-      const num = Number(b.textContent);
-      if (claimedBlocks.includes(num)) {
-        b.classList.add("claimed");
-        b.classList.remove("selected");
-      }
-    });
-  }
+  renderGrid();
 
-  // CLICK BLOCK
-  grid.addEventListener("click", async e => {
-    if (!e.target.classList.contains("block")) return;
-    const num = Number(e.target.textContent);
-
-    if (claimedBlocks.includes(num)) {
-      const data = await fetchBlock(num);
-      viewTitle.textContent = `Block #${num}`;
-      viewMsg.textContent = data?.message || "(no message)";
-      viewModal.classList.remove("hidden");
-      return;
-    }
-
-    // Free block
-    document.querySelectorAll(".block").forEach(b =>
-      b.classList.remove("selected")
-    );
-
-    e.target.classList.add("selected");
-    selected = num;
-    blockNumInput.value = num;
-
-    document.getElementById("selected-block-text").textContent =
-      `Selected Block: #${num}`;
-
-    modal.classList.remove("hidden");
-  });
-
-  // CLOSE MODALS
+  // === CLOSE MODALS =================================
   closeBtn.onclick = () => modal.classList.add("hidden");
-  viewCloseBtn.onclick = () => viewModal.classList.add("hidden");
+  viewClose.onclick = () => viewModal.classList.add("hidden");
 
-  // FORM CHECK
+  // === VALIDATION ===================================
   function valid() {
     return (
       nameInput.value.trim() &&
       emailInput.value.trim() &&
-      selected &&
-      fileInput.files.length > 0
+      fileInput.files.length > 0 &&
+      selected
     );
   }
 
-  function fileOK() {
-    const f = fileInput.files[0];
-    if (!f) return false;
-    if (f.size > 2 * 1024 * 1024) {
-      alert("File too large (2MB max)");
-      return false;
-    }
-    return true;
-  }
-
-  // SHOW PAY BUTTON
-  document.getElementById("uploadBtn").onclick = () => {
-    if (!fileOK()) return;
+  function updateGate() {
     if (valid()) {
       readyMsg.classList.add("show");
-      paypalContainer.classList.add("show");
+      payButton.style.display = "block";
     }
-  };
+  }
 
-  // === PAY BUTTON LOGIC (NEW) ===================
-  paypalContainer.addEventListener("click", async () => {
-    const name = nameInput.value.trim();
-    const email = emailInput.value.trim();
-    const msg = messageInput.value.trim();
+  document.getElementById("uploadBtn").onclick = updateGate;
+  blockForm.addEventListener("input", updateGate, true);
 
-    if (!valid()) {
-      alert("Fill in your details first.");
-      return;
-    }
+  // === PAYMENT BUTTON ===============================
+  payButton.onclick = async () => {
+    const url =
+      `https://www.paypal.com/ncp/payment/${seller}?amount=${price}&currency=USD&item_name=Vault+Block+%23${selected}`;
 
-    const paypalLink = new URL("https://www.paypal.com/cgi-bin/webscr");
-    paypalLink.searchParams.set("cmd", "_xclick");
-    paypalLink.searchParams.set("business", paypalEmail);
-    paypalLink.searchParams.set("item_name", `Vault Block #${selected}`);
-    paypalLink.searchParams.set("amount", blockPrice.toFixed(2));
-    paypalLink.searchParams.set("currency_code", "USD");
+    window.open(url, "_blank");
 
-    paypalLink.searchParams.set("return", "https://vaultoftime.com");
-    paypalLink.searchParams.set("cancel_return", "https://vaultoftime.com");
-
-    // External checkout
-    window.open(paypalLink.toString(), "_blank");
-
-    // TEMP: assume success after 4s
     setTimeout(async () => {
-      await saveBlock(selected, name, email, msg);
-      claimedBlocks.push(selected);
-      localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
+      await saveBlock(
+        selected,
+        nameInput.value,
+        emailInput.value,
+        messageInput.value
+      );
+
+      claimed.push(selected);
+      localStorage.setItem("claimed", JSON.stringify(claimed));
+
       modal.classList.add("hidden");
-      refreshGrid();
+      renderGrid();
     }, 4000);
-  });
-
-  // ACCORDION
-  document.querySelectorAll(".accordion-header").forEach(h => {
-    h.addEventListener("click", () => {
-      const open = h.classList.contains("active");
-      document.querySelectorAll(".accordion-header").forEach(a => a.classList.remove("active"));
-      document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
-      if (!open) {
-        h.classList.add("active");
-        h.nextElementSibling.classList.add("show");
-      }
-    });
-  });
-
-  // MENU
-  const menuToggle = document.getElementById("menuToggle");
-  const sideMenu = document.getElementById("sideMenu");
-  const overlay = document.getElementById("overlay");
-
-  menuToggle.onclick = () => {
-    sideMenu.classList.add("open");
-    overlay.classList.add("show");
   };
-  document.getElementById("closeMenu").onclick = () => {
-    sideMenu.classList.remove("open");
-    overlay.classList.remove("show");
-  };
-  overlay.onclick = () => {
-    sideMenu.classList.remove("open");
-    overlay.classList.remove("show");
-  };
-
-  // Remove splash
-  hideSplash();
 });
