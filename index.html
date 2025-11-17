@@ -72,7 +72,7 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Clock + inner styles */
+    /* CLOCK */
     .clock-icon {
       display:inline-block;
       transform-origin:bottom center;
@@ -101,11 +101,6 @@
     #vault-main-content.vault-main-visible {
       opacity: 1;
     }
-
-    #paypal-container-L4UK67HLWZ324 {
-      margin-top: 16px;
-      display:none;
-    }
   </style>
 </head>
 
@@ -132,7 +127,6 @@
 
   <div class="accordion">
 
-    <!-- ABOUT -->
     <div class="accordion-item">
       <button class="accordion-header">📜 About The Vault</button>
       <div class="accordion-content">
@@ -149,7 +143,6 @@
       </div>
     </div>
 
-    <!-- HOW TO BUY -->
     <div class="accordion-item">
       <button class="accordion-header">💳 How To Buy</button>
       <div class="accordion-content">
@@ -166,9 +159,8 @@
       </div>
     </div>
 
-    <!-- FAQ -->
     <div class="accordion-item">
-      <button class="accordion-header">❓ Frequently Asked Questions</button>
+      <button class="accordion-header">❓ FAQ</button>
       <div class="accordion-content">
         <p><strong>What if someone bought the block I want?</strong><br>
         Then it’s sealed. Blocks cannot be replaced or taken.</p>
@@ -184,7 +176,6 @@
       </div>
     </div>
 
-    <!-- RULES -->
     <div class="accordion-item">
       <button class="accordion-header">⚖️ Vault Rules</button>
       <div class="accordion-content">
@@ -200,7 +191,6 @@
       </div>
     </div>
 
-    <!-- PRIVACY -->
     <div class="accordion-item">
       <button class="accordion-header">🔐 Privacy Policy</button>
       <div class="accordion-content">
@@ -210,20 +200,17 @@
           <li>Your email</li>
           <li>Your upload / message</li>
         </ul>
-
         <p>We do NOT:</p>
         <ul>
           <li>Sell your data</li>
           <li>Share your info with advertisers</li>
           <li>Store card details</li>
         </ul>
-
         <p>Payments are handled securely by PayPal.</p>
         <p>Need help? Email: <strong>hello@vaultoftime.com</strong></p>
       </div>
     </div>
 
-    <!-- LEGAL -->
     <div class="accordion-item">
       <button class="accordion-header">📇 Legal Info</button>
       <div class="accordion-content">
@@ -258,10 +245,23 @@
 
       <button type="button" id="uploadBtn">Save Details</button>
 
-      <div id="ready-message" class="hidden">✅ Ready for checkout</div>
-
-      <div id="paypal-container-L4UK67HLWZ324"></div>
+      <div id="ready-message">✅ Ready for checkout</div>
     </form>
+
+    <!-- 💳 PAYPAL BUTTON -->
+    <div style="margin-top:1.5rem;">
+      <div>
+        <style>.pp-L4UK67HLWZ324{text-align:center;border:none;border-radius:0.25rem;min-width:11.625rem;padding:0 2rem;height:2.625rem;font-weight:bold;background-color:#FFD140;color:#000000;font-family:"Helvetica Neue",Arial,sans-serif;font-size:1rem;line-height:1.25rem;cursor:pointer;}</style>
+        <form action="https://www.sandbox.paypal.com/ncp/payment/L4UK67HLWZ324" method="post" target="_blank" style="display:inline-grid;justify-items:center;align-content:start;gap:0.5rem;">
+          <input class="pp-L4UK67HLWZ324" type="submit" value="Buy Now" />
+          <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="cards" />
+          <section style="font-size: 0.75rem;">
+            Powered by <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="paypal" style="height:0.875rem;vertical-align:middle;"/>
+          </section>
+        </form>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -276,24 +276,13 @@
 
 <footer>
   <p>
-    <a href="contact.html">📩 Contact Us</a> |
+    <a href="contact.html">📩 Contact Us</a> | 
     <a href="terms.html">📜 Terms & Conditions</a><br>
     <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</small>
   </p>
 </footer>
 
 </div><!-- END MAIN CONTENT -->
-
-<!-- PAYPAL API -->
-<script src="https://www.paypal.com/sdk/js?client-id=BAABdDlBK6bnCOG7pqGOgVVz7vDF4yhg3-PvS8ZwAbxXJMmGgjMnYAQSkaXOrSwXReJlgWIw62sTpXTksU&components=hosted-buttons&enable-funding=card&currency=USD"></script>
-
-<script>
-function showPayPalButton() {
-  paypal.HostedButtons({
-    hostedButtonId: "L4UK67HLWZ324",
-  }).render("#paypal-container-L4UK67HLWZ324");
-}
-</script>
 
 <script type="module" src="script.js"></script>
 </body>
