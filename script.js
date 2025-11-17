@@ -56,6 +56,7 @@ async function fetchBlock(num) {
 
 // === MAIN APP ========================================
 document.addEventListener("DOMContentLoaded", async () => {
+  const blockForm = document.getElementById("blockForm"); // FIX ADDED
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
   const viewModal = document.getElementById("viewModal");
