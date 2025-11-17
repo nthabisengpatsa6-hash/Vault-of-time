@@ -156,13 +156,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   // === ACCORDION FIX ================================
-  document.querySelectorAll(".accordion-header").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const content = btn.nextElementSibling;
-      content.style.maxHeight = content.style.maxHeight ? null : content.scrollHeight + "px";
-    });
-  });
+document.querySelectorAll(".accordion-header").forEach(header => {
+  header.addEventListener("click", () => {
+    const content = header.nextElementSibling;
+    const expanded = header.classList.contains("open");
 
+    // Close all accordion sections
+    document.querySelectorAll(".accordion-header").forEach(h => {
+      h.classList.remove("open");
+      h.nextElementSibling.style.maxHeight = null;
+    });
+
+    // Toggle current one
+    if (!expanded) {
+      header.classList.add("open");
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
+  });
 });
 
 
