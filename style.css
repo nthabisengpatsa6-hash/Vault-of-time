@@ -427,3 +427,21 @@ html {
     margin-top: 25px;
   }
   }
+/* === LOADING SKELETONS === */
+.loading-block {
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(90deg,
+    #2a2f36 0%,
+    #3a4048 50%,
+    #2a2f36 100%
+  );
+  background-size: 200% 100%;
+  animation: loadingPulse 1.4s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes loadingPulse {
+  0% { background-position: 200% 0; opacity: 0.6; }
+  50% { background-position: 0 0; opacity: 1; }
+  100% { background-position: -200% 0; opacity: 0.6; }
+}
