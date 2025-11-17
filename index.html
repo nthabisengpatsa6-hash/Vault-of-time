@@ -13,7 +13,7 @@
       background-color: #0d1117;
     }
 
-    /* 🔐 FULLSCREEN VAULT LOADER */
+    /* LOADER */
     #vault-loader {
       position: fixed;
       inset: 0;
@@ -35,12 +35,11 @@
       width: 120px;
       height: 120px;
       border-radius: 50%;
-      border: 4px solid rgba(255, 255, 255, 0.15);
+      border: 4px solid rgba(255,255,255,0.15);
       border-top-color: #f5c542;
       border-right-color: #f5c542;
       animation: vault-spin 1.4s linear infinite;
-      box-shadow: 0 0 25px rgba(245, 197, 66, 0.35);
-      position: relative;
+      box-shadow: 0 0 25px rgba(245,197,66,0.35);
     }
 
     .vault-circle-center {
@@ -48,13 +47,18 @@
       height: 36px;
       border-radius: 50%;
       background: radial-gradient(circle, #f5c542, #b47b16);
-      box-shadow: 0 0 18px rgba(245, 197, 66, 0.7);
+      box-shadow: 0 0 18px rgba(245,197,66,0.7);
       margin-top: -78px;
+    }
+
+    @keyframes vault-spin {
+      from { transform:rotate(0deg) }
+      to { transform:rotate(360deg) }
     }
 
     .vault-loader-text {
       color: #f5f5f5;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: system-ui;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       font-size: 0.9rem;
@@ -67,46 +71,64 @@
       transition: opacity 0.6s ease;
     }
 
-    @keyframes vault-spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+    .hidden { display:none !important; }
+
+    #vault-main-content {
+      opacity: 0;
+      transition: opacity .6s ease;
+    }
+    #vault-main-content.vault-main-visible {
+      opacity: 1;
     }
 
-    /* CLOCK */
+    /* Clock */
     .clock-icon {
       display:inline-block;
       transform-origin:bottom center;
       animation:tick 1.2s infinite steps(2,start), clock-glow 3s ease-in-out 1;
       opacity:.85;
     }
-
     .clock-icon.reverse {
       animation:tick-reverse 1.2s infinite steps(2,start), clock-glow 3s ease-in-out 1;
     }
-
     @keyframes tick{0%{transform:rotate(0)}50%{transform:rotate(6deg)}100%{transform:rotate(0)}}
     @keyframes tick-reverse{0%{transform:rotate(0)}50%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
-
     @keyframes clock-glow{
       0%,100%{text-shadow:0 0 6px rgba(212,175,55,.8)}
       50%{text-shadow:0 0 40px rgba(212,175,55,.6);transform:scale(1.1)}
     }
 
-    .hidden { display:none !important; }
-
-    #vault-main-content {
-      opacity: 0;
-      transition: opacity 0.6s ease;
+    #ready-message {
+      display:none;
+      opacity:0;
+      color:#9be589;
+      font-weight:600;
+      font-size:14px;
+      margin-top:5px;
+      transition:.3s ease;
     }
-    #vault-main-content.vault-main-visible {
-      opacity: 1;
+    #ready-message.show {
+      display:block;
+      opacity:1;
+    }
+
+    /* Pay button */
+    .pay-now-button {
+      display:none;
+      margin-top:10px;
+      background:#FFD140;
+      border:none;
+      border-radius:8px;
+      padding:10px;
+      font-weight:700;
+      cursor:pointer;
     }
   </style>
 </head>
 
 <body>
 
-<!-- 🔐 LOADER -->
+<!-- LOADER -->
 <div id="vault-loader">
   <div class="vault-loader-inner">
     <div class="vault-circle"></div>
@@ -115,7 +137,7 @@
   </div>
 </div>
 
-<!-- 🔓 MAIN CONTENT -->
+<!-- MAIN CONTENT -->
 <div id="vault-main-content">
 
 <div class="menu-toggle" id="menuToggle">☰</div>
@@ -126,7 +148,6 @@
   <h2>Vault Menu</h2>
 
   <div class="accordion">
-
     <div class="accordion-item">
       <button class="accordion-header">📜 About The Vault</button>
       <div class="accordion-content">
@@ -136,10 +157,9 @@
           <li>Remember loved ones</li>
           <li>Create small works of art</li>
           <li>Leave advice, warnings, or poetry</li>
-          <li>Say “I was here” — for the future to see</li>
+          <li>Say “I was here.”</li>
         </ul>
         <p><strong>Exactly 1,000,000 blocks will ever exist.</strong></p>
-        <p>A time capsule — built one block at a time.</p>
       </div>
     </div>
 
@@ -149,74 +169,42 @@
         <ol>
           <li>Pick a block.</li>
           <li>Enter your name & email.</li>
-          <li>(Optional) Write a message.</li>
-          <li>Upload an image (max 2MB).</li>
-          <li>Pay <strong>$6</strong> securely by card.</li>
+          <li>Upload an image (2MB max).</li>
+          <li>Pay <strong>$6</strong> securely.</li>
         </ol>
-        <p>🧱 Your block becomes part of the Vault forever.</p>
-        <p>⏳ You may edit your block for 7 days.</p>
-        <p>💵 All transactions are final.</p>
+        <p>Your block becomes part of the Vault forever.</p>
       </div>
     </div>
 
     <div class="accordion-item">
       <button class="accordion-header">❓ FAQ</button>
       <div class="accordion-content">
-        <p><strong>What if someone bought the block I want?</strong><br>
-        Then it’s sealed. Blocks cannot be replaced or taken.</p>
-
-        <p><strong>Can I change my block later?</strong><br>
-        Yes — you have 7 days to edit image or text.</p>
-
-        <p><strong>Is the Vault permanent?</strong><br>
-        Yes. Once sealed, your block becomes part of a permanent archive.</p>
-
-        <p><strong>Do I need PayPal?</strong><br>
-        No — you can pay by card using PayPal’s secure processor.</p>
+        <p><strong>Can I change my block?</strong> Yes — within 7 days.</p>
+        <p><strong>Do I need a PayPal account?</strong> No — cards work too.</p>
       </div>
     </div>
 
     <div class="accordion-item">
-      <button class="accordion-header">⚖️ Vault Rules</button>
+      <button class="accordion-header">⚖️ Rules</button>
       <div class="accordion-content">
         <ul>
-          <li>❌ No hate speech or harassment.</li>
-          <li>❌ No NSFW, violent, or illegal content.</li>
-          <li>❌ No confessions to crimes.</li>
-          <li>❌ No copyrighted content unless you own the rights.</li>
-          <li>🕊️ Keep your block meaningful or creative.</li>
-          <li>🧱 All transactions are final once a block is sealed.</li>
+          <li>No hate speech</li>
+          <li>No gore or porn</li>
+          <li>No illegal content</li>
         </ul>
-        <p>By submitting, you agree to the Vault’s Terms & Conditions.</p>
       </div>
     </div>
 
     <div class="accordion-item">
-      <button class="accordion-header">🔐 Privacy Policy</button>
+      <button class="accordion-header">🔐 Privacy</button>
       <div class="accordion-content">
-        <p>We only collect:</p>
+        <p>We collect:</p>
         <ul>
-          <li>Your name</li>
-          <li>Your email</li>
-          <li>Your upload / message</li>
+          <li>Name</li>
+          <li>Email</li>
+          <li>Upload</li>
         </ul>
-        <p>We do NOT:</p>
-        <ul>
-          <li>Sell your data</li>
-          <li>Share your info with advertisers</li>
-          <li>Store card details</li>
-        </ul>
-        <p>Payments are handled securely by PayPal.</p>
-        <p>Need help? Email: <strong>hello@vaultoftime.com</strong></p>
-      </div>
-    </div>
-
-    <div class="accordion-item">
-      <button class="accordion-header">📇 Legal Info</button>
-      <div class="accordion-content">
-        <p><strong>Company:</strong> Vault of Time (Pty) Ltd</p>
-        <p><strong>Reg No:</strong> 2025/875420/07</p>
-        <p><strong>Jurisdiction:</strong> South Africa</p>
+        <p>We never sell or share data.</p>
       </div>
     </div>
   </div>
@@ -244,24 +232,35 @@
       <input type="file" id="fileUpload" accept="image/*" required>
 
       <button type="button" id="uploadBtn">Save Details</button>
-
       <div id="ready-message">✅ Ready for checkout</div>
-    </form>
 
-    <!-- 💳 PAYPAL BUTTON -->
-    <div style="margin-top:1.5rem;">
-      <div>
-        <style>.pp-L4UK67HLWZ324{text-align:center;border:none;border-radius:0.25rem;min-width:11.625rem;padding:0 2rem;height:2.625rem;font-weight:bold;background-color:#FFD140;color:#000000;font-family:"Helvetica Neue",Arial,sans-serif;font-size:1rem;line-height:1.25rem;cursor:pointer;}</style>
-        <form action="https://www.sandbox.paypal.com/ncp/payment/L4UK67HLWZ324" method="post" target="_blank" style="display:inline-grid;justify-items:center;align-content:start;gap:0.5rem;">
-          <input class="pp-L4UK67HLWZ324" type="submit" value="Buy Now" />
-          <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="cards" />
-          <section style="font-size: 0.75rem;">
-            Powered by <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="paypal" style="height:0.875rem;vertical-align:middle;"/>
-          </section>
-        </form>
+      <!-- PAYPAL BUTTON -->
+      <div id="paypal-area" style="display:none;margin-top:12px;">
+        <div>
+          <style>.pp-L4UK67HLWZ324{text-align:center;border:none;border-radius:0.25rem;min-width:11.625rem;padding:0 2rem;height:2.625rem;font-weight:bold;background-color:#FFD140;color:#000000;font-family:"Helvetica Neue",Arial,sans-serif;font-size:1rem;line-height:1.25rem;cursor:pointer;}</style>
+
+          <form
+            action="https://www.sandbox.paypal.com/ncp/payment/L4UK67HLWZ324"
+            method="post"
+            target="_blank"
+            style="display:inline-grid;justify-items:center;align-content:start;gap:0.5rem;"
+          >
+            <input type="hidden" name="return" value="https://vaultoftime.com/?paid=true" />
+            <input type="hidden" name="cancel_return" value="https://vaultoftime.com" />
+
+            <input class="pp-L4UK67HLWZ324" type="submit" value="Buy Now" />
+
+            <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="cards" />
+
+            <section style="font-size: 0.75rem;">
+              Powered by
+              <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg"
+              alt="paypal" style="height:0.875rem;vertical-align:middle;"/>
+            </section>
+          </form>
+        </div>
       </div>
-    </div>
-
+    </form>
   </div>
 </div>
 
@@ -276,14 +275,13 @@
 
 <footer>
   <p>
-    <a href="contact.html">📩 Contact Us</a> | 
-    <a href="terms.html">📜 Terms & Conditions</a><br>
-    <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</small>
+    <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd — Reg 2025/875420/07</small>
   </p>
 </footer>
 
-</div><!-- END MAIN CONTENT -->
+</div><!-- end main -->
 
 <script type="module" src="script.js"></script>
+
 </body>
 </html>
