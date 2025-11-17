@@ -13,6 +13,66 @@
       background-color: #0d1117;
     }
 
+    /* 🔐 FULLSCREEN VAULT LOADER */
+    #vault-loader {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, #1a1a2e 0, #050509 55%, #000 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .vault-loader-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .vault-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid rgba(255, 255, 255, 0.15);
+      border-top-color: #f5c542;
+      border-right-color: #f5c542;
+      animation: vault-spin 1.4s linear infinite;
+      box-shadow: 0 0 25px rgba(245, 197, 66, 0.35);
+      position: relative;
+    }
+
+    .vault-circle-center {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #f5c542, #b47b16);
+      box-shadow: 0 0 18px rgba(245, 197, 66, 0.7);
+      margin-top: -78px;
+    }
+
+    .vault-loader-text {
+      color: #f5f5f5;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .vault-loader-hide {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+
+    @keyframes vault-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Clock + inner styles (kept exactly as before) */
     .clock-icon {
       display:inline-block;
       transform-origin:bottom center;
@@ -32,6 +92,7 @@
       50%{text-shadow:0 0 40px rgba(212,175,55,.6);transform:scale(1.1)}
     }
 
+    /* Keep these internal styles */
     .hidden { display:none !important; }
 
     #ready-message {
@@ -100,10 +161,38 @@
       max-height:300px;
       border-radius:6px;
     }
+
+    /* Hide main content at start */
+    #vault-main-content {
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    #vault-main-content.vault-main-visible {
+      opacity: 1;
+    }
   </style>
 </head>
 
+
+
+
 <body>
+
+<!-- 🔐 VAULT LOADING SCREEN -->
+<div id="vault-loader">
+  <div class="vault-loader-inner">
+    <div class="vault-circle"></div>
+    <div class="vault-circle-center"></div>
+    <p class="vault-loader-text">Opening the Vault...</p>
+  </div>
+</div>
+
+
+<!-- 🔓 MAIN CONTENT START -->
+<div id="vault-main-content">
+
+
 <div class="menu-toggle" id="menuToggle">☰</div>
 <div class="overlay" id="overlay"></div>
 
@@ -213,6 +302,9 @@
     <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd</small>
   </p>
 </footer>
+
+</div><!-- END MAIN CONTENT -->
+
 
 <script type="module" src="script.js"></script>
 </body>
