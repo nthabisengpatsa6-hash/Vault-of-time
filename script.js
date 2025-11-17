@@ -1,3 +1,4 @@
+alert("Vault script is running!");
 // === FIREBASE IMPORTS ================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
