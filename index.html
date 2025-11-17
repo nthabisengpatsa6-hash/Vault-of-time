@@ -5,37 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vault of Time</title>
   <link rel="stylesheet" href="style.css" />
+
   <style>
     html, body {
       margin: 0;
       padding: 0;
       background-color: #0d1117;
     }
+
     .clock-icon {
       display:inline-block;
       transform-origin:bottom center;
       animation:tick 1.2s infinite steps(2,start), clock-glow 3s ease-in-out 1;
       opacity:.85;
     }
+
     .clock-icon.reverse {
       animation:tick-reverse 1.2s infinite steps(2,start), clock-glow 3s ease-in-out 1;
     }
+
     @keyframes tick{0%{transform:rotate(0)}50%{transform:rotate(6deg)}100%{transform:rotate(0)}}
     @keyframes tick-reverse{0%{transform:rotate(0)}50%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
+
     @keyframes clock-glow{
       0%,100%{text-shadow:0 0 6px rgba(212,175,55,.8)}
       50%{text-shadow:0 0 40px rgba(212,175,55,.6);transform:scale(1.1)}
     }
 
     .hidden { display:none !important; }
-
-    #paypal-button-container {
-      display:none;
-      opacity:0;
-      transition:opacity .4s ease;
-      margin-top:12px;
-    }
-    #paypal-button-container.show { display:block; opacity:1; }
 
     #ready-message {
       display:none;
@@ -46,13 +43,25 @@
       transform:translateY(4px);
       transition:.3s ease;
     }
-    #ready-message.show { display:block; opacity:1; transform:none; }
 
-    h1 {
-      margin-top: 0;
-      padding-top: 10px;
-      text-align:center;
-      color:#f9d26e;
+    #ready-message.show {
+      display:block;
+      opacity:1;
+      transform:none;
+    }
+
+    .pay-now-button {
+      margin-top: 10px;
+      background: #f9d26e;
+      color: #111;
+      font-weight: bold;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      display: none;
     }
 
     #viewModal {
@@ -64,6 +73,7 @@
       justify-content:center;
       z-index: 99999;
     }
+
     #viewModalContent {
       background:#11161f;
       border:1px solid #d4af37;
@@ -75,6 +85,7 @@
       position:relative;
       text-align:center;
     }
+
     .close-view {
       position:absolute;
       right:12px;
@@ -83,6 +94,7 @@
       color:#d4af37;
       font-size:22px;
     }
+
     #viewBlockMedia img {
       max-width:100%;
       max-height:300px;
@@ -92,7 +104,6 @@
 </head>
 
 <body>
-
 <div class="menu-toggle" id="menuToggle">☰</div>
 <div class="overlay" id="overlay"></div>
 
@@ -120,12 +131,10 @@
           <li>Select your block.</li>
           <li>Enter your name & email.</li>
           <li>(Optional) Write a message — tribute, memory, note, poem, etc.</li>
-          <li>Upload your image, audio, text file, or video (max 2MB).</li>
-          <li>Pay <strong>$6</strong> via PayPal (debit & credit cards accepted).</li>
-          <li>Your block becomes instantly visible to the world.</li>
+          <li>Upload your image (max 2MB).</li>
+          <li>Pay <strong>$6</strong> securely by card.</li>
         </ol>
         <p>🧱 You can edit your block for 7 days.</p>
-        <p>⏳ After that, it becomes permanent — part of the archive.</p>
       </div>
     </div>
 
@@ -134,31 +143,10 @@
       <div class="accordion-content">
         <ul>
           <li>📦 Max upload size: 2MB</li>
-          <li>❌ No hate speech / harassment / bigotry</li>
-          <li>❌ No porn, gore, or illegal content</li>
-          <li>🕒 Block editable for 7 days after payment</li>
-          <li>🧾 After that, it becomes permanent</li>
+          <li>❌ No hate speech</li>
+          <li>❌ No porn, gore, illegal content</li>
+          <li>🕒 Editable 7 days only</li>
         </ul>
-      </div>
-    </div>
-
-    <div class="accordion-item">
-      <button class="accordion-header">❓ FAQ</button>
-      <div class="accordion-content">
-        <p><strong>What can I upload?</strong><br>
-          Images, text files, poems, screenshots, artwork, audio, video — anything under 2MB.</p>
-
-        <p><strong>Why does it exist?</strong><br>
-          Because we all want to be remembered. This is a digital monument built by ordinary people.</p>
-
-        <p><strong>How many blocks are there?</strong><br>
-          Exactly 1,000,000 — once they’re sold, that's it.</p>
-
-        <p><strong>Can I delete or change my upload?</strong><br>
-          Yes, within 7 days. After that, it becomes part of the permanent Vault.</p>
-
-        <p><strong>Can brands buy blocks?</strong><br>
-          Yes, as long as the content respects the rules.</p>
       </div>
     </div>
 
@@ -167,29 +155,14 @@
       <div class="accordion-content">
         <p>We only collect:</p>
         <ul>
-          <li>Your name (as you enter it)</li>
-          <li>Your email (for receipt & edit link)</li>
-          <li>Your upload file & message</li>
+          <li>Name</li>
+          <li>Email</li>
+          <li>Your upload</li>
         </ul>
-        <p>We never sell your data.</p>
-        <p>We don’t share it with advertisers.</p>
-        <p>You can request deletion anytime.</p>
+        <p>We never sell or share your data.</p>
       </div>
     </div>
-
-    <div class="accordion-item">
-      <button class="accordion-header">📲 Follow Us</button>
-      <div class="accordion-content">
-        <p><a href="https://www.instagram.com/officialvaultoftime" target="_blank">Instagram</a></p>
-        <p><a href="https://www.tiktok.com/@officialvaultoftime" target="_blank">TikTok</a></p>
-      </div>
-    </div>
-
   </div>
-
-  <p style="font-size:12px;color:#777;margin-top:25px;">
-    © 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07
-  </p>
 </nav>
 
 <h1>
@@ -199,10 +172,6 @@
 </h1>
 
 <div class="grid-container" id="grid"></div>
-
-<div class="total-blocks-banner">
-  <p>🪙 Exactly <strong>1,000,000 blocks</strong> will ever exist.</p>
-</div>
 
 <div class="modal hidden" id="modal">
   <div class="modal-content">
@@ -215,12 +184,15 @@
       <input type="text" id="name" placeholder="Your Name" required>
       <input type="email" id="email" placeholder="Your Email" required>
       <textarea id="message" placeholder="Optional message…" maxlength="500"></textarea>
-      <input type="file" id="fileUpload" accept="image/*,.txt,.pdf,.mp3,.mp4" required>
+      <input type="file" id="fileUpload" accept="image/*" required>
 
       <button type="button" id="uploadBtn">Save Details</button>
 
       <div id="ready-message">✅ Ready for checkout</div>
-      <div id="paypal-button-container"></div>
+
+      <button type="button" id="payButton" class="pay-now-button">
+        💳 Pay $6 Securely
+      </button>
     </form>
   </div>
 </div>
@@ -231,7 +203,6 @@
     <h2 id="viewBlockTitle"></h2>
     <div id="viewBlockMedia"></div>
     <p id="viewBlockMessage"></p>
-    <small id="viewBlockMeta"></small>
   </div>
 </div>
 
@@ -243,10 +214,6 @@
   </p>
 </footer>
 
-<!-- REMOVE PAYPAL SMART BUTTON SCRIPT -->
-<!-- (we are now using REST redirect only) -->
-
 <script type="module" src="script.js"></script>
-
 </body>
 </html>
