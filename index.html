@@ -5,27 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vault of Time</title>
   <link rel="stylesheet" href="style.css" />
+
   <style>
     html, body {
       margin: 0;
       padding: 0;
       background-color: #0d1117;
     }
+
     .clock-icon {
-      display:inline-block;
-      transform-origin:bottom center;
-      animation:tick 1.2s infinite steps(2,start), clock-glow 3s ease-in-out 1;
-      opacity:.85;
+      display: inline-block;
+      transform-origin: bottom center;
+      animation: tick 1.2s infinite steps(2, start), clock-glow 3s ease-in-out 1;
+      opacity: .85;
     }
+
     .clock-icon.reverse {
-      animation:tick-reverse 1.2s infinite steps(2,start), clock-glow 3s ease-in-out 1;
+      animation: tick-reverse 1.2s infinite steps(2, start), clock-glow 3s ease-in-out 1;
     }
-    @keyframes tick{0%{transform:rotate(0)}50%{transform:rotate(6deg)}100%{transform:rotate(0)}}
-    @keyframes tick-reverse{0%{transform:rotate(0)}50%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
-    @keyframes clock-glow{
-      0%,100%{text-shadow:0 0 6px rgba(212,175,55,.8)}
-      50%{text-shadow:0 0 40px rgba(212,175,55,.6);transform:scale(1.1)}
+
+    @keyframes tick {0%{transform:rotate(0)}50%{transform:rotate(6deg)}100%{transform:rotate(0)}}
+    @keyframes tick-reverse {0%{transform:rotate(0)}50%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
+
+    @keyframes clock-glow {
+      0%,100% { text-shadow: 0 0 6px rgba(212,175,55,.8) }
+      50% { text-shadow: 0 0 40px rgba(212,175,55,.6); transform: scale(1.1) }
     }
+
     .hidden { display:none !important; }
 
     #paypal-button-container {
@@ -63,6 +69,7 @@
       justify-content:center;
       z-index: 99999;
     }
+
     #viewModalContent {
       background:#11161f;
       border:1px solid #d4af37;
@@ -74,6 +81,7 @@
       position:relative;
       text-align:center;
     }
+
     .close-view {
       position:absolute;
       right:12px;
@@ -82,6 +90,7 @@
       color:#d4af37;
       font-size:22px;
     }
+
     #viewBlockMedia img {
       max-width:100%;
       max-height:300px;
@@ -216,7 +225,7 @@
       <textarea id="message" placeholder="Optional message…" maxlength="500"></textarea>
       <input type="file" id="fileUpload" accept="image/*,.txt,.pdf,.mp3,.mp4" required>
 
-      <button type="button" id="uploadBtn">Save Details</button>
+      <button type="button" id="uploadBtn">Continue</button>
 
       <div id="ready-message">✅ Ready for checkout</div>
       <div id="paypal-button-container"></div>
@@ -242,9 +251,10 @@
   </p>
 </footer>
 
-<!-- UPDATED PAYPAL SANDBOX -->
-<script src="https://www.paypal.com/sdk/js?client-id=AUK2McH5yTvRCHXypQrwShFriZMsW7Ojf16wtlHAYP8rsK92eio4l65xyVDfC0sZl2WGQWTlFrbZZnP7&currency=USD&intent=capture&enable-funding=card"></script>
+<!-- FIXED & COMPLETE PAYPAL SCRIPT -->
+<script src="https://www.paypal.com/sdk/js?client-id=AUK2McH5yTvRCHXypQrwShFriZMsW7Ojf16wtlHAYP8rsK92eio4l65xyVDfC0sZl2WGQWTlFrbZZnP7&currency=USD&components=buttons&intent=capture&enable-funding=card"></script>
 
+<!-- Must come last -->
 <script type="module" src="script.js"></script>
 
 </body>
