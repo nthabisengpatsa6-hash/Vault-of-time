@@ -47,7 +47,7 @@ async function saveBlock(blockNumber, name, email, message) {
       purchasedAt: serverTimestamp()
     });
   } catch (err) {
-    console.error("Error saving block:", err);
+    console.error("Failed to save block:", err);
   }
 }
 
@@ -63,7 +63,7 @@ async function fetchBlock(blockNumber) {
 // === MAIN APP ========================================
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // === LOAD SCREEN ===============================
+  // === LOADING OVERLAY ===============================
   const overlay = document.createElement("div");
   overlay.style = `
     position: fixed;
@@ -89,18 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setTimeout(() => overlay.remove(), 400);
   };
 
-  // === REDIRECT HANDLER ===========================
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("paid") === "true") {
-    const block = Number(urlParams.get("block"));
-    alert("Payment complete! Your block is now part of the Vault.");
-    if (!claimedBlocks.includes(block)) {
-      claimedBlocks.push(block);
-      localStorage.setItem("claimedBlocks", JSON.stringify(claimedBlocks));
-    }
-  }
-
-  // === DOM REFS ==================================
+  // === DOM REFS ======================================
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
   const viewModal = document.getElementById("viewModal");
@@ -118,17 +107,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const paypalContainer = document.getElementById("paypal-button-container");
   const readyMsg = document.getElementById("ready-message");
-  const uploadBtn = document.getElementById("uploadBtn");
 
   let selected = null;
   let paypalRendered = false;
   const blockPrice = 6.0;
 
-  // === FIRESTORE LOAD ============================
+  // === FIRESTORE LOAD ================================
   claimedBlocks = JSON.parse(localStorage.getItem("claimedBlocks")) || [];
   await loadClaimedBlocks();
 
-  // === GRID ==========================
+  // === GRID ==========================================
   function buildGrid() {
     grid.innerHTML = "";
     for (let i = 1; i <= 100; i++) {
@@ -153,7 +141,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // === BLOCK CLICK ===============================
+  // === BLOCK CLICK ==================================
   grid.addEventListener("click", async e => {
     if (!e.target.classList.contains("block")) return;
     const num = Number(e.target.textContent);
@@ -175,11 +163,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     modal.classList.remove("hidden");
   });
 
-  // === MODAL CLOSE ===============================
-  closeBtn.addEventListener("click", () => modal.classList.add("hidden"));
-  viewClose.addEventListener("click", () => viewModal.classList.add("hidden"));
+  // === MODAL CLOSE ===================================
+  closeBtn.onclick = () => modal.classList.add("hidden");
+  viewClose.onclick = () => viewModal.classList.add("hidden");
 
-  // === FORM VALIDATION ===========================
+  // === FORM VALIDATION ===============================
   function valid() {
     return (
       nameInput.value.trim() &&
@@ -211,10 +199,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  uploadBtn.addEventListener("click", updateGate);
-  document.getElementById("blockForm").addEventListener("input", updateGate);
+  document.getElementById("uploadBtn").onclick = updateGate;
+  blockForm.addEventListener("input", updateGate, true);
 
-  // === PAYPAL: REDIRECT MODE =====================
+  // === PAYPAL BUTTON: FIXED REDIRECT MODE ============
   function renderPayPal() {
     paypal.Buttons({
       style: { shape: "pill", color: "gold", layout: "horizontal" },
@@ -226,17 +214,19 @@ document.addEventListener("DOMContentLoaded", async () => {
             amount: { value: blockPrice.toFixed(2) }
           }],
           application_context: {
-            shipping_preference: "NO_SHIPPING",
-            user_action: "PAY_NOW",
-            return_url: window.location.origin + "/?paid=true&block=" + selected,
-            cancel_url: window.location.origin + "/?cancel=true"
+            shipping_preference: "NO_SHIPPING"
           }
         });
       },
 
       onApprove: async (data, actions) => {
         const order = await actions.order.capture();
+
+        // SAVE BLOCK FIRST
         await paymentSuccess(order);
+
+        // THEN FORCE REDIRECT
+        window.location.href = `/?paid=true&block=${selected}`;
       },
 
       onError(err) {
@@ -247,7 +237,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }).render("#paypal-button-container");
   }
 
-  // === SUCCESS ==================================
+  // === PAYMENT SUCCESS ===============================
   async function paymentSuccess(details) {
     const name = nameInput.value.trim();
     const email = emailInput.value.trim();
@@ -261,7 +251,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     refreshGrid();
   }
 
-  // === ACCORDION ================================
+  // === ACCORDION =====================================
   document.querySelectorAll(".accordion-header").forEach(h => {
     h.addEventListener("click", () => {
       const open = h.classList.contains("active");
@@ -274,7 +264,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // === MENU =====================================
+  // === MENU ==========================================
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const menuOverlay = document.getElementById("overlay");
