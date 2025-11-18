@@ -1,5 +1,6 @@
 console.log("Vault JS running");
 
+// === FIREBASE IMPORTS ===
 import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -14,6 +15,8 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
+
+// === CONFIG ===
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
   authDomain: "vault-of-time-e6c03.firebaseapp.com",
@@ -27,8 +30,18 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const blocksCollection = collection(db, "blocks");
 
+
+// === BLOCK LIMIT ===
+// For launch: 100K
+// Eventually: 1M
+const MAX_BLOCKS = 100000;
+
+
+// === STATE ===
 let claimed = [];
 
+
+// === DB FUNCTIONS ===
 async function loadClaimedBlocks() {
   try {
     const snap = await getDocs(blocksCollection);
@@ -54,7 +67,10 @@ async function fetchBlock(num) {
   return snap.exists() ? snap.data() : null;
 }
 
+
+// === MAIN DOM ON READY ===
 document.addEventListener("DOMContentLoaded", async () => {
+
   // DOM
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
@@ -76,22 +92,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   const overlay = document.getElementById("overlay");
   const closeMenuBtn = document.getElementById("closeMenu");
 
+  const searchInput = document.getElementById("searchBlocks");
+
   let selected = null;
 
-  // Start with skeletons
+  // Skeleton first
   renderSkeletonGrid();
 
-  // Load blocks
+  // Load claims
   claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   await loadClaimedBlocks();
 
-  // Render actual grid
+  // Render real grid
   renderRealGrid();
 
-  // Now that rendering is finished, hide loader
+  // Loader hides once ready
   hideLoader();
 
-  // === RULES BANNER ==========================
+
+  // === RULES BANNER ===
   if (!localStorage.getItem("vaultRulesOk")) {
     banner.style.display = "block";
     grid.style.opacity = "0.4";
@@ -105,6 +124,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     grid.style.pointerEvents = "auto";
   };
 
+
+  // === GRID RENDERERS ===
   function renderSkeletonGrid() {
     grid.innerHTML = "";
     for (let i = 1; i <= 100; i++) {
@@ -116,7 +137,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function renderRealGrid() {
     grid.innerHTML = "";
-    for (let i = 1; i <= 100; i++) {
+
+    for (let i = 1; i <= MAX_BLOCKS; i++) {
       const div = document.createElement("div");
       div.className = "block";
       div.textContent = i;
@@ -148,47 +170,64 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // CLOSE MODALS
+
+  // === SEARCH FEATURE ===
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      const q = Number(searchInput.value);
+      if (!q || q < 1 || q > MAX_BLOCKS) return;
+
+      const block = [...document.querySelectorAll(".block")][q - 1];
+      if (!block) return;
+
+      block.scrollIntoView({ behavior: "smooth", block: "center" });
+      block.classList.add("search-highlight");
+
+      setTimeout(() => block.classList.remove("search-highlight"), 2000);
+    });
+  }
+
+
+  // === CLOSE MODALS ===
   closeBtn.onclick = () => modal.classList.add("hidden");
   viewClose.onclick = () => viewModal.classList.add("hidden");
 
-  // MENU
+
+  // === MENU ===
   function closeMenu() {
     sideMenu.classList.remove("open");
     overlay.classList.remove("show");
     menuToggle.classList.remove("active");
   }
 
-  menuToggle.addEventListener("click", () => {
+  menuToggle.onclick = () => {
     sideMenu.classList.add("open");
     overlay.classList.add("show");
     menuToggle.classList.add("active");
-  });
+  };
 
-  closeMenuBtn.addEventListener("click", closeMenu);
-  overlay.addEventListener("click", closeMenu);
+  closeMenuBtn.onclick = closeMenu;
+  overlay.onclick = closeMenu;
 
-  // ACCORDION
+
+  // === ACCORDION ===
   document.querySelectorAll(".accordion-header").forEach(header => {
-    header.addEventListener("click", () => {
+    header.onclick = () => {
       const content = header.nextElementSibling;
       const isOpen = header.classList.contains("active");
 
-      document.querySelectorAll(".accordion-header").forEach(h =>
-        h.classList.remove("active")
-      );
-      document.querySelectorAll(".accordion-content").forEach(c =>
-        c.classList.remove("show")
-      );
+      document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
+      document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
 
       if (!isOpen) {
         header.classList.add("active");
         content.classList.add("show");
       }
-    });
+    };
   });
 
-  // FORM ENABLE
+
+  // === FORM GATE ===
   function valid() {
     return (
       nameInput.value.trim() &&
@@ -208,7 +247,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("uploadBtn").onclick = updateGate;
   document.getElementById("blockForm").addEventListener("input", updateGate, true);
 
-  // TEMP SAVE (PayPal coming later)
+
+  // === TEMP SAVE ===
   payButton.onclick = async () => {
     if (!valid()) return alert("Complete all fields first.");
 
@@ -229,44 +269,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 });
 
-// === BLOCK SEARCH =========================
-const searchInput = document.getElementById("blockSearch");
-const searchBtn = document.getElementById("searchBtn");
 
-searchBtn.onclick = handleSearch;
-searchInput.onkeydown = (e) => {
-  if (e.key === "Enter") handleSearch();
-};
-
-function handleSearch() {
-  const num = Number(searchInput.value.trim());
-
-  if (!num || num < 1 || num > 1000000) {
-    return alert("Enter a valid block number (1–1,000,000).");
-  }
-
-  // If it's within our displayed range (1–100)
-  if (num <= 100) {
-    const blockEl = [...document.querySelectorAll(".block")][num - 1];
-    if (!blockEl) return;
-
-    blockEl.scrollIntoView({ behavior: "smooth", block: "center" });
-    blockEl.click();
-    return;
-  }
-
-  // Future-proof:
-  alert("This block exists, but isn't visible yet.");
-}
-
-// === NEW LOADER LOGIC =========================
+// === SMOOTH LOADER HIDE ===
 function hideLoader() {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
   if (!loader || !main) return;
 
-  // Keep it visible long enough to avoid empty screen
   Promise.all([
     new Promise(resolve => setTimeout(resolve, 1200))
   ]).then(() => {
