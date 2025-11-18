@@ -22,6 +22,7 @@
       align-items: center;
       justify-content: center;
       z-index: 9999;
+      transition: opacity .6s ease;
     }
 
     .vault-loader-inner {
@@ -54,7 +55,7 @@
 
     .vault-loader-text {
       color: #f5f5f5;
-      font-family: system-ui, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       font-size: 0.9rem;
@@ -64,7 +65,6 @@
     .vault-loader-hide {
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.6s ease;
     }
 
     @keyframes vault-spin {
@@ -72,7 +72,6 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Clock styling (unchanged) */
     .clock-icon {
       display:inline-block;
       transform-origin:bottom center;
@@ -84,7 +83,6 @@
     }
     @keyframes tick{0%{transform:rotate(0)}50%{transform:rotate(6deg)}100%{transform:rotate(0)}}
     @keyframes tick-reverse{0%{transform:rotate(0)}50%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
-
     @keyframes clock-glow{
       0%,100%{text-shadow:0 0 6px rgba(212,175,55,.8)}
       50%{text-shadow:0 0 40px rgba(212,175,55,.6);transform:scale(1.1)}
@@ -96,6 +94,7 @@
       opacity: 0;
       transition: opacity 0.6s ease;
     }
+
     #vault-main-content.vault-main-visible {
       opacity: 1;
     }
@@ -113,9 +112,31 @@
   </div>
 </div>
 
-<!-- 🔓 MAIN CONTENT -->
+<!-- MAIN CONTENT -->
 <div id="vault-main-content">
 
+<!-- RULES BANNER -->
+<div id="rules-banner" class="hidden" style="
+  width:100%;
+  background:#2d1f07;
+  border-bottom:2px solid #d4af37;
+  color:#f1d58a;
+  padding:12px;
+  text-align:center;
+  font-size:14px;
+  line-height:1.4;
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:5000;">
+  Before buying a block, please read <strong>“How to Buy”</strong> and <strong>“Vault Rules”</strong> in the menu.
+  <br>
+  <button id="acknowledgeBtn" style="margin-top:6px;padding:6px 18px;border:none;border-radius:4px;background:#d4af37;color:#000;font-weight:bold;cursor:pointer;">
+    I Understand
+  </button>
+</div>
+
+<!-- MENU -->
 <div class="menu-toggle" id="menuToggle">☰</div>
 <div class="overlay" id="overlay"></div>
 
@@ -129,63 +150,50 @@
     <div class="accordion-item">
       <button class="accordion-header">📜 About The Vault</button>
       <div class="accordion-content">
-        <p>The Vault of Time is a global digital monument — built block by block, person by person.</p>
-
-        <p>People use blocks to:</p>
-        <ul>
-          <li>Leave memories for future generations</li>
-          <li>Honor loved ones</li>
-          <li>Record history and personal truth</li>
-          <li>Create art, poetry, and fragments of culture</li>
-          <li>Say: “I was here.”</li>
-        </ul>
-
-        <p><strong>There will only ever be 1,000,000 blocks.</strong>  
-        One day, someone will look back and see exactly who we were.</p>
+        <p>The Vault of Time is a global memory wall — built by ordinary people, one block at a time.</p>
+        <p>Each block is a tiny monument: a story, a tribute, an artwork, a warning, a love note, a scream, a prayer.</p>
+        <p>We're living through chaotic times. This is how we say: <strong>“We were here.”</strong></p>
+        <p><strong>Exactly 1,000,000 blocks will ever exist.</strong></p>
       </div>
     </div>
 
-
-    <!-- HOW TO BUY — **FINAL VERSION** -->
+    <!-- HOW TO BUY -->
     <div class="accordion-item">
       <button class="accordion-header">💳 How To Buy</button>
       <div class="accordion-content">
         <ol>
-          <li>Choose an unclaimed block.</li>
-          <li>Enter your name & email.</li>
-          <li>(Optional) Write a message that matters to you.</li>
-          <li>Upload an image or audio (max 2MB).</li>
-          <li>Pay <strong>$6</strong> — debit or credit card accepted.</li>
+          <li>Pick a block from the grid.</li>
+          <li>Enter your name + email.</li>
+          <li>(Optional) Write a message.</li>
+          <li>Upload an image (max 2MB).</li>
+          <li>You’ll soon be able to pay securely by card (via PayPal).</li>
+          <li>Your block becomes visible instantly — forever.</li>
         </ol>
-
-        <p>🧱 Once confirmed, your block becomes visible instantly.</p>
-        <p>⏳ You may edit it for 7 days — after that, it becomes permanent.</p>
+        <p>🧱 You can edit your block for 7 days.</p>
+        <p>⏳ After that, it becomes permanent.</p>
       </div>
     </div>
 
-
-    <!-- FRIENDLY FAQ -->
+    <!-- FAQ -->
     <div class="accordion-item">
-      <button class="accordion-header">❓ FAQ</button>
+      <button class="accordion-header">❓ Frequently Asked Questions</button>
       <div class="accordion-content">
+        <p><strong>Why does this exist?</strong><br>
+        Because history books don’t record regular people — but we still matter.</p>
 
-        <p><strong>What kinds of uploads are allowed?</strong><br>
-        Images and audio — as long as they respect the rules. Keep it meaningful, creative, or personal.</p>
+        <p><strong>Do I need crypto?</strong><br>
+        Nope. Just a card.</p>
 
-        <p><strong>Can I upload text-only?</strong><br>
-        Yes! Just write your message and upload a blank or symbolic image.</p>
+        <p><strong>Can I upload anything?</strong><br>
+        As long as it's legal, safe, and under 2MB.</p>
 
-        <p><strong>Can my block be edited?</strong><br>
-        Yes — for 7 days. After that, it’s sealed forever.</p>
+        <p><strong>Can I change what I uploaded?</strong><br>
+        Yes — 7 days to edit. Then it’s sealed.</p>
 
-        <p><strong>Do I need a PayPal account?</strong><br>
-        Nope! You can pay with a normal card — PayPal just securely processes it.</p>
-
-        <p><strong>What happens when all blocks are sold?</strong><br>
-        The Vault becomes a completed time capsule — a historical artifact.</p>
+        <p><strong>Can I buy more than one?</strong><br>
+        Absolutely — build a cluster.</p>
       </div>
     </div>
-
 
     <!-- RULES -->
     <div class="accordion-item">
@@ -193,38 +201,33 @@
       <div class="accordion-content">
         <ul>
           <li>❌ No hate speech or harassment</li>
-          <li>❌ No extremist content</li>
-          <li>❌ No sexual or violent content</li>
-          <li>❌ No copyrighted material you don’t own</li>
-          <li>🕊 Make it meaningful — this is a monument</li>
+          <li>❌ No porn, gore, or illegal content</li>
+          <li>❌ No doxxing or personal info of others</li>
+          <li>🕊️ Keep it meaningful, artistic, or human</li>
         </ul>
-        <p>All sales are final once your block is sealed.</p>
+        <p>By uploading, you accept the Vault's Terms & Conditions.</p>
       </div>
     </div>
-
 
     <!-- PRIVACY -->
     <div class="accordion-item">
       <button class="accordion-header">🔐 Privacy Policy</button>
       <div class="accordion-content">
-        <p>We only store:</p>
+        <p>We only collect:</p>
         <ul>
           <li>Your name</li>
           <li>Your email</li>
-          <li>Your submitted block content</li>
+          <li>Your upload + message</li>
         </ul>
-
-        <p>We do NOT:</p>
+        <p>We DO NOT:</p>
         <ul>
           <li>Sell your data</li>
-          <li>Store card details</li>
-          <li>Share your info with advertisers</li>
+          <li>Store your card info</li>
+          <li>Track you across the web</li>
         </ul>
-
-        <p>Payment is handled securely by PayPal.</p>
+        <p>Payments are handled securely via PayPal.</p>
       </div>
     </div>
-
 
     <!-- LEGAL -->
     <div class="accordion-item">
@@ -235,20 +238,28 @@
         <p><strong>Jurisdiction:</strong> South Africa</p>
       </div>
     </div>
+
   </div>
+
+  <p style="font-size:12px;color:#777;margin-top:25px;">
+    © 2025 Vault Of Time (Pty) Ltd
+  </p>
 </nav>
 
 
+<!-- TITLE -->
 <h1>
   <span class="clock-icon">🕰️</span>
   The Vault of Time
   <span class="clock-icon reverse">🕰️</span>
 </h1>
 
+
+<!-- BLOCK GRID -->
 <div class="grid-container" id="grid"></div>
 
 
-<!-- BLOCK MODAL -->
+<!-- CLAIM MODAL -->
 <div class="modal hidden" id="modal">
   <div class="modal-content">
     <span class="close-button">&times;</span>
@@ -260,14 +271,14 @@
       <input type="text" id="name" placeholder="Your Name" required>
       <input type="email" id="email" placeholder="Your Email" required>
       <textarea id="message" placeholder="Optional message…" maxlength="500"></textarea>
-      <input type="file" id="fileUpload" accept="image/*,audio/*" required>
+      <input type="file" id="fileUpload" accept="image/*" required>
 
       <button type="button" id="uploadBtn">Save Details</button>
 
-      <div id="ready-message">✅ Ready for checkout</div>
+      <div id="ready-message" class="hidden">✅ Ready</div>
 
-      <button type="button" id="payButton" class="pay-now-button">
-        💳 Pay $6 Securely
+      <button type="button" id="payButton" class="pay-now-button" style="display:none;">
+        💳 Pay $6 Securely (coming soon)
       </button>
     </form>
   </div>
@@ -284,16 +295,16 @@
   </div>
 </div>
 
-
 <footer>
   <p>
-    <a href="contact.html">📩 Contact Us</a> |
+    <a href="contact.html">📩 Contact Us</a> | 
     <a href="terms.html">📜 Terms & Conditions</a><br>
-    <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd — Reg No: 2025/875420/07</small>
+    <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd</small>
   </p>
 </footer>
 
-</div><!-- END MAIN CONTENT -->
+</div><!-- end MAIN CONTENT -->
+
 
 <script type="module" src="script.js"></script>
 </body>
