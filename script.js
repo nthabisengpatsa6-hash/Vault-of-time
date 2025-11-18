@@ -1,9 +1,7 @@
-console.log("Vault JS running");
+console.log("Vault JS loaded");
 
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-
+// Firebase imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
   getFirestore,
   collection,
@@ -14,7 +12,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-// === FIREBASE CONFIG =================================
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
   authDomain: "vault-of-time-e6c03.firebaseapp.com",
@@ -28,14 +26,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const blocksCollection = collection(db, "blocks");
 
-let claimed = [];
-
-// === CONFIG ====================================
+// config
 const TOTAL_BLOCKS = 100000;
 const PAGE_SIZE = 500;
 let currentPage = 1;
+let claimed = [];
 
-// === LOAD CLAIMED BLOCKS ========================
+// Load claimed blocks
 async function loadClaimedBlocks() {
   try {
     const snap = await getDocs(blocksCollection);
@@ -46,7 +43,7 @@ async function loadClaimedBlocks() {
   }
 }
 
-// === SAVE BLOCK =================================
+// Save block
 async function saveBlock(pending) {
   await setDoc(doc(blocksCollection, String(pending.blockNumber)), {
     name: pending.name,
@@ -56,24 +53,15 @@ async function saveBlock(pending) {
   });
 }
 
-// === FETCH BLOCK ================================
+// Fetch block data
 async function fetchBlock(num) {
   const snap = await getDoc(doc(blocksCollection, String(num)));
   return snap.exists() ? snap.data() : null;
 }
 
-// === MAIN ========================================
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // === ACCORDION ======================================
-  const headers = document.querySelectorAll(".accordion-header");
-  headers.forEach(header => {
-    header.addEventListener("click", () => {
-      header.classList.toggle("active");
-    });
-  });
-
-  // DOM
+  // DOM refs
   const grid = document.getElementById("grid");
   const pagination = document.getElementById("pagination");
 
@@ -90,6 +78,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const readyMsg = document.getElementById("ready-message");
   const paypalWrapper = document.getElementById("paypalWrapper");
+  const saveBtn = document.getElementById("uploadBtn");
 
   const banner = document.getElementById("rules-banner");
   const ackBtn = document.getElementById("acknowledgeBtn");
@@ -97,18 +86,39 @@ document.addEventListener("DOMContentLoaded", async () => {
   const searchInput = document.getElementById("blockSearch");
   const searchBtn = document.getElementById("searchBtn");
 
-  const saveBtn = document.getElementById("uploadBtn");
+  const menuToggle = document.getElementById("menuToggle");
+  const sideMenu = document.getElementById("sideMenu");
+  const overlay = document.getElementById("overlay");
+  const closeMenuBtn = document.getElementById("closeMenu");
 
   let selected = null;
 
-  // Load data
+  // Accordion
+  document.querySelectorAll(".accordion-header").forEach(header => {
+    header.addEventListener("click", () => {
+      const alreadyActive = header.classList.contains("active");
+      
+      // Reset all
+      document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
+      document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
+
+      // Toggle target
+      if (!alreadyActive) {
+        header.classList.add("active");
+        header.nextElementSibling.classList.add("show");
+      }
+    });
+  });
+
+  // Load saved state
   claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   await loadClaimedBlocks();
+
   renderPage(currentPage);
 
   hideLoader();
 
-  // RULES BANNER CONTROL
+  // RULES LOCK
   if (!localStorage.getItem("vaultRulesOk")) {
     banner.style.display = "block";
     grid.style.opacity = "0.4";
@@ -122,7 +132,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     grid.style.pointerEvents = "auto";
   };
 
-  // === PAGINATION UI ================================
+  // MENU
+  menuToggle.addEventListener("click", () => {
+    sideMenu.classList.add("open");
+    overlay.classList.add("show");
+  });
+
+  overlay.addEventListener("click", closeMenu);
+  closeMenuBtn.addEventListener("click", closeMenu);
+
+  function closeMenu() {
+    sideMenu.classList.remove("open");
+    overlay.classList.remove("show");
+  }
+
+  // Pagination
   function renderPagination() {
     const totalPages = Math.ceil(TOTAL_BLOCKS / PAGE_SIZE);
     pagination.innerHTML = "";
@@ -133,9 +157,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     prev.onclick = () => changePage(currentPage - 1);
     pagination.appendChild(prev);
 
-    const pageInfo = document.createElement("span");
-    pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
-    pagination.appendChild(pageInfo);
+    const label = document.createElement("span");
+    label.textContent = `Page ${currentPage} / ${totalPages}`;
+    pagination.appendChild(label);
 
     const next = document.createElement("button");
     next.textContent = "Next →";
@@ -149,7 +173,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderPage(page);
   }
 
-  // === RENDER PAGE ================================
+  // Render blocks
   function renderPage(pageNum) {
     grid.innerHTML = "";
 
@@ -175,15 +199,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
         }
 
-        document.querySelectorAll(".block").forEach(b =>
-          b.classList.remove("selected")
-        );
-
+        document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
         div.classList.add("selected");
         selected = i;
+
         document.getElementById("blockNumber").value = i;
-        document.getElementById("selected-block-text").textContent =
-          `Selected Block: #${i}`;
+        document.getElementById("selected-block-text").textContent = `Selected Block: #${i}`;
+
         modal.classList.remove("hidden");
       };
 
@@ -193,7 +215,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderPagination();
   }
 
-  // === SEARCH FUNCTION ============================
+  // Search
   function searchBlock() {
     const target = Number(searchInput.value);
     if (!target || target < 1 || target > TOTAL_BLOCKS) return;
@@ -203,34 +225,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (page !== currentPage) {
       currentPage = page;
       renderPage(page);
-      setTimeout(() => highlightBlock(target), 50);
+      setTimeout(() => highlight(target), 50);
     } else {
-      highlightBlock(target);
+      highlight(target);
     }
   }
 
-  function highlightBlock(num) {
+  function highlight(num) {
     const blocks = document.querySelectorAll(".block");
     const block = Array.from(blocks).find(b => Number(b.textContent) === num);
-
     if (!block) return;
 
     block.scrollIntoView({ behavior: "smooth", block: "center" });
     block.classList.add("search-highlight");
-    setTimeout(() => {
-      block.classList.remove("search-highlight");
-    }, 2000);
+    setTimeout(() => block.classList.remove("search-highlight"), 2000);
   }
 
-  // Hook search
   searchBtn.addEventListener("click", searchBlock);
   searchInput.addEventListener("change", searchBlock);
 
-  // CLOSE MODALS
+  // Modal close
   closeBtn.onclick = () => modal.classList.add("hidden");
   viewClose.onclick = () => viewModal.classList.add("hidden");
 
-  // === VALIDATION + GATE CONTROL =================
+  // Validation
   function valid() {
     return (
       nameInput.value.trim() &&
@@ -240,9 +258,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  async function handleSave() {
+  // Save button
+  saveBtn.addEventListener("click", async () => {
     if (!valid()) {
-      alert("Please fill all fields + upload an image");
+      alert("Fill in all fields + upload image");
       return;
     }
 
@@ -264,22 +283,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     paypalWrapper.classList.remove("hidden");
 
     renderPage(currentPage);
-  }
-
-  saveBtn.addEventListener("click", handleSave);
+  });
 });
 
-// === LOADER ========================
+// Loader fade-out
 function hideLoader() {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
   setTimeout(() => {
-    if (loader) {
-      loader.style.opacity = 0;
-      loader.style.pointerEvents = "none";
-      setTimeout(() => loader.remove(), 400);
-    }
-    if (main) main.classList.add("vault-main-visible");
-  }, 1400);
-}
+    loader.style.opacity = 0;
+    loader.style.pointerEvents = "none";
+
+    setTimeout(() => loader.remove(), 400);
+    main.classList.add("vault-main-visible");
+
+  }, 1200);
+                            }
