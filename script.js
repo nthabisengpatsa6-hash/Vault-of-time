@@ -70,17 +70,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   headers.forEach(header => {
     header.addEventListener("click", () => {
       header.classList.toggle("active");
-      const content = header.nextElementSibling;
-
-      if (content.style.maxHeight) {
-        content.style.maxHeight = null;
-      } else {
-        content.style.maxHeight = content.scrollHeight + "px";
-      }
     });
   });
 
-  // DOM references
+  // DOM
   const grid = document.getElementById("grid");
   const pagination = document.getElementById("pagination");
 
@@ -104,19 +97,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   const searchInput = document.getElementById("blockSearch");
   const searchBtn = document.getElementById("searchBtn");
 
+  const saveBtn = document.getElementById("uploadBtn");
+
   let selected = null;
 
-  // Load claimed blocks
+  // Load data
   claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   await loadClaimedBlocks();
-
-  // Render page
   renderPage(currentPage);
 
-  // Loader
   hideLoader();
 
-  // RULES BANNER
+  // RULES BANNER CONTROL
   if (!localStorage.getItem("vaultRulesOk")) {
     banner.style.display = "block";
     grid.style.opacity = "0.4";
@@ -130,7 +122,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     grid.style.pointerEvents = "auto";
   };
 
-  // === PAGINATION ================================
+  // === PAGINATION UI ================================
   function renderPagination() {
     const totalPages = Math.ceil(TOTAL_BLOCKS / PAGE_SIZE);
     pagination.innerHTML = "";
@@ -157,7 +149,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderPage(page);
   }
 
-  // === PAGE RENDER ================================
+  // === RENDER PAGE ================================
   function renderPage(pageNum) {
     grid.innerHTML = "";
 
@@ -201,7 +193,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderPagination();
   }
 
-  // === SEARCH ============================
+  // === SEARCH FUNCTION ============================
   function searchBlock() {
     const target = Number(searchInput.value);
     if (!target || target < 1 || target > TOTAL_BLOCKS) return;
@@ -230,14 +222,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 2000);
   }
 
-  if (searchBtn) searchBtn.addEventListener("click", searchBlock);
-  if (searchInput) searchInput.addEventListener("change", searchBlock);
+  // Hook search
+  searchBtn.addEventListener("click", searchBlock);
+  searchInput.addEventListener("change", searchBlock);
 
   // CLOSE MODALS
   closeBtn.onclick = () => modal.classList.add("hidden");
   viewClose.onclick = () => viewModal.classList.add("hidden");
 
-  // FORM VALIDATION
+  // === VALIDATION + GATE CONTROL =================
   function valid() {
     return (
       nameInput.value.trim() &&
@@ -247,19 +240,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  function updateGate() {
-    if (valid()) {
-      readyMsg.classList.remove("hidden");
-      paypalWrapper.classList.remove("hidden");
+  async function handleSave() {
+    if (!valid()) {
+      alert("Please fill all fields + upload an image");
+      return;
     }
-  }
-
-  document.getElementById("uploadBtn").onclick = updateGate;
-  document.getElementById("blockForm").addEventListener("input", updateGate, true);
-
-  // SAVE DETAILS
-  window.saveBlockData = async () => {
-    if (!valid()) return alert("Complete all fields first.");
 
     const pending = {
       blockNumber: selected,
@@ -270,15 +255,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await saveBlock(pending);
 
-    claimed.push(selected);
-    localStorage.setItem("claimed", JSON.stringify(claimed));
+    if (!claimed.includes(selected)) {
+      claimed.push(selected);
+      localStorage.setItem("claimed", JSON.stringify(claimed));
+    }
 
-    modal.classList.add("hidden");
+    readyMsg.classList.remove("hidden");
+    paypalWrapper.classList.remove("hidden");
+
     renderPage(currentPage);
-  };
+  }
+
+  saveBtn.addEventListener("click", handleSave);
 });
 
-// === SAFE LOADER ========================
+// === LOADER ========================
 function hideLoader() {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
@@ -291,4 +282,4 @@ function hideLoader() {
     }
     if (main) main.classList.add("vault-main-visible");
   }, 1400);
-                          }
+}
