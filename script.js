@@ -68,11 +68,6 @@ async function fetchBlock(num) {
   }
 }
 
-// === HELPER: URL PARAM ===============================
-function getParam(param) {
-  return new URLSearchParams(window.location.search).get(param);
-}
-
 // === MAIN APP ========================================
 document.addEventListener("DOMContentLoaded", async () => {
 
@@ -101,20 +96,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let selected = null;
 
-  // Load claimed blocks
+  // Load claimed
   claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   await loadClaimedBlocks();
 
-  // === RULES ACKNOWLEDGEMENT ==========================
+  // === RULES BANNER LOGIC ==========================
   if (!localStorage.getItem("vaultRulesOk")) {
     banner.classList.remove("hidden");
-    grid.style.opacity = "0.25";
+    banner.style.display = "block";
+    grid.style.opacity = "0.4";
     grid.style.pointerEvents = "none";
   }
 
   ackBtn.onclick = () => {
     localStorage.setItem("vaultRulesOk", "true");
-    banner.classList.add("hidden");
+    banner.style.display = "none";
     grid.style.opacity = "1";
     grid.style.pointerEvents = "auto";
   };
@@ -156,7 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   renderGrid();
 
-  // === CLOSE MODALS =========================
+  // CLOSE MODAL
   closeBtn.onclick = () => modal.classList.add("hidden");
   viewClose.onclick = () => viewModal.classList.add("hidden");
 
@@ -216,7 +212,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("uploadBtn").onclick = updateGate;
   document.getElementById("blockForm").addEventListener("input", updateGate, true);
 
-  // === TEMP PAYMENT (NO PAYPAL YET) =================
+  // === TEMP PAYMENT =================
   payButton.onclick = async () => {
     if (!valid()) return alert("Complete all fields first.");
 
@@ -237,18 +233,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 });
 
-// === LOADER =========================================
+// === LOADER: KEEP 15 SECONDS =========================
 window.addEventListener("load", () => {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
   if (!loader || !main) return;
 
-  // Keep loader ~3.5s for effect
   setTimeout(() => {
     loader.classList.add("vault-loader-hide");
     main.classList.add("vault-main-visible");
 
-    setTimeout(() => loader.remove(), 900);
-  }, 3500);
+    setTimeout(() => loader.remove(), 600);
+  }, 15000);
 });
