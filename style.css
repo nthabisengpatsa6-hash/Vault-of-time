@@ -501,3 +501,15 @@ html {
 #searchBtn:hover {
   transform: scale(1.1);
 }
+.release-banner {
+  background: #161b22;
+  color: #d4af37;
+  padding: 10px 16px;
+  margin: 10px auto 20px;
+  border-radius: 6px;
+  display: inline-block;
+  font-size: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+  max-width: 90%;
+}
