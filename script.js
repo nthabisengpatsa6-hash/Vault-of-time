@@ -85,15 +85,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   await loadClaimedBlocks();
 
-  // Render real grid
+  // Render actual grid
   renderRealGrid();
 
-  // Once grid is ready → remove loader
+  // Now that rendering is finished, hide loader
   hideLoader();
 
   // === RULES BANNER ==========================
   if (!localStorage.getItem("vaultRulesOk")) {
-    banner.classList.remove("hidden");
     banner.style.display = "block";
     grid.style.opacity = "0.4";
     grid.style.pointerEvents = "none";
@@ -209,7 +208,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("uploadBtn").onclick = updateGate;
   document.getElementById("blockForm").addEventListener("input", updateGate, true);
 
-  // TEMP SAVE
+  // TEMP SAVE (PayPal coming later)
   payButton.onclick = async () => {
     if (!valid()) return alert("Complete all fields first.");
 
@@ -237,11 +236,12 @@ function hideLoader() {
 
   if (!loader || !main) return;
 
-// Loader stays just long enough to avoid the “empty grid” moment
-Promise.all([
-  new Promise(resolve => setTimeout(resolve, 1200)) // 1.2s minimum
-]).then(() => {
-  loader.classList.add("vault-loader-hide");
-  main.classList.add("vault-main-visible");
-  setTimeout(() => loader.remove(), 600);
-});
+  // Keep it visible long enough to avoid empty screen
+  Promise.all([
+    new Promise(resolve => setTimeout(resolve, 1200))
+  ]).then(() => {
+    loader.classList.add("vault-loader-hide");
+    main.classList.add("vault-main-visible");
+    setTimeout(() => loader.remove(), 600);
+  });
+}
