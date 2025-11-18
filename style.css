@@ -804,3 +804,30 @@ html {
   box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
   max-width: 90%;
 }
+#pagination {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  margin: 20px auto;
+}
+
+#pagination button {
+  background: #d4af37;
+  color: #111;
+  border: none;
+  padding: 6px 14px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#pagination button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+#pagination span {
+  font-size: 14px;
+  color: #d4af37;
+    }
