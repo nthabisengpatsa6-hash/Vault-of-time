@@ -845,3 +845,16 @@ html {
 .accordion-header.active + .accordion-content {
   padding-top: 8px;
 }
+.accordion-content {
+  display: none;
+  padding: 10px;
+  background: #111;
+  border-left: 3px solid #d4af37;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.accordion-header.active + .accordion-content {
+  display: block;
+    }
