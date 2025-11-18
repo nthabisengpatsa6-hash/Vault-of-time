@@ -1,6 +1,5 @@
 console.log("Vault JS running");
 
-// === FIREBASE IMPORTS ================================
 import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -15,7 +14,6 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-// === FIREBASE CONFIG =================================
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
   authDomain: "vault-of-time-e6c03.firebaseapp.com",
@@ -31,7 +29,6 @@ const blocksCollection = collection(db, "blocks");
 
 let claimed = [];
 
-// === LOAD CLAIMED BLOCKS =============================
 async function loadClaimedBlocks() {
   try {
     const snap = await getDocs(blocksCollection);
@@ -43,34 +40,21 @@ async function loadClaimedBlocks() {
   }
 }
 
-// === SAVE BLOCK ======================================
 async function saveBlock(pending) {
-  try {
-    await setDoc(doc(blocksCollection, String(pending.blockNumber)), {
-      name: pending.name,
-      email: pending.email,
-      message: pending.message || "",
-      purchasedAt: serverTimestamp()
-    });
-  } catch (err) {
-    console.error("Error saving block:", err);
-  }
+  await setDoc(doc(blocksCollection, String(pending.blockNumber)), {
+    name: pending.name,
+    email: pending.email,
+    message: pending.message || "",
+    purchasedAt: serverTimestamp()
+  });
 }
 
-// === FETCH BLOCK =====================================
 async function fetchBlock(num) {
-  try {
-    const snap = await getDoc(doc(blocksCollection, String(num)));
-    return snap.exists() ? snap.data() : null;
-  } catch (err) {
-    console.error("Error fetching block:", err);
-    return null;
-  }
+  const snap = await getDoc(doc(blocksCollection, String(num)));
+  return snap.exists() ? snap.data() : null;
 }
 
-// === MAIN APP ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-
   // DOM
   const grid = document.getElementById("grid");
   const modal = document.getElementById("modal");
@@ -84,11 +68,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const readyMsg = document.getElementById("ready-message");
   const payButton = document.getElementById("payButton");
 
-  // Banner
   const banner = document.getElementById("rules-banner");
   const ackBtn = document.getElementById("acknowledgeBtn");
 
-  // Menu
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const overlay = document.getElementById("overlay");
@@ -96,11 +78,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let selected = null;
 
-  // Load claimed
+  // Start with skeletons
+  renderSkeletonGrid();
+
+  // Load blocks
   claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   await loadClaimedBlocks();
 
-  // === RULES BANNER LOGIC ==========================
+  // Render real grid
+  renderRealGrid();
+
+  // Once grid is ready → remove loader
+  hideLoader();
+
+  // === RULES BANNER ==========================
   if (!localStorage.getItem("vaultRulesOk")) {
     banner.classList.remove("hidden");
     banner.style.display = "block";
@@ -115,8 +106,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     grid.style.pointerEvents = "auto";
   };
 
-  // === GRID ========================================
-  function renderGrid() {
+  function renderSkeletonGrid() {
+    grid.innerHTML = "";
+    for (let i = 1; i <= 100; i++) {
+      const div = document.createElement("div");
+      div.className = "block skeleton-loading";
+      grid.appendChild(div);
+    }
+  }
+
+  function renderRealGrid() {
     grid.innerHTML = "";
     for (let i = 1; i <= 100; i++) {
       const div = document.createElement("div");
@@ -150,13 +149,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  renderGrid();
-
-  // CLOSE MODAL
+  // CLOSE MODALS
   closeBtn.onclick = () => modal.classList.add("hidden");
   viewClose.onclick = () => viewModal.classList.add("hidden");
 
-  // === MENU =========================
+  // MENU
   function closeMenu() {
     sideMenu.classList.remove("open");
     overlay.classList.remove("show");
@@ -172,7 +169,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   closeMenuBtn.addEventListener("click", closeMenu);
   overlay.addEventListener("click", closeMenu);
 
-  // === ACCORDION =========================
+  // ACCORDION
   document.querySelectorAll(".accordion-header").forEach(header => {
     header.addEventListener("click", () => {
       const content = header.nextElementSibling;
@@ -192,7 +189,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // === VALIDATION =========================
+  // FORM ENABLE
   function valid() {
     return (
       nameInput.value.trim() &&
@@ -212,7 +209,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("uploadBtn").onclick = updateGate;
   document.getElementById("blockForm").addEventListener("input", updateGate, true);
 
-  // === TEMP PAYMENT =================
+  // TEMP SAVE
   payButton.onclick = async () => {
     if (!valid()) return alert("Complete all fields first.");
 
@@ -229,21 +226,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     localStorage.setItem("claimed", JSON.stringify(claimed));
 
     modal.classList.add("hidden");
-    renderGrid();
+    renderRealGrid();
   };
 });
 
-// === LOADER: KEEP 15 SECONDS =========================
-window.addEventListener("load", () => {
+// === NEW LOADER LOGIC =========================
+function hideLoader() {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
   if (!loader || !main) return;
 
+  // safety timeout (max 5s)
   setTimeout(() => {
     loader.classList.add("vault-loader-hide");
     main.classList.add("vault-main-visible");
 
     setTimeout(() => loader.remove(), 600);
-  }, 15000);
-});
+  }, 5000);
+                          }
