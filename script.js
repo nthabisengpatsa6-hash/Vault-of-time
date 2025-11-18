@@ -14,26 +14,18 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
-
 // === FIREBASE CONFIG =================================
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
   authDomain: "vault-of-time-e6c03.firebaseapp.com",
   projectId: "vault-of-time-e6c03",
-  storageBucket: "vault-of-time-e6c03.appspot.com",
+  storageBucket: "vault-of-time-e6c03.firebasestorage.app",
   messagingSenderId: "941244238426",
   appId: "1:941244238426:web:80f80b5237b84b1740e663"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 const blocksCollection = collection(db, "blocks");
 
 let claimed = [];
@@ -54,21 +46,12 @@ async function loadClaimedBlocks() {
   }
 }
 
-// === SAVE BLOCK + IMAGE =========================
-async function saveBlock(pending, file) {
-  let imageUrl = "";
-
-  if (file) {
-    const fileRef = ref(storage, `blocks/${pending.blockNumber}/${file.name}`);
-    await uploadBytes(fileRef, file);
-    imageUrl = await getDownloadURL(fileRef);
-  }
-
+// === SAVE BLOCK =================================
+async function saveBlock(pending) {
   await setDoc(doc(blocksCollection, String(pending.blockNumber)), {
     name: pending.name,
     email: pending.email,
     message: pending.message || "",
-    imageUrl,
     purchasedAt: serverTimestamp()
   });
 }
@@ -82,7 +65,22 @@ async function fetchBlock(num) {
 // === MAIN ========================================
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // DOM
+  // === ACCORDION ======================================
+  const headers = document.querySelectorAll(".accordion-header");
+  headers.forEach(header => {
+    header.addEventListener("click", () => {
+      header.classList.toggle("active");
+      const content = header.nextElementSibling;
+
+      if (content.style.maxHeight) {
+        content.style.maxHeight = null;
+      } else {
+        content.style.maxHeight = content.scrollHeight + "px";
+      }
+    });
+  });
+
+  // DOM references
   const grid = document.getElementById("grid");
   const pagination = document.getElementById("pagination");
 
@@ -96,16 +94,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const closeBtn = document.querySelector(".close-button");
   const viewClose = document.querySelector(".close-view");
+
   const readyMsg = document.getElementById("ready-message");
-  const payButton = document.getElementById("payButton");
+  const paypalWrapper = document.getElementById("paypalWrapper");
 
   const banner = document.getElementById("rules-banner");
   const ackBtn = document.getElementById("acknowledgeBtn");
-
-  const menuToggle = document.getElementById("menuToggle");
-  const sideMenu = document.getElementById("sideMenu");
-  const overlay = document.getElementById("overlay");
-  const closeMenuBtn = document.getElementById("closeMenu");
 
   const searchInput = document.getElementById("blockSearch");
   const searchBtn = document.getElementById("searchBtn");
@@ -116,7 +110,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   await loadClaimedBlocks();
 
+  // Render page
   renderPage(currentPage);
+
+  // Loader
   hideLoader();
 
   // RULES BANNER
@@ -160,7 +157,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderPage(page);
   }
 
-  // === PAGE RENDERER ================================
+  // === PAGE RENDER ================================
   function renderPage(pageNum) {
     grid.innerHTML = "";
 
@@ -181,6 +178,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           const data = await fetchBlock(i);
           document.getElementById("viewBlockTitle").textContent = `Block #${i}`;
           document.getElementById("viewBlockMessage").textContent = data?.message || "";
+          document.getElementById("viewBlockMedia").innerHTML = "";
           viewModal.classList.remove("hidden");
           return;
         }
@@ -239,39 +237,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   closeBtn.onclick = () => modal.classList.add("hidden");
   viewClose.onclick = () => viewModal.classList.add("hidden");
 
-  // MENU
-  function closeMenu() {
-    sideMenu.classList.remove("open");
-    overlay.classList.remove("show");
-    menuToggle.classList.remove("active");
-  }
-
-  menuToggle.addEventListener("click", () => {
-    sideMenu.classList.add("open");
-    overlay.classList.add("show");
-    menuToggle.classList.add("active");
-  });
-
-  closeMenuBtn.addEventListener("click", closeMenu);
-  overlay.addEventListener("click", closeMenu);
-
-  // === REAL ACCORDION FIX ===
-const headers = document.querySelectorAll(".accordion-header");
-
-headers.forEach(header => {
-  header.addEventListener("click", () => {
-    header.classList.toggle("active");
-    const content = header.nextElementSibling;
-
-    if (content.style.maxHeight) {
-      content.style.maxHeight = null;
-    } else {
-      content.style.maxHeight = content.scrollHeight + "px";
-    }
-  });
-});
-  
-
   // FORM VALIDATION
   function valid() {
     return (
@@ -284,16 +249,16 @@ headers.forEach(header => {
 
   function updateGate() {
     if (valid()) {
-      readyMsg.classList.add("show");
-      payButton.style.display = "block";
+      readyMsg.classList.remove("hidden");
+      paypalWrapper.classList.remove("hidden");
     }
   }
 
   document.getElementById("uploadBtn").onclick = updateGate;
   document.getElementById("blockForm").addEventListener("input", updateGate, true);
 
-  // === SAVE (BEFORE PAYMENT!) ============================
-  payButton.onclick = async () => {
+  // SAVE DETAILS
+  window.saveBlockData = async () => {
     if (!valid()) return alert("Complete all fields first.");
 
     const pending = {
@@ -303,20 +268,17 @@ headers.forEach(header => {
       message: messageInput.value
     };
 
-    await saveBlock(pending, fileInput.files[0]);
+    await saveBlock(pending);
 
     claimed.push(selected);
     localStorage.setItem("claimed", JSON.stringify(claimed));
 
-    // show confirmation
-    readyMsg.innerHTML = "✔️ Saved. Now complete payment to seal your block.";
-    readyMsg.classList.add("show");
-
+    modal.classList.add("hidden");
     renderPage(currentPage);
   };
 });
 
-// === SAFEST LOADER EVER ========================
+// === SAFE LOADER ========================
 function hideLoader() {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
@@ -329,4 +291,4 @@ function hideLoader() {
     }
     if (main) main.classList.add("vault-main-visible");
   }, 1400);
-}
+                          }
