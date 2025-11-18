@@ -255,18 +255,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   closeMenuBtn.addEventListener("click", closeMenu);
   overlay.addEventListener("click", closeMenu);
 
-  // === ACCORDION (RESTORED) ============================
-  const accordions = document.querySelectorAll(".accordion");
+  // === REAL ACCORDION FIX ===
+const headers = document.querySelectorAll(".accordion-header");
 
-  accordions.forEach(acc => {
-    acc.addEventListener("click", () => {
-      acc.classList.toggle("active");
-      const panel = acc.nextElementSibling;
-      panel.style.maxHeight = panel.style.maxHeight
-        ? null
-        : panel.scrollHeight + "px";
-    });
+headers.forEach(header => {
+  header.addEventListener("click", () => {
+    header.classList.toggle("active");
+    const content = header.nextElementSibling;
+
+    if (content.style.maxHeight) {
+      content.style.maxHeight = null;
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
   });
+});
+  
 
   // FORM VALIDATION
   function valid() {
