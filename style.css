@@ -53,6 +53,7 @@ h1 {
   font-size: clamp(8px, 2vw, 12px);
   transition: all 0.25s ease;
   border-radius: 4px;
+  position: relative; /* <-- THIS FIXES THE SEARCH HIGHLIGHT */
 }
 
 .block:hover:not(.claimed) {
