@@ -290,11 +290,22 @@
 
       <button type="button" id="uploadBtn">Save Details</button>
 
-      <div id="ready-message" class="hidden">✅ Ready</div>
+<div id="ready-message" class="hidden">✅ Saved. Now complete payment to seal your block.</div>
 
-      <button type="button" id="payButton" class="pay-now-button" style="display:none;">
-        💳 Pay $6 Securely (coming soon)
-      </button>
+<!-- PayPal button wrapper – hidden until details are saved -->
+<div id="paypalWrapper" class="hidden">
+  <div>
+    <style>.pp-T9TZLXDZ6CLSE{text-align:center;border:none;border-radius:0.25rem;min-width:11.625rem;padding:0 2rem;height:2.625rem;font-weight:bold;background-color:#FFD140;color:#000000;font-family:"Helvetica Neue",Arial,sans-serif;font-size:1rem;line-height:1.25rem;cursor:pointer;}</style>
+    <form action="https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE" method="post" target="_blank" style="display:inline-grid;justify-items:center;align-content:start;gap:0.5rem;">
+      <input class="pp-T9TZLXDZ6CLSE" type="submit" value="Buy Now" />
+      <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="cards" />
+      <section style="font-size: 0.75rem;">
+        Powered by
+        <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="paypal" style="height:0.875rem;vertical-align:middle;"/>
+      </section>
+    </form>
+  </div>
+</div>
     </form>
   </div>
 </div>
