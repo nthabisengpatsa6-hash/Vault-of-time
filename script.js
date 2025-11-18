@@ -237,11 +237,11 @@ function hideLoader() {
 
   if (!loader || !main) return;
 
-  // safety timeout (max 5s)
-  setTimeout(() => {
-    loader.classList.add("vault-loader-hide");
-    main.classList.add("vault-main-visible");
-
-    setTimeout(() => loader.remove(), 600);
-  }, 5000);
-                          }
+// Loader stays just long enough to avoid the “empty grid” moment
+Promise.all([
+  new Promise(resolve => setTimeout(resolve, 1200)) // 1.2s minimum
+]).then(() => {
+  loader.classList.add("vault-loader-hide");
+  main.classList.add("vault-main-visible");
+  setTimeout(() => loader.remove(), 600);
+});
