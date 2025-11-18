@@ -1,7 +1,9 @@
-console.log("Vault JS loaded");
+console.log("Vault JS running");
 
-// Firebase imports
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -12,7 +14,14 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-// Firebase config
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
+
+// === FIREBASE CONFIG =================================
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
   authDomain: "vault-of-time-e6c03.firebaseapp.com",
@@ -24,15 +33,17 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const blocksCollection = collection(db, "blocks");
 
-// config
+let claimed = [];
+
+// === CONFIG ====================================
 const TOTAL_BLOCKS = 100000;
 const PAGE_SIZE = 500;
 let currentPage = 1;
-let claimed = [];
 
-// Load claimed blocks
+// === LOAD CLAIMED BLOCKS ========================
 async function loadClaimedBlocks() {
   try {
     const snap = await getDocs(blocksCollection);
@@ -43,25 +54,16 @@ async function loadClaimedBlocks() {
   }
 }
 
-// Save block
-async function saveBlock(pending) {
-  await setDoc(doc(blocksCollection, String(pending.blockNumber)), {
-    name: pending.name,
-    email: pending.email,
-    message: pending.message || "",
-    purchasedAt: serverTimestamp()
-  });
-}
-
-// Fetch block data
+// === FETCH BLOCK ================================
 async function fetchBlock(num) {
   const snap = await getDoc(doc(blocksCollection, String(num)));
   return snap.exists() ? snap.data() : null;
 }
 
+// === MAIN ========================================
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // DOM refs
+  // DOM references
   const grid = document.getElementById("grid");
   const pagination = document.getElementById("pagination");
 
@@ -78,7 +80,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const readyMsg = document.getElementById("ready-message");
   const paypalWrapper = document.getElementById("paypalWrapper");
-  const saveBtn = document.getElementById("uploadBtn");
 
   const banner = document.getElementById("rules-banner");
   const ackBtn = document.getElementById("acknowledgeBtn");
@@ -86,39 +87,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   const searchInput = document.getElementById("blockSearch");
   const searchBtn = document.getElementById("searchBtn");
 
-  const menuToggle = document.getElementById("menuToggle");
-  const sideMenu = document.getElementById("sideMenu");
-  const overlay = document.getElementById("overlay");
-  const closeMenuBtn = document.getElementById("closeMenu");
+  const saveBtn = document.getElementById("uploadBtn");
 
   let selected = null;
 
-  // Accordion
-  document.querySelectorAll(".accordion-header").forEach(header => {
-    header.addEventListener("click", () => {
-      const alreadyActive = header.classList.contains("active");
-      
-      // Reset all
-      document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
-      document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
-
-      // Toggle target
-      if (!alreadyActive) {
-        header.classList.add("active");
-        header.nextElementSibling.classList.add("show");
-      }
-    });
-  });
-
-  // Load saved state
+  // Load data
   claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   await loadClaimedBlocks();
-
   renderPage(currentPage);
 
   hideLoader();
 
-  // RULES LOCK
+  // RULES BANNER CONTROL
   if (!localStorage.getItem("vaultRulesOk")) {
     banner.style.display = "block";
     grid.style.opacity = "0.4";
@@ -132,21 +112,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     grid.style.pointerEvents = "auto";
   };
 
-  // MENU
-  menuToggle.addEventListener("click", () => {
-    sideMenu.classList.add("open");
-    overlay.classList.add("show");
+  // ACCORDION FIX
+  document.querySelectorAll(".accordion-header").forEach(header => {
+    header.addEventListener("click", () => {
+      const content = header.nextElementSibling;
+      const open = header.classList.contains("active");
+
+      document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
+      document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
+
+      if (!open) {
+        header.classList.add("active");
+        content.classList.add("show");
+      }
+    });
   });
 
-  overlay.addEventListener("click", closeMenu);
-  closeMenuBtn.addEventListener("click", closeMenu);
-
-  function closeMenu() {
-    sideMenu.classList.remove("open");
-    overlay.classList.remove("show");
-  }
-
-  // Pagination
+  // === PAGINATION UI ================================
   function renderPagination() {
     const totalPages = Math.ceil(TOTAL_BLOCKS / PAGE_SIZE);
     pagination.innerHTML = "";
@@ -157,9 +139,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     prev.onclick = () => changePage(currentPage - 1);
     pagination.appendChild(prev);
 
-    const label = document.createElement("span");
-    label.textContent = `Page ${currentPage} / ${totalPages}`;
-    pagination.appendChild(label);
+    const pageInfo = document.createElement("span");
+    pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
+    pagination.appendChild(pageInfo);
 
     const next = document.createElement("button");
     next.textContent = "Next →";
@@ -173,7 +155,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderPage(page);
   }
 
-  // Render blocks
+  // === RENDER PAGE ================================
   function renderPage(pageNum) {
     grid.innerHTML = "";
 
@@ -194,18 +176,22 @@ document.addEventListener("DOMContentLoaded", async () => {
           const data = await fetchBlock(i);
           document.getElementById("viewBlockTitle").textContent = `Block #${i}`;
           document.getElementById("viewBlockMessage").textContent = data?.message || "";
-          document.getElementById("viewBlockMedia").innerHTML = "";
+          document.getElementById("viewBlockMedia").innerHTML = data?.imageUrl
+            ? `<img src="${data.imageUrl}" style="max-width:100%;border-radius:8px;">`
+            : "";
           viewModal.classList.remove("hidden");
           return;
         }
 
-        document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
+        document.querySelectorAll(".block").forEach(b =>
+          b.classList.remove("selected")
+        );
+
         div.classList.add("selected");
         selected = i;
-
         document.getElementById("blockNumber").value = i;
-        document.getElementById("selected-block-text").textContent = `Selected Block: #${i}`;
-
+        document.getElementById("selected-block-text").textContent =
+          `Selected Block: #${i}`;
         modal.classList.remove("hidden");
       };
 
@@ -215,7 +201,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderPagination();
   }
 
-  // Search
+  // === SEARCH ============================
   function searchBlock() {
     const target = Number(searchInput.value);
     if (!target || target < 1 || target > TOTAL_BLOCKS) return;
@@ -225,30 +211,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (page !== currentPage) {
       currentPage = page;
       renderPage(page);
-      setTimeout(() => highlight(target), 50);
+      setTimeout(() => highlightBlock(target), 50);
     } else {
-      highlight(target);
+      highlightBlock(target);
     }
   }
 
-  function highlight(num) {
+  function highlightBlock(num) {
     const blocks = document.querySelectorAll(".block");
     const block = Array.from(blocks).find(b => Number(b.textContent) === num);
+
     if (!block) return;
 
     block.scrollIntoView({ behavior: "smooth", block: "center" });
     block.classList.add("search-highlight");
-    setTimeout(() => block.classList.remove("search-highlight"), 2000);
+    setTimeout(() => {
+      block.classList.remove("search-highlight");
+    }, 2000);
   }
 
   searchBtn.addEventListener("click", searchBlock);
   searchInput.addEventListener("change", searchBlock);
 
-  // Modal close
+  // CLOSE MODALS
   closeBtn.onclick = () => modal.classList.add("hidden");
   viewClose.onclick = () => viewModal.classList.add("hidden");
 
-  // Validation
+  // === VALIDATION CHECK =================
   function valid() {
     return (
       nameInput.value.trim() &&
@@ -258,21 +247,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  // Save button
-  saveBtn.addEventListener("click", async () => {
+  // === SAVE BLOCK + UPLOAD IMAGE =================
+  async function handleSave() {
     if (!valid()) {
-      alert("Fill in all fields + upload image");
+      alert("Please fill all fields + upload an image");
       return;
     }
 
-    const pending = {
+    const file = fileInput.files[0];
+    const blockId = String(selected);
+
+    // Upload file to storage
+    const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
+    await uploadBytes(fileRef, file);
+
+    // Get public URL
+    const imageUrl = await getDownloadURL(fileRef);
+
+    // Save Firestore entry
+    await setDoc(doc(blocksCollection, blockId), {
       blockNumber: selected,
       name: nameInput.value,
       email: emailInput.value,
-      message: messageInput.value
-    };
-
-    await saveBlock(pending);
+      message: messageInput.value,
+      imageUrl,
+      purchasedAt: serverTimestamp()
+    });
 
     if (!claimed.includes(selected)) {
       claimed.push(selected);
@@ -283,20 +283,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     paypalWrapper.classList.remove("hidden");
 
     renderPage(currentPage);
-  });
+  }
+
+  saveBtn.addEventListener("click", handleSave);
 });
 
-// Loader fade-out
+// === LOADER ========================
 function hideLoader() {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
   setTimeout(() => {
-    loader.style.opacity = 0;
-    loader.style.pointerEvents = "none";
-
-    setTimeout(() => loader.remove(), 400);
-    main.classList.add("vault-main-visible");
-
-  }, 1200);
-                            }
+    if (loader) {
+      loader.style.opacity = 0;
+      loader.style.pointerEvents = "none";
+      setTimeout(() => loader.remove(), 400);
+    }
+    if (main) main.classList.add("vault-main-visible");
+  }, 1400);
+}
