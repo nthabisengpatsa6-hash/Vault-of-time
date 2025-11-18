@@ -1,6 +1,5 @@
 console.log("Vault JS running");
 
-// === FIREBASE IMPORTS =================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
   getFirestore,
@@ -28,23 +27,24 @@ const blocksCollection = collection(db, "blocks");
 
 let claimed = [];
 
-// === GRID CONFIG ====================================
+// === CONFIG ====================================
 const TOTAL_BLOCKS = 100000;
 const PAGE_SIZE = 500;
 let currentPage = 1;
 
-// === LOAD CLAIMED BLOCKS ============================
+// === LOAD CLAIMED BLOCKS ========================
 async function loadClaimedBlocks() {
   try {
     const snap = await getDocs(blocksCollection);
     claimed = snap.docs.map(d => Number(d.id));
     localStorage.setItem("claimed", JSON.stringify(claimed));
-  } catch {
+  } catch (err) {
+    console.error("Error loading claimed blocks:", err);
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   }
 }
 
-// === SAVE BLOCK =====================================
+// === SAVE BLOCK =================================
 async function saveBlock(pending) {
   await setDoc(doc(blocksCollection, String(pending.blockNumber)), {
     name: pending.name,
@@ -54,18 +54,17 @@ async function saveBlock(pending) {
   });
 }
 
-// === FETCH BLOCK ====================================
+// === FETCH BLOCK ================================
 async function fetchBlock(num) {
   const snap = await getDoc(doc(blocksCollection, String(num)));
   return snap.exists() ? snap.data() : null;
 }
 
-// === MAIN ===========================================
+// === MAIN ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-
-  // DOM HOOKS
+  // DOM
   const grid = document.getElementById("grid");
-  const pagination = document.getElementById("pagination");
+  const pagination = document.getElementById("pagination") ?? null;
 
   const modal = document.getElementById("modal");
   const viewModal = document.getElementById("viewModal");
@@ -78,7 +77,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const closeBtn = document.querySelector(".close-button");
   const viewClose = document.querySelector(".close-view");
   const readyMsg = document.getElementById("ready-message");
-  const payButton = document.getElementById("payButton");
+  const paypalWrapper = document.getElementById("paypalWrapper");
 
   const banner = document.getElementById("rules-banner");
   const ackBtn = document.getElementById("acknowledgeBtn");
@@ -97,7 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   await loadClaimedBlocks();
 
-  // Render page 1
+  // Render first page
   renderPage(currentPage);
 
   // Loader
@@ -117,8 +116,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     grid.style.pointerEvents = "auto";
   };
 
-  // === PAGINATION CONTROLS ==========================
+  // === PAGINATION ================================
   function renderPagination() {
+    if (!pagination) return;
+
     const totalPages = Math.ceil(TOTAL_BLOCKS / PAGE_SIZE);
     pagination.innerHTML = "";
 
@@ -144,7 +145,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderPage(page);
   }
 
-  // === RENDER PAGE FUNCTION ========================
+  // === PAGE RENDERER ================================
   function renderPage(pageNum) {
     grid.innerHTML = "";
 
@@ -155,7 +156,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       const div = document.createElement("div");
       div.className = "block";
       div.textContent = i;
-      div.style.position = "relative"; // required for highlight glow
 
       if (claimed.includes(i)) {
         div.classList.add("claimed");
@@ -164,7 +164,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       div.onclick = async () => {
         if (claimed.includes(i)) {
           const data = await fetchBlock(i);
-
           document.getElementById("viewBlockTitle").textContent = `Block #${i}`;
           document.getElementById("viewBlockMessage").textContent = data?.message || "";
           document.getElementById("viewBlockMedia").innerHTML = "";
@@ -172,13 +171,26 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
         }
 
-        document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
-        div.classList.add("selected");
+        document.querySelectorAll(".block").forEach(b =>
+          b.classList.remove("selected")
+        );
 
+        div.classList.add("selected");
         selected = i;
         document.getElementById("blockNumber").value = i;
-        document.getElementById("selected-block-text").textContent = `Selected Block: #${i}`;
+        document.getElementById("selected-block-text").textContent =
+          `Selected Block: #${i}`;
         modal.classList.remove("hidden");
+
+        // reset PayPal area when opening modal
+        if (paypalWrapper) {
+          paypalWrapper.classList.add("hidden");
+          paypalWrapper.style.display = "none";
+        }
+        if (readyMsg) {
+          readyMsg.classList.add("hidden");
+          readyMsg.classList.remove("show");
+        }
       };
 
       grid.appendChild(div);
@@ -187,40 +199,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderPagination();
   }
 
-  // === SEARCH ================================
+  // === SEARCH HANDLER ============================
   function searchBlock() {
     const target = Number(searchInput.value);
     if (!target || target < 1 || target > TOTAL_BLOCKS) return;
 
-    const newPage = Math.ceil(target / PAGE_SIZE);
-    const wasDifferentPage = newPage !== currentPage;
+    const page = Math.ceil(target / PAGE_SIZE);
 
-    currentPage = newPage;
-    renderPage(newPage);
+    if (page !== currentPage) {
+      currentPage = page;
+      renderPage(page);
+      setTimeout(() => highlightBlock(target), 50);
+    } else {
+      highlightBlock(target);
+    }
+  }
 
+  function highlightBlock(num) {
+    const blocks = document.querySelectorAll(".block");
+    const block = Array.from(blocks).find(b => Number(b.textContent) === num);
+
+    if (!block) return;
+
+    block.scrollIntoView({ behavior: "smooth", block: "center" });
+    block.classList.add("search-highlight");
     setTimeout(() => {
-      const blockEl = [...document.querySelectorAll(".block")]
-        .find(b => Number(b.textContent) === target);
-
-      if (!blockEl) return;
-
-      blockEl.scrollIntoView({ behavior: "smooth", block: "center" });
-      blockEl.classList.add("search-highlight");
-
-      setTimeout(() => {
-        blockEl.classList.remove("search-highlight");
-      }, 1500);
-    }, wasDifferentPage ? 100 : 10);
+      block.classList.remove("search-highlight");
+    }, 2000);
   }
 
   if (searchBtn) searchBtn.addEventListener("click", searchBlock);
   if (searchInput) searchInput.addEventListener("change", searchBlock);
 
-  // === MODALS ==================================
+  // CLOSE MODALS
   closeBtn.onclick = () => modal.classList.add("hidden");
   viewClose.onclick = () => viewModal.classList.add("hidden");
 
-  // === MENU ====================================
+  // MENU
   function closeMenu() {
     sideMenu.classList.remove("open");
     overlay.classList.remove("show");
@@ -236,14 +251,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   closeMenuBtn.addEventListener("click", closeMenu);
   overlay.addEventListener("click", closeMenu);
 
-  // === ACCORDION (RESTORED) ====================
+  // ACCORDION
   document.querySelectorAll(".accordion-header").forEach(header => {
     header.addEventListener("click", () => {
       const content = header.nextElementSibling;
       const open = header.classList.contains("active");
 
-      document.querySelectorAll(".accordion-header").forEach(h => h.classList.remove("active"));
-      document.querySelectorAll(".accordion-content").forEach(c => c.classList.remove("show"));
+      document
+        .querySelectorAll(".accordion-header")
+        .forEach(h => h.classList.remove("active"));
+      document
+        .querySelectorAll(".accordion-content")
+        .forEach(c => c.classList.remove("show"));
 
       if (!open) {
         header.classList.add("active");
@@ -252,7 +271,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // === CLAIM VALIDATION ========================
+  // FORM VALIDATION
   function valid() {
     return (
       nameInput.value.trim() &&
@@ -262,19 +281,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  function updateGate() {
-    if (valid()) {
-      readyMsg.classList.add("show");
-      payButton.style.display = "block";
+  // Save details & reveal PayPal
+  document.getElementById("uploadBtn").onclick = async () => {
+    if (!valid()) {
+      alert("Please complete all fields first.");
+      return;
     }
-  }
-
-  document.getElementById("uploadBtn").onclick = updateGate;
-  document.getElementById("blockForm").addEventListener("input", updateGate, true);
-
-  // === TEMP "PAY" BUTTON ======================
-  payButton.onclick = async () => {
-    if (!valid()) return alert("Complete all fields first.");
 
     const pending = {
       blockNumber: selected,
@@ -283,17 +295,41 @@ document.addEventListener("DOMContentLoaded", async () => {
       message: messageInput.value
     };
 
-    await saveBlock(pending);
+    try {
+      await saveBlock(pending);
 
-    claimed.push(selected);
-    localStorage.setItem("claimed", JSON.stringify(claimed));
+      if (!claimed.includes(selected)) {
+        claimed.push(selected);
+        localStorage.setItem("claimed", JSON.stringify(claimed));
+      }
 
-    modal.classList.add("hidden");
-    renderPage(currentPage);
+      if (readyMsg) {
+        readyMsg.classList.remove("hidden");
+        readyMsg.classList.add("show");
+      }
+      if (paypalWrapper) {
+        paypalWrapper.classList.remove("hidden");
+        paypalWrapper.style.display = "block";
+      }
+    } catch (err) {
+      console.error("Error saving block:", err);
+      alert("We couldn't save your block details. Please try again.");
+    }
   };
+
+  // Optional: show "Ready" as soon as form is valid
+  document.getElementById("blockForm").addEventListener(
+    "input",
+    () => {
+      if (valid() && readyMsg) {
+        readyMsg.classList.remove("hidden");
+      }
+    },
+    true
+  );
 });
 
-// === LOADER ==================================
+// === LOADER ====================================
 function hideLoader() {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
@@ -306,4 +342,4 @@ function hideLoader() {
     }
     if (main) main.classList.add("vault-main-visible");
   }, 1400);
-                 }
+        }
