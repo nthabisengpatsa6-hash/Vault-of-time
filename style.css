@@ -832,3 +832,16 @@ html {
   font-size: 14px;
   color: #d4af37;
     }
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+
+.accordion-header.active {
+  background-color: #3a3a3a;
+}
+
+.accordion-header.active + .accordion-content {
+  padding-top: 8px;
+}
