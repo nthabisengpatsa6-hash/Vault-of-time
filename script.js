@@ -229,6 +229,36 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 });
 
+// === BLOCK SEARCH =========================
+const searchInput = document.getElementById("blockSearch");
+const searchBtn = document.getElementById("searchBtn");
+
+searchBtn.onclick = handleSearch;
+searchInput.onkeydown = (e) => {
+  if (e.key === "Enter") handleSearch();
+};
+
+function handleSearch() {
+  const num = Number(searchInput.value.trim());
+
+  if (!num || num < 1 || num > 1000000) {
+    return alert("Enter a valid block number (1–1,000,000).");
+  }
+
+  // If it's within our displayed range (1–100)
+  if (num <= 100) {
+    const blockEl = [...document.querySelectorAll(".block")][num - 1];
+    if (!blockEl) return;
+
+    blockEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    blockEl.click();
+    return;
+  }
+
+  // Future-proof:
+  alert("This block exists, but isn't visible yet.");
+}
+
 // === NEW LOADER LOGIC =========================
 function hideLoader() {
   const loader = document.getElementById("vault-loader");
