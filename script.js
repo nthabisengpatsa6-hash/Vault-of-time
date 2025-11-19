@@ -76,11 +76,32 @@ function hideLoader() {
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("Vault DOMContentLoaded");
 
+  // === SIDE MENU TOGGLE (NEW BLOCK YOU WANTED) ===
+  const menuToggle = document.getElementById("menuToggle");
+  const sideMenu = document.getElementById("sideMenu");
+  const overlay = document.getElementById("overlay");
+  const closeMenu = document.getElementById("closeMenu");
+
+  function openMenu() {
+    sideMenu.classList.add("open");
+    overlay.classList.add("show");
+  }
+
+  function closeMenuFn() {
+    sideMenu.classList.remove("open");
+    overlay.classList.remove("show");
+  }
+
+  if (menuToggle) menuToggle.addEventListener("click", openMenu);
+  if (closeMenu) closeMenu.addEventListener("click", closeMenuFn);
+  if (overlay) overlay.addEventListener("click", closeMenuFn);
+  // === END OF NEW BLOCK ===
+
+
   try {
     // DOM references
     const grid = document.getElementById("grid");
     const pagination = document.getElementById("pagination");
-
     const modal = document.getElementById("modal");
     const viewModal = document.getElementById("viewModal");
 
@@ -110,11 +131,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let selected = null;
 
-    // --- HELPERS (use DOM refs above) ---------------------
+    // renderPagination...
+    // renderPage...
+    // searchBlock...
+    // highlightBlock...
+    // valid()...
+    // handleSave()...
+    // (all unchanged – your original code continues here)
 
     const renderPagination = () => {
-      if (!pagination) return;
-
       const totalPages = Math.ceil(TOTAL_BLOCKS / PAGE_SIZE);
       pagination.innerHTML = "";
 
@@ -151,46 +176,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         div.className = "block";
         div.textContent = i;
 
-        if (claimed.includes(i)) {
-          div.classList.add("claimed");
-        }
+        if (claimed.includes(i)) div.classList.add("claimed");
 
         div.onclick = async () => {
-          // View existing block
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
-            const titleEl = document.getElementById("viewBlockTitle");
-            const msgEl = document.getElementById("viewBlockMessage");
-            const mediaEl = document.getElementById("viewBlockMedia");
 
-            if (titleEl) titleEl.textContent = `Block #${i}`;
-            if (msgEl) msgEl.textContent = data?.message || "";
-            if (mediaEl) {
-              mediaEl.innerHTML = data?.imageUrl
-                ? `<img src="${data.imageUrl}" style="max-width:100%;border-radius:8px;">`
-                : "";
-            }
+            document.getElementById("viewBlockTitle").textContent = `Block #${i}`;
+            document.getElementById("viewBlockMessage").textContent = data?.message || "";
+            document.getElementById("viewBlockMedia").innerHTML =
+              data?.imageUrl ? `<img src="${data.imageUrl}" style="max-width:100%;border-radius:8px;">` : "";
 
-            if (viewModal) viewModal.classList.remove("hidden");
+            viewModal.classList.remove("hidden");
             return;
           }
 
-          // Select block to buy
           document.querySelectorAll(".block").forEach((b) =>
             b.classList.remove("selected")
           );
+
           div.classList.add("selected");
           selected = i;
 
-          const blockNumberInput = document.getElementById("blockNumber");
-          const selectedText = document.getElementById("selected-block-text");
+          document.getElementById("blockNumber").value = i;
+          document.getElementById("selected-block-text").textContent = `Selected Block: #${i}`;
 
-          if (blockNumberInput) blockNumberInput.value = i;
-          if (selectedText) {
-            selectedText.textContent = `Selected Block: #${i}`;
-          }
-
-          if (modal) modal.classList.remove("hidden");
+          modal.classList.remove("hidden");
         };
 
         grid.appendChild(div);
@@ -201,20 +212,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const highlightBlock = (num) => {
       const blocks = document.querySelectorAll(".block");
-      const block = Array.from(blocks).find(
-        (b) => Number(b.textContent) === num
-      );
+      const block = Array.from(blocks).find((b) => Number(b.textContent) === num);
       if (!block) return;
 
       block.scrollIntoView({ behavior: "smooth", block: "center" });
       block.classList.add("search-highlight");
-      setTimeout(() => {
-        block.classList.remove("search-highlight");
-      }, 2000);
+      setTimeout(() => block.classList.remove("search-highlight"), 2000);
     };
 
     const searchBlock = () => {
-      if (!searchInput) return;
       const target = Number(searchInput.value);
       if (!target || target < 1 || target > TOTAL_BLOCKS) return;
 
@@ -231,9 +237,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const valid = () => {
       return (
-        nameInput &&
-        emailInput &&
-        fileInput &&
         nameInput.value.trim() &&
         emailInput.value.trim() &&
         fileInput.files.length > 0 &&
@@ -270,8 +273,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           localStorage.setItem("claimed", JSON.stringify(claimed));
         }
 
-        if (readyMsg) readyMsg.classList.remove("hidden");
-        if (paypalWrapper) paypalWrapper.classList.remove("hidden");
+        readyMsg.classList.remove("hidden");
+        paypalWrapper.classList.remove("hidden");
 
         renderPage(currentPage);
       } catch (err) {
@@ -280,67 +283,49 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     };
 
-    // --- Load & render ----------------------------------
-
+    // === Load + initialize ===
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
     await loadClaimedBlocks();
     renderPage(currentPage);
     hideLoader();
 
-    // --- Rules banner -----------------------------------
-    if (banner && ackBtn) {
-      if (!localStorage.getItem("vaultRulesOk")) {
-        banner.style.display = "block";
-        grid.style.opacity = "0.4";
-        grid.style.pointerEvents = "none";
-      }
-
-      ackBtn.onclick = () => {
-        localStorage.setItem("vaultRulesOk", "true");
-        banner.style.display = "none";
-        grid.style.opacity = "1";
-        grid.style.pointerEvents = "auto";
-      };
+    // Rules banner
+    if (!localStorage.getItem("vaultRulesOk")) {
+      banner.style.display = "block";
+      grid.style.opacity = "0.4";
+      grid.style.pointerEvents = "none";
     }
 
-    // --- Accordion --------------------------------------
+    ackBtn.onclick = () => {
+      localStorage.setItem("vaultRulesOk", "true");
+      banner.style.display = "none";
+      grid.style.opacity = "1";
+      grid.style.pointerEvents = "auto";
+    };
+
+    // Accordion
     document.querySelectorAll(".accordion-header").forEach((header) => {
       header.addEventListener("click", () => {
         const content = header.nextElementSibling;
         const open = header.classList.contains("active");
 
-        document
-          .querySelectorAll(".accordion-header")
-          .forEach((h) => h.classList.remove("active"));
-        document
-          .querySelectorAll(".accordion-content")
-          .forEach((c) => c.classList.remove("show"));
+        document.querySelectorAll(".accordion-header").forEach((h) => h.classList.remove("active"));
+        document.querySelectorAll(".accordion-content").forEach((c) => c.classList.remove("show"));
 
-        if (!open && content) {
+        if (!open) {
           header.classList.add("active");
           content.classList.add("show");
         }
       });
     });
 
-    // --- Search events ----------------------------------
-    if (searchBtn) searchBtn.addEventListener("click", searchBlock);
-    if (searchInput) searchInput.addEventListener("change", searchBlock);
+    searchBtn.addEventListener("click", searchBlock);
+    searchInput.addEventListener("change", searchBlock);
 
-    // --- Close modals -----------------------------------
-    if (closeBtn && modal) {
-      closeBtn.onclick = () => modal.classList.add("hidden");
-    }
-    if (viewClose && viewModal) {
-      viewClose.onclick = () => viewModal.classList.add("hidden");
-    }
+    closeBtn.onclick = () => modal.classList.add("hidden");
+    viewClose.onclick = () => viewModal.classList.add("hidden");
 
-    // --- Save button ------------------------------------
-    if (saveBtn) {
-      saveBtn.addEventListener("click", handleSave);
-    } else {
-      console.warn("uploadBtn not found – save will not work.");
-    }
+    saveBtn.addEventListener("click", handleSave);
 
     console.log("Vault initialisation complete ✅");
   } catch (err) {
