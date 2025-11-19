@@ -22,7 +22,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
   authDomain: "vault-of-time-e6c03.firebaseapp.com",
   projectId: "vault-of-time-e6c03",
-  storageBucket: "vault-of-time-e6c03.appspot.com",
+  storageBucket: "vault-of-time-e6c03.firebasestorage.app",
   messagingSenderId: "941244238426",
   appId: "1:941244238426:web:80f80b5237b84b1740e663"
 };
