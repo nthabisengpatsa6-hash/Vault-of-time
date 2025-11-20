@@ -15,6 +15,7 @@ import {
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
 
+
 // === FIREBASE CONFIG =================================
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
@@ -30,6 +31,7 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const blocksCollection = collection(db, "blocks");
 
+
 // === CONFIG ====================================
 const TOTAL_BLOCKS = 100000;
 const PAGE_SIZE = 500;
@@ -39,8 +41,8 @@ const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 let currentPage = 1;
 let claimed = [];
 
-// === LOAD CLAIMED BLOCKS ========================
-// Only treat docs with status === "paid" as sealed blocks
+
+// === LOAD CLAIMED BLOCKS (ONLY PAID ONES) ===============
 async function loadClaimedBlocks() {
   try {
     const snap = await getDocs(blocksCollection);
@@ -51,17 +53,20 @@ async function loadClaimedBlocks() {
 
     localStorage.setItem("claimed", JSON.stringify(claimed));
     console.log("Loaded claimed PAID blocks:", claimed.length);
+
   } catch (err) {
     console.error("Error loading claimed blocks, using local cache:", err);
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   }
 }
 
+
 // === FETCH BLOCK ================================
 async function fetchBlock(num) {
   const snap = await getDoc(doc(blocksCollection, String(num)));
   return snap.exists() ? snap.data() : null;
 }
+
 
 // === LOADER ========================
 function hideLoader() {
@@ -78,9 +83,10 @@ function hideLoader() {
   }, 1400);
 }
 
+
+
 // === MAIN ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("🔥 DOM fully loaded — JS starting");
 
   // === SIDE MENU TOGGLE ===
   const menuToggle = document.getElementById("menuToggle");
@@ -102,6 +108,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (closeMenu) closeMenu.addEventListener("click", closeMenuFn);
   if (overlay) overlay.addEventListener("click", closeMenuFn);
 
+
   try {
     // DOM references
     const grid = document.getElementById("grid");
@@ -112,6 +119,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const nameInput = document.getElementById("name");
     const emailInput = document.getElementById("email");
     const messageInput = document.getElementById("message");
+    const messageCounter = document.getElementById("messageCounter");
     const fileInput = document.getElementById("fileUpload");
 
     const closeBtn = document.querySelector(".close-button");
@@ -125,7 +133,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const searchInput = document.getElementById("blockSearch");
     const searchBtn = document.getElementById("searchBtn");
-
     const saveBtn = document.getElementById("uploadBtn");
     const hiddenBlockNumber = document.getElementById("blockNumber");
 
@@ -134,11 +141,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    console.log("✔ saveBtn FOUND:", !!saveBtn);
 
-    let selected = null; // UI helper only – source of truth is hiddenBlockNumber.value
+    // === LIVE MESSAGE COUNTER ===
+    if (messageInput && messageCounter) {
+      messageInput.addEventListener("input", () => {
+        const length = messageInput.value.length;
+        messageCounter.textContent = `${length}/${MAX_MESSAGE_LENGTH}`;
+      });
+    }
 
-    // === PAGINATION ===
+
+    // PAGE + PAGINATION ======================
     const renderPagination = () => {
       const totalPages = Math.ceil(TOTAL_BLOCKS / PAGE_SIZE);
 
@@ -161,12 +174,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       pagination.appendChild(next);
     };
 
+
     const changePage = (page) => {
       currentPage = page;
       renderPage(page);
     };
 
-    // === RENDER PAGE ===
+
+    // === RENDER PAGE (GRID) ===
     const renderPage = (pageNum) => {
       grid.innerHTML = "";
 
@@ -181,45 +196,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (claimed.includes(i)) div.classList.add("claimed");
 
         div.onclick = async () => {
-          console.log("Clicked block:", i);
 
-          // VIEW BLOCK (paid / sealed)
+          // VIEW BLOCK (SEALED)
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
-            const titleEl = document.getElementById("viewBlockTitle");
-            const msgEl = document.getElementById("viewBlockMessage");
-            const mediaEl = document.getElementById("viewBlockMedia");
 
-            if (titleEl) titleEl.textContent = `Block #${i}`;
-            if (msgEl) msgEl.textContent = data?.message || "";
-            if (mediaEl) {
-              mediaEl.innerHTML = data?.imageUrl
-                ? `<img src="${data.imageUrl}" style="max-width:100%;border-radius:8px;">`
+            document.getElementById("viewBlockTitle").textContent = `Block #${i}`;
+            document.getElementById("viewBlockMessage").textContent = data?.message || "";
+
+            document.getElementById("viewBlockMedia").innerHTML =
+              data?.imageUrl
+                ? `<img src="${data.imageUrl}" style="max-width:100%;border-radius:8px;" />`
                 : "";
-            }
 
-            if (viewModal) viewModal.classList.remove("hidden");
+            viewModal.classList.remove("hidden");
             return;
           }
 
-          // SELECT BLOCK TO BUY
-          document.querySelectorAll(".block").forEach((b) =>
-            b.classList.remove("selected")
-          );
+          // SELECT NEW BLOCK
+          document.querySelectorAll(".block").forEach((b) => b.classList.remove("selected"));
           div.classList.add("selected");
 
-          selected = i;
-          if (hiddenBlockNumber) {
-            hiddenBlockNumber.value = i;
-            console.log("Selected block stored in hidden input:", hiddenBlockNumber.value);
-          }
+          hiddenBlockNumber.value = i;
 
-          const selectedText = document.getElementById("selected-block-text");
-          if (selectedText) {
-            selectedText.textContent = `Selected Block: #${i}`;
-          }
+          document.getElementById("selected-block-text").textContent =
+            `Selected Block: #${i}`;
 
-          if (modal) modal.classList.remove("hidden");
+          modal.classList.remove("hidden");
         };
 
         grid.appendChild(div);
@@ -228,16 +231,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       renderPagination();
     };
 
+
     // === SEARCH ===
     const highlightBlock = (num) => {
-      const blocks = document.querySelectorAll(".block");
-      const block = Array.from(blocks).find((b) => Number(b.textContent) === num);
+      const blocks = [...document.querySelectorAll(".block")];
+      const block = blocks.find((b) => Number(b.textContent) === num);
       if (!block) return;
 
       block.scrollIntoView({ behavior: "smooth", block: "center" });
       block.classList.add("search-highlight");
+
       setTimeout(() => block.classList.remove("search-highlight"), 2000);
     };
+
 
     const searchBlock = () => {
       const target = Number(searchInput.value);
@@ -248,49 +254,48 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (page !== currentPage) {
         currentPage = page;
         renderPage(page);
-        setTimeout(() => highlightBlock(target), 100);
+
+        setTimeout(() => highlightBlock(target), 120);
       } else {
         highlightBlock(target);
       }
     };
 
+
     // === VALIDATION ===
     const valid = () => {
-      if (!hiddenBlockNumber || !hiddenBlockNumber.value) return false;
+      if (!hiddenBlockNumber.value) return false;
       if (!nameInput.value.trim()) return false;
       if (!emailInput.value.trim()) return false;
-      if (!fileInput.files || fileInput.files.length === 0) return false;
 
-      // Enforce 300-char limit in JS as well
-      if (messageInput && messageInput.value.length > MAX_MESSAGE_LENGTH) {
+      if (!fileInput.files.length) return false;
+
+      // CHAR LIMIT
+      if (messageInput.value.length > MAX_MESSAGE_LENGTH) {
         alert(`Message too long. Max ${MAX_MESSAGE_LENGTH} characters.`);
         return false;
       }
 
-      // Enforce 2MB file limit
-      const file = fileInput.files[0];
-      if (file && file.size > MAX_FILE_SIZE_BYTES) {
-        alert("Image is too large. Maximum size is 2MB.");
+      // FILE SIZE
+      if (fileInput.files[0].size > MAX_FILE_SIZE_BYTES) {
+        alert("Image too large. Max 2MB.");
         return false;
       }
 
       return true;
     };
 
-    // === PAYPAL RETURN HANDLER ===
-    const handlePaypalReturn = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const paid = params.get("paid");
 
-      if (paid !== "true") return;
+    // === PAYPAL RETURN HANDLER ==========================
+    const handlePaypalReturn = async () => {
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("paid") !== "true") return;
 
       const pendingBlockId = localStorage.getItem("pendingBlockId");
       if (!pendingBlockId) return;
 
       try {
-        console.log("Finalising PayPal payment for block:", pendingBlockId);
-
-        // Mark block as paid in Firestore
         await setDoc(
           doc(blocksCollection, pendingBlockId),
           {
@@ -301,6 +306,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
 
         const numId = Number(pendingBlockId);
+
         if (!claimed.includes(numId)) {
           claimed.push(numId);
           localStorage.setItem("claimed", JSON.stringify(claimed));
@@ -309,35 +315,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         localStorage.removeItem("pendingBlockId");
 
         alert("Payment received!🎉 Your block is now sealed in the Vault.");
+
       } catch (err) {
         console.error("Error finalising PayPal payment:", err);
-        alert("We received your return from PayPal but could not seal the block automatically. Please contact support.");
+        alert("We received your return from PayPal, but something went wrong. Please contact support.");
       }
     };
 
-    // === SAVE BLOCK (DETAILS + PENDING STATE) ===
-    const handleSave = async () => {
-      console.log("👉 Save button clicked");
 
-      if (!valid()) {
-        // valid() already shows relevant alerts
-        return;
-      }
+
+    // === SAVE (PENDING) ============================
+    const handleSave = async () => {
+
+      if (!valid()) return;
 
       const blockId = hiddenBlockNumber.value;
-      console.log("Block ID from hidden field:", blockId);
 
       try {
         const file = fileInput.files[0];
 
-        // Upload file to storage
+        // upload
         const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
         await uploadBytes(fileRef, file);
 
-        // Get public URL
         const imageUrl = await getDownloadURL(fileRef);
 
-        // Save Firestore entry as PENDING
+        // write pending doc
         await setDoc(doc(blocksCollection, blockId), {
           blockNumber: Number(blockId),
           name: nameInput.value,
@@ -348,32 +351,29 @@ document.addEventListener("DOMContentLoaded", async () => {
           purchasedAt: null
         });
 
-        // Store pending block in localStorage so we know what to seal after PayPal
         localStorage.setItem("pendingBlockId", blockId);
 
-        if (readyMsg) readyMsg.classList.remove("hidden");
-        if (paypalWrapper) paypalWrapper.classList.remove("hidden");
+        readyMsg.classList.remove("hidden");
+        paypalWrapper.classList.remove("hidden");
 
-        console.log("Details saved, block pending payment:", blockId);
       } catch (err) {
         console.error("Error saving block:", err);
-        alert("Upload failed: " + (err.message || err));
+        alert("Upload failed: " + err.message);
       }
     };
 
-    // === INIT FLOW ===
-    // 1) Load existing paid blocks
+
+    // === INIT FLOW ================================
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
     await loadClaimedBlocks();
 
-    // 2) Handle PayPal return (?paid=true)
     await handlePaypalReturn();
 
-    // 3) Render grid + loader
     renderPage(currentPage);
     hideLoader();
 
-    // 4) Rules banner
+
+    // RULES BANNER
     if (!localStorage.getItem("vaultRulesOk")) {
       banner.style.display = "block";
       grid.style.opacity = "0.4";
@@ -387,17 +387,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       grid.style.pointerEvents = "auto";
     };
 
-    // === ACCORDION (UNCHANGED) ===
+
+    // ACCORDION (unchanged)
     document.querySelectorAll(".accordion-header").forEach((header) => {
       header.addEventListener("click", () => {
         const content = header.nextElementSibling;
         const open = header.classList.contains("active");
 
-        document
-          .querySelectorAll(".accordion-header")
+        document.querySelectorAll(".accordion-header")
           .forEach((h) => h.classList.remove("active"));
-        document
-          .querySelectorAll(".accordion-content")
+        document.querySelectorAll(".accordion-content")
           .forEach((c) => c.classList.remove("show"));
 
         if (!open) {
@@ -407,24 +406,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
 
-    // === EVENTS ===
-    if (searchBtn) searchBtn.addEventListener("click", searchBlock);
-    if (searchInput) searchInput.addEventListener("change", searchBlock);
 
-    if (closeBtn && modal) {
-      closeBtn.onclick = () => modal.classList.add("hidden");
-    }
-    if (viewClose && viewModal) {
-      viewClose.onclick = () => viewModal.classList.add("hidden");
-    }
+    // EVENTS
+    searchBtn.addEventListener("click", searchBlock);
+    searchInput.addEventListener("change", searchBlock);
 
-    if (saveBtn) {
-      saveBtn.addEventListener("click", handleSave);
-    }
+    closeBtn.addEventListener("click", () => modal.classList.add("hidden"));
+    viewClose.addEventListener("click", () => viewModal.classList.add("hidden"));
 
-    console.log("🔥 Vault initialisation complete");
+    saveBtn.addEventListener("click", handleSave);
+
   } catch (err) {
     console.error("Vault fatal error:", err);
-    alert("Vault error: " + (err.message || err));
+    alert("Vault error: " + err.message);
   }
+
 });
