@@ -75,7 +75,7 @@ h1 {
   background-color: #33494d;
   border: 1px solid #1f3337;
   opacity: 0.85;
-  cursor: not-allowed;
+  cursor: zoom-in !important;
   color: #cbd5df;
 }
 
