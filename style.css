@@ -399,3 +399,80 @@ footer {
   max-height: 500px;
   padding-top: 8px;
 }
+/* === FIX: SIDE MENU + OVERLAY (mobile & desktop) === */
+
+/* MENU TOGGLE BUTTON */
+.menu-toggle {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  font-size: 32px;
+  cursor: pointer;
+  z-index: 2000;
+  color: #e6edf3;
+  background: #1c2128;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+/* SIDE MENU BASE */
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: -260px; /* hidden by default */
+  width: 260px;
+  height: 100%;
+  background: #13171d;
+  box-shadow: 3px 0 12px rgba(0,0,0,0.4);
+  padding: 20px;
+  overflow-y: auto;
+  transition: left 0.35s ease;
+  z-index: 3000;
+}
+
+.side-menu.open {
+  left: 0;
+}
+
+/* CLOSE BUTTON */
+#closeMenu {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  font-size: 32px;
+  color: #e6edf3;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* DARK OVERLAY */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 2500;
+}
+
+.overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* MOBILE FIX: Push grid down so menu does not cover the header */
+@media (max-width: 768px) {
+  .header-wrapper {
+    padding-top: 70px; 
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  .search-wrapper {
+    margin-top: 10px;
+  }
+}
