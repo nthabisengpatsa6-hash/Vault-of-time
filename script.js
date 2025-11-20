@@ -42,9 +42,8 @@ async function loadClaimedBlocks() {
     const snap = await getDocs(blocksCollection);
     claimed = snap.docs.map((d) => Number(d.id));
     localStorage.setItem("claimed", JSON.stringify(claimed));
-    console.log("Loaded claimed blocks:", claimed.length);
   } catch (err) {
-    console.error("Error loading claimed blocks, using local cache:", err);
+    console.error("Error loading claimed blocks:", err);
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   }
 }
@@ -72,9 +71,7 @@ function hideLoader() {
 
 // === MAIN ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("🔥 DOM fully loaded — JS starting");
-
-  // === SIDE MENU TOGGLE ===
+  // SIDE MENU
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const overlay = document.getElementById("overlay");
@@ -95,7 +92,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (overlay) overlay.addEventListener("click", closeMenuFn);
 
   try {
-    // DOM references
+    // DOM refs
     const grid = document.getElementById("grid");
     const pagination = document.getElementById("pagination");
     const modal = document.getElementById("modal");
@@ -119,18 +116,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     const searchBtn = document.getElementById("searchBtn");
 
     const saveBtn = document.getElementById("uploadBtn");
-
     const hiddenBlockNumber = document.getElementById("blockNumber");
 
-    if (!grid) {
-      alert("Vault error: grid container missing.");
-      return;
-    }
-
-    console.log("✔ saveBtn FOUND:");
-    console.log(saveBtn);
-
     let selected = null;
+
+    // === MESSAGE CHARACTER LIMIT (NEW FEATURE) =====================
+    const MESSAGE_MAX = 300;
+
+    messageInput.addEventListener("input", () => {
+      if (messageInput.value.length > MESSAGE_MAX) {
+        messageInput.value = messageInput.value.slice(0, MESSAGE_MAX);
+      }
+
+      let counter = document.getElementById("messageCounter");
+      if (counter) counter.textContent = `${messageInput.value.length} / ${MESSAGE_MAX}`;
+    });
+    // ===============================================================
 
     // === PAGINATION ===
     const renderPagination = () => {
@@ -142,16 +143,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       prev.textContent = "← Prev";
       prev.disabled = currentPage === 1;
       prev.onclick = () => changePage(currentPage - 1);
-      pagination.appendChild(prev);
 
-      const pageInfo = document.createElement("span");
-      pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
-      pagination.appendChild(pageInfo);
+      const info = document.createElement("span");
+      info.textContent = `Page ${currentPage} / ${totalPages}`;
 
       const next = document.createElement("button");
       next.textContent = "Next →";
       next.disabled = currentPage === totalPages;
       next.onclick = () => changePage(currentPage + 1);
+
+      pagination.appendChild(prev);
+      pagination.appendChild(info);
       pagination.appendChild(next);
     };
 
@@ -172,34 +174,30 @@ document.addEventListener("DOMContentLoaded", async () => {
         div.className = "block";
         div.textContent = i;
 
-        if (claimed.includes(i)) div.classList.add("claimed");
+        if (claimed.includes(i)) {
+          div.classList.add("claimed");
+        }
 
         div.onclick = async () => {
-          console.log("Clicked block:", i);
-
-          // VIEW BLOCK
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
+
             document.getElementById("viewBlockTitle").textContent = `Block #${i}`;
             document.getElementById("viewBlockMessage").textContent = data?.message || "";
             document.getElementById("viewBlockMedia").innerHTML =
-              data?.imageUrl
-                ? `<img src="${data.imageUrl}" style="max-width:100%;border-radius:8px;">`
-                : "";
+              data?.imageUrl ? `<img src="${data.imageUrl}" style="max-width:100%;border-radius:8px;">` : "";
+
             viewModal.classList.remove("hidden");
             return;
           }
 
-          // SELECT BLOCK TO BUY
           document.querySelectorAll(".block").forEach((b) =>
             b.classList.remove("selected")
           );
+
           div.classList.add("selected");
-
-          selected = i; // but we no longer rely on this 100%
-
-          hiddenBlockNumber.value = i; // THIS IS THE REAL SOURCE OF TRUTH
-          console.log("Selected block stored in hidden input:", hiddenBlockNumber.value);
+          selected = i;
+          hiddenBlockNumber.value = i;
 
           document.getElementById("selected-block-text").textContent = `Selected Block: #${i}`;
           modal.classList.remove("hidden");
@@ -231,7 +229,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (page !== currentPage) {
         currentPage = page;
         renderPage(page);
-        setTimeout(() => highlightBlock(target), 100);
+        setTimeout(() => highlightBlock(target), 80);
       } else {
         highlightBlock(target);
       }
@@ -239,8 +237,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // === VALIDATION ===
     const valid = () => {
+      if (messageInput.value.length > MESSAGE_MAX) return false;
       return (
-        hiddenBlockNumber.value &&   // <-- FIXED
+        hiddenBlockNumber.value &&
         nameInput.value.trim() &&
         emailInput.value.trim() &&
         fileInput.files.length > 0
@@ -249,24 +248,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // === SAVE BLOCK ===
     const handleSave = async () => {
-      console.log("👉 Save button clicked");
-
       const blockId = hiddenBlockNumber.value;
-      console.log("Block ID from hidden field:", blockId);
-
-      if (!blockId) {
-        alert("No block selected.");
-        return;
-      }
-
       if (!valid()) {
-        alert("Please complete all required fields.");
+        alert("Please fill all fields. Message max = 300 characters.");
         return;
       }
 
       try {
         const file = fileInput.files[0];
-
         const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
         await uploadBytes(fileRef, file);
 
@@ -291,8 +280,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         renderPage(currentPage);
       } catch (err) {
-        console.error("Error saving block:", err);
-        alert("Upload failed: " + (err.message || err));
+        alert("Upload failed: " + err.message);
       }
     };
 
@@ -315,14 +303,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       grid.style.pointerEvents = "auto";
     };
 
-    // ACCORDION
+    // Accordion
     document.querySelectorAll(".accordion-header").forEach((header) => {
       header.addEventListener("click", () => {
         const content = header.nextElementSibling;
         const open = header.classList.contains("active");
 
-        document.querySelectorAll(".accordion-header").forEach((h) => h.classList.remove("active"));
-        document.querySelectorAll(".accordion-content").forEach((c) => c.classList.remove("show"));
+        document.querySelectorAll(".accordion-header").forEach((h) =>
+          h.classList.remove("active")
+        );
+        document.querySelectorAll(".accordion-content").forEach((c) =>
+          c.classList.remove("show")
+        );
 
         if (!open) {
           header.classList.add("active");
@@ -338,10 +330,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     viewClose.onclick = () => viewModal.classList.add("hidden");
 
     saveBtn.addEventListener("click", handleSave);
-
-    console.log("🔥 Vault initialisation complete");
   } catch (err) {
-    console.error("Vault fatal error:", err);
-    alert("Vault error: " + (err.message || err));
+    console.error("Fatal Vault error:", err);
+    alert("Vault error: " + err.message);
   }
 });
