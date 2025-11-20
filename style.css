@@ -262,3 +262,30 @@ h1 {
 
 /* --- SIDE MENU, ACCORDION, FOOTER, BANNERS (unchanged) --- */
 /* (UNCHANGED SECTIONS OMITTED FOR LENGTH — kept identical to your existing copy) */
+/* === FIX: Hide number ONLY inside image blocks === */
+.block.claimed-has-image {
+    position: relative;
+    color: transparent !important; /* hide the number */
+    font-size: 0; /* prevents ghost text spacing */
+}
+
+.block.claimed-has-image::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    background-size: cover;
+    background-position: center;
+}
+
+/* === FIX: Restore side-menu text alignment & colors === */
+.side-menu,
+.side-menu * {
+    text-align: left !important;
+    color: #e6edf3 !important;
+}
+
+/* === FIX: Restore Title Alignment === */
+.side-menu h2 {
+    text-align: center !important;
+}
