@@ -33,17 +33,26 @@ const blocksCollection = collection(db, "blocks");
 // === CONFIG ====================================
 const TOTAL_BLOCKS = 100000;
 const PAGE_SIZE = 500;
+const MAX_MESSAGE_LENGTH = 300;
+const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+
 let currentPage = 1;
 let claimed = [];
 
 // === LOAD CLAIMED BLOCKS ========================
+// Only treat docs with status === "paid" as sealed blocks
 async function loadClaimedBlocks() {
   try {
     const snap = await getDocs(blocksCollection);
-    claimed = snap.docs.map((d) => Number(d.id));
+    claimed = snap.docs
+      .map((d) => ({ id: Number(d.id), data: d.data() }))
+      .filter((b) => b.data && b.data.status === "paid")
+      .map((b) => b.id);
+
     localStorage.setItem("claimed", JSON.stringify(claimed));
+    console.log("Loaded claimed PAID blocks:", claimed.length);
   } catch (err) {
-    console.error("Error loading claimed blocks:", err);
+    console.error("Error loading claimed blocks, using local cache:", err);
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
   }
 }
@@ -71,7 +80,9 @@ function hideLoader() {
 
 // === MAIN ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-  // SIDE MENU
+  console.log("🔥 DOM fully loaded — JS starting");
+
+  // === SIDE MENU TOGGLE ===
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const overlay = document.getElementById("overlay");
@@ -92,7 +103,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (overlay) overlay.addEventListener("click", closeMenuFn);
 
   try {
-    // DOM refs
+    // DOM references
     const grid = document.getElementById("grid");
     const pagination = document.getElementById("pagination");
     const modal = document.getElementById("modal");
@@ -118,20 +129,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const saveBtn = document.getElementById("uploadBtn");
     const hiddenBlockNumber = document.getElementById("blockNumber");
 
-    let selected = null;
+    if (!grid) {
+      alert("Vault error: grid container missing.");
+      return;
+    }
 
-    // === MESSAGE CHARACTER LIMIT (NEW FEATURE) =====================
-    const MESSAGE_MAX = 300;
+    console.log("✔ saveBtn FOUND:", !!saveBtn);
 
-    messageInput.addEventListener("input", () => {
-      if (messageInput.value.length > MESSAGE_MAX) {
-        messageInput.value = messageInput.value.slice(0, MESSAGE_MAX);
-      }
-
-      let counter = document.getElementById("messageCounter");
-      if (counter) counter.textContent = `${messageInput.value.length} / ${MESSAGE_MAX}`;
-    });
-    // ===============================================================
+    let selected = null; // UI helper only – source of truth is hiddenBlockNumber.value
 
     // === PAGINATION ===
     const renderPagination = () => {
@@ -143,17 +148,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       prev.textContent = "← Prev";
       prev.disabled = currentPage === 1;
       prev.onclick = () => changePage(currentPage - 1);
+      pagination.appendChild(prev);
 
-      const info = document.createElement("span");
-      info.textContent = `Page ${currentPage} / ${totalPages}`;
+      const pageInfo = document.createElement("span");
+      pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
+      pagination.appendChild(pageInfo);
 
       const next = document.createElement("button");
       next.textContent = "Next →";
       next.disabled = currentPage === totalPages;
       next.onclick = () => changePage(currentPage + 1);
-
-      pagination.appendChild(prev);
-      pagination.appendChild(info);
       pagination.appendChild(next);
     };
 
@@ -174,33 +178,48 @@ document.addEventListener("DOMContentLoaded", async () => {
         div.className = "block";
         div.textContent = i;
 
-        if (claimed.includes(i)) {
-          div.classList.add("claimed");
-        }
+        if (claimed.includes(i)) div.classList.add("claimed");
 
         div.onclick = async () => {
+          console.log("Clicked block:", i);
+
+          // VIEW BLOCK (paid / sealed)
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
+            const titleEl = document.getElementById("viewBlockTitle");
+            const msgEl = document.getElementById("viewBlockMessage");
+            const mediaEl = document.getElementById("viewBlockMedia");
 
-            document.getElementById("viewBlockTitle").textContent = `Block #${i}`;
-            document.getElementById("viewBlockMessage").textContent = data?.message || "";
-            document.getElementById("viewBlockMedia").innerHTML =
-              data?.imageUrl ? `<img src="${data.imageUrl}" style="max-width:100%;border-radius:8px;">` : "";
+            if (titleEl) titleEl.textContent = `Block #${i}`;
+            if (msgEl) msgEl.textContent = data?.message || "";
+            if (mediaEl) {
+              mediaEl.innerHTML = data?.imageUrl
+                ? `<img src="${data.imageUrl}" style="max-width:100%;border-radius:8px;">`
+                : "";
+            }
 
-            viewModal.classList.remove("hidden");
+            if (viewModal) viewModal.classList.remove("hidden");
             return;
           }
 
+          // SELECT BLOCK TO BUY
           document.querySelectorAll(".block").forEach((b) =>
             b.classList.remove("selected")
           );
-
           div.classList.add("selected");
-          selected = i;
-          hiddenBlockNumber.value = i;
 
-          document.getElementById("selected-block-text").textContent = `Selected Block: #${i}`;
-          modal.classList.remove("hidden");
+          selected = i;
+          if (hiddenBlockNumber) {
+            hiddenBlockNumber.value = i;
+            console.log("Selected block stored in hidden input:", hiddenBlockNumber.value);
+          }
+
+          const selectedText = document.getElementById("selected-block-text");
+          if (selectedText) {
+            selectedText.textContent = `Selected Block: #${i}`;
+          }
+
+          if (modal) modal.classList.remove("hidden");
         };
 
         grid.appendChild(div);
@@ -229,7 +248,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (page !== currentPage) {
         currentPage = page;
         renderPage(page);
-        setTimeout(() => highlightBlock(target), 80);
+        setTimeout(() => highlightBlock(target), 100);
       } else {
         highlightBlock(target);
       }
@@ -237,65 +256,124 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // === VALIDATION ===
     const valid = () => {
-      if (messageInput.value.length > MESSAGE_MAX) return false;
-      return (
-        hiddenBlockNumber.value &&
-        nameInput.value.trim() &&
-        emailInput.value.trim() &&
-        fileInput.files.length > 0
-      );
+      if (!hiddenBlockNumber || !hiddenBlockNumber.value) return false;
+      if (!nameInput.value.trim()) return false;
+      if (!emailInput.value.trim()) return false;
+      if (!fileInput.files || fileInput.files.length === 0) return false;
+
+      // Enforce 300-char limit in JS as well
+      if (messageInput && messageInput.value.length > MAX_MESSAGE_LENGTH) {
+        alert(`Message too long. Max ${MAX_MESSAGE_LENGTH} characters.`);
+        return false;
+      }
+
+      // Enforce 2MB file limit
+      const file = fileInput.files[0];
+      if (file && file.size > MAX_FILE_SIZE_BYTES) {
+        alert("Image is too large. Maximum size is 2MB.");
+        return false;
+      }
+
+      return true;
     };
 
-    // === SAVE BLOCK ===
+    // === PAYPAL RETURN HANDLER ===
+    const handlePaypalReturn = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const paid = params.get("paid");
+
+      if (paid !== "true") return;
+
+      const pendingBlockId = localStorage.getItem("pendingBlockId");
+      if (!pendingBlockId) return;
+
+      try {
+        console.log("Finalising PayPal payment for block:", pendingBlockId);
+
+        // Mark block as paid in Firestore
+        await setDoc(
+          doc(blocksCollection, pendingBlockId),
+          {
+            status: "paid",
+            purchasedAt: serverTimestamp()
+          },
+          { merge: true }
+        );
+
+        const numId = Number(pendingBlockId);
+        if (!claimed.includes(numId)) {
+          claimed.push(numId);
+          localStorage.setItem("claimed", JSON.stringify(claimed));
+        }
+
+        localStorage.removeItem("pendingBlockId");
+
+        alert("Payment received!🎉 Your block is now sealed in the Vault.");
+      } catch (err) {
+        console.error("Error finalising PayPal payment:", err);
+        alert("We received your return from PayPal but could not seal the block automatically. Please contact support.");
+      }
+    };
+
+    // === SAVE BLOCK (DETAILS + PENDING STATE) ===
     const handleSave = async () => {
-      const blockId = hiddenBlockNumber.value;
+      console.log("👉 Save button clicked");
+
       if (!valid()) {
-        alert("Please fill all fields. Message max = 300 characters.");
+        // valid() already shows relevant alerts
         return;
       }
 
+      const blockId = hiddenBlockNumber.value;
+      console.log("Block ID from hidden field:", blockId);
+
       try {
         const file = fileInput.files[0];
-        // === ENFORCE 2MB FILE LIMIT ===
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
-if (file.size > MAX_FILE_SIZE) {
-  alert("Your image is too large. Max allowed size is 2MB.");
-  return;
-}
+
+        // Upload file to storage
         const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
         await uploadBytes(fileRef, file);
 
+        // Get public URL
         const imageUrl = await getDownloadURL(fileRef);
 
+        // Save Firestore entry as PENDING
         await setDoc(doc(blocksCollection, blockId), {
           blockNumber: Number(blockId),
           name: nameInput.value,
           email: emailInput.value,
           message: messageInput.value,
           imageUrl,
-          purchasedAt: serverTimestamp()
+          status: "pending",
+          purchasedAt: null
         });
 
-        if (!claimed.includes(Number(blockId))) {
-          claimed.push(Number(blockId));
-          localStorage.setItem("claimed", JSON.stringify(claimed));
-        }
+        // Store pending block in localStorage so we know what to seal after PayPal
+        localStorage.setItem("pendingBlockId", blockId);
 
-        readyMsg.classList.remove("hidden");
-        paypalWrapper.classList.remove("hidden");
+        if (readyMsg) readyMsg.classList.remove("hidden");
+        if (paypalWrapper) paypalWrapper.classList.remove("hidden");
 
-        renderPage(currentPage);
+        console.log("Details saved, block pending payment:", blockId);
       } catch (err) {
-        alert("Upload failed: " + err.message);
+        console.error("Error saving block:", err);
+        alert("Upload failed: " + (err.message || err));
       }
     };
 
-    // === INIT ===
+    // === INIT FLOW ===
+    // 1) Load existing paid blocks
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
     await loadClaimedBlocks();
+
+    // 2) Handle PayPal return (?paid=true)
+    await handlePaypalReturn();
+
+    // 3) Render grid + loader
     renderPage(currentPage);
     hideLoader();
 
+    // 4) Rules banner
     if (!localStorage.getItem("vaultRulesOk")) {
       banner.style.display = "block";
       grid.style.opacity = "0.4";
@@ -309,18 +387,18 @@ if (file.size > MAX_FILE_SIZE) {
       grid.style.pointerEvents = "auto";
     };
 
-    // Accordion
+    // === ACCORDION (UNCHANGED) ===
     document.querySelectorAll(".accordion-header").forEach((header) => {
       header.addEventListener("click", () => {
         const content = header.nextElementSibling;
         const open = header.classList.contains("active");
 
-        document.querySelectorAll(".accordion-header").forEach((h) =>
-          h.classList.remove("active")
-        );
-        document.querySelectorAll(".accordion-content").forEach((c) =>
-          c.classList.remove("show")
-        );
+        document
+          .querySelectorAll(".accordion-header")
+          .forEach((h) => h.classList.remove("active"));
+        document
+          .querySelectorAll(".accordion-content")
+          .forEach((c) => c.classList.remove("show"));
 
         if (!open) {
           header.classList.add("active");
@@ -329,15 +407,24 @@ if (file.size > MAX_FILE_SIZE) {
       });
     });
 
-    searchBtn.addEventListener("click", searchBlock);
-    searchInput.addEventListener("change", searchBlock);
+    // === EVENTS ===
+    if (searchBtn) searchBtn.addEventListener("click", searchBlock);
+    if (searchInput) searchInput.addEventListener("change", searchBlock);
 
-    closeBtn.onclick = () => modal.classList.add("hidden");
-    viewClose.onclick = () => viewModal.classList.add("hidden");
+    if (closeBtn && modal) {
+      closeBtn.onclick = () => modal.classList.add("hidden");
+    }
+    if (viewClose && viewModal) {
+      viewClose.onclick = () => viewModal.classList.add("hidden");
+    }
 
-    saveBtn.addEventListener("click", handleSave);
+    if (saveBtn) {
+      saveBtn.addEventListener("click", handleSave);
+    }
+
+    console.log("🔥 Vault initialisation complete");
   } catch (err) {
-    console.error("Fatal Vault error:", err);
-    alert("Vault error: " + err.message);
+    console.error("Vault fatal error:", err);
+    alert("Vault error: " + (err.message || err));
   }
 });
