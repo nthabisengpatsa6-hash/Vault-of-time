@@ -54,8 +54,10 @@ h1 {
   transition: all 0.25s ease;
   border-radius: 4px;
   position: relative;
+  overflow: hidden; /* IMPORTANT for mosaic */
 }
 
+/* Hover on available blocks only */
 .block:hover:not(.claimed) {
   background: #707881;
   transform: scale(1.05);
@@ -69,13 +71,33 @@ h1 {
   transform: scale(1.08);
 }
 
+/* ============= MOSAIC STYLE FOR CLAIMED BLOCKS ============= */
 .block.claimed {
-  background-color: #33494d;
-  border: 1px solid #1f3337;
-  opacity: 0.85;
   cursor: not-allowed;
+  border: 1px solid #1f3337;
+  color: transparent;           /* hide block number */
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  opacity: 1 !important;
 }
 
+/* Subtle overlay for contrast (keeps mosaic uniform & clean) */
+.block.claimed::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.18); /* just a kiss of contrast */
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Prevent hover zoom on claimed blocks */
+.block.claimed:hover {
+  transform: none;
+}
+
+/* Search highlight */
 .search-highlight::after {
   content: "";
   position: absolute;
@@ -552,7 +574,8 @@ html {
     margin-top: 25px;
   }
 }
-/* === VIEW MODAL (fix) === */
+
+/* === VIEW MODAL === */
 #viewModal {
   position: fixed;
   top: 0;
