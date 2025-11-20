@@ -256,6 +256,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       try {
         const file = fileInput.files[0];
+        // === ENFORCE 2MB FILE LIMIT ===
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+if (file.size > MAX_FILE_SIZE) {
+  alert("Your image is too large. Max allowed size is 2MB.");
+  return;
+}
         const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
         await uploadBytes(fileRef, file);
 
