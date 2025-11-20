@@ -293,3 +293,109 @@ footer {
   padding-bottom: 25px;
   opacity: 0.7;
 }
+/* ============================
+   SIDE MENU + OVERLAY RESTORE
+   ============================ */
+
+/* MENU TOGGLE (hamburger) */
+.menu-toggle {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  font-size: 28px;
+  cursor: pointer;
+  z-index: 3000;
+  background: #1c2128;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #2b3138;
+  color: #e6edf3;
+}
+
+/* OVERLAY BEHIND SIDE MENU */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 2500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+}
+
+.overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* SIDE MENU PANEL */
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: -320px;
+  width: 300px;
+  height: 100%;
+  background: #11161c;
+  border-right: 1px solid #2b3138;
+  box-shadow: 3px 0 12px rgba(0,0,0,0.4);
+  padding: 25px 20px;
+  z-index: 3500;
+  overflow-y: auto;
+  transition: left .35s ease;
+}
+
+.side-menu.open {
+  left: 0;
+}
+
+.side-menu h2 {
+  margin-top: 0;
+  color: #f9d26e;
+}
+
+/* CLOSE BUTTON */
+#closeMenu {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 30px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #f9d26e;
+}
+
+/* ACCORDION */
+.accordion-item {
+  margin-bottom: 15px;
+}
+
+.accordion-header {
+  background: #1c2128;
+  color: #e6edf3;
+  padding: 10px;
+  text-align: left;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.accordion-header.active {
+  background: #2a313a;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s ease;
+  text-align: left;
+  padding-left: 5px;
+}
+
+.accordion-content.show {
+  max-height: 500px;
+  padding-top: 8px;
+}
