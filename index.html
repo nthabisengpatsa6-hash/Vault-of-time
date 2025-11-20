@@ -6,11 +6,12 @@
   <title>Vault of Time</title>
   <link rel="stylesheet" href="style.css" />
 
-  <!-- PAYPAL SMART BUTTON SDK (must be in <head>) -->
+  <!-- PAYPAL SMART BUTTON SDK -->
   <script 
     src="https://www.paypal.com/sdk/js?client-id=BAARqxcLBGQEGzz_884ntis7qCccdM2tHQgqot4oqffaKaohFGfaySQblJunzpMskuY5_MlbTTO_fPaGsA&components=hosted-buttons&disable-funding=venmo&currency=USD">
   </script>
 
+  <!-- RESTORED LOADER + ANIMATIONS -->
   <style>
     html, body {
       margin: 0;
@@ -18,7 +19,75 @@
       background-color: #0d1117;
     }
 
-    /* (ALL YOUR EXISTING LOADER + HEADER CSS — UNCHANGED) */
+    /* 🔐 FULLSCREEN VAULT LOADER */
+    #vault-loader {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, #1a1a2e 0, #050509 55%, #000 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity .6s ease;
+    }
+
+    .vault-loader-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .vault-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid rgba(255, 255, 255, 0.15);
+      border-top-color: #f5c542;
+      border-right-color: #f5c542;
+      animation: vault-spin 1.4s linear infinite;
+      box-shadow: 0 0 25px rgba(245, 197, 66, 0.35);
+      position: relative;
+    }
+
+    .vault-circle-center {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #f5c542, #b47b16);
+      box-shadow: 0 0 18px rgba(245, 197, 66, 0.7);
+      margin-top: -78px;
+    }
+
+    .vault-loader-text {
+      color: #f5f5f5;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    @keyframes vault-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .clock-icon {
+      display:inline-block;
+      transform-origin:bottom center;
+      animation:tick 1.2s infinite steps(2,start), clock-glow 3s ease-in-out 1;
+      opacity:.85;
+    }
+    .clock-icon.reverse {
+      animation:tick-reverse 1.2s infinite steps(2,start), clock-glow 3s ease-in-out 1;
+    }
+    @keyframes tick{0%{transform:rotate(0)}50%{transform:rotate(6deg)}100%{transform:rotate(0)}}
+    @keyframes tick-reverse{0%{transform:rotate(0)}50%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
+    @keyframes clock-glow{
+      0%,100%{text-shadow:0 0 6px rgba(212,175,55,.8)}
+      50%{text-shadow:0 0 40px rgba(212,175,55,.6);transform:scale(1.1)}
+    }
 
     .hidden { display:none !important; }
 
@@ -26,7 +95,6 @@
       opacity: 0;
       transition: opacity 0.6s ease;
     }
-
     #vault-main-content.vault-main-visible {
       opacity: 1;
     }
@@ -89,7 +157,7 @@
       </div>
     </div>
 
-    <!-- HOW TO BUY -->
+    <!-- HOW TO BUY (UPDATED) -->
     <div class="accordion-item">
       <button class="accordion-header">💳 How To Buy</button>
       <div class="accordion-content">
@@ -98,7 +166,11 @@
           <li>Enter your name + email.</li>
           <li>(Optional) Write a message.</li>
           <li>Upload an image (max 2MB).</li>
-          <li>You’ll soon be able to pay securely by card (via PayPal).</li>
+
+          <li><strong>Click “Save Details” and wait.</strong><br>
+              The PayPal button will appear automatically.</li>
+
+          <li>Pay securely (via card or PayPal).</li>
           <li>Your block becomes visible instantly — forever.</li>
         </ol>
         <p>🧱 You can edit your block for 7 days.</p>
@@ -106,8 +178,69 @@
       </div>
     </div>
 
-    <!-- FAQ, RULES, PRIVACY, LEGAL -->
-    <!-- (UNCHANGED — leaving all your content as-is) -->
+    <!-- FAQ -->
+    <div class="accordion-item">
+      <button class="accordion-header">❓ Frequently Asked Questions</button>
+      <div class="accordion-content">
+        <p><strong>Why does this exist?</strong><br>
+        Because history books don’t record regular people — but we still matter.</p>
+
+        <p><strong>Do I need crypto?</strong><br>
+        Nope. Just a card.</p>
+
+        <p><strong>Can I upload anything?</strong><br>
+        As long as it's legal, safe, and under 2MB.</p>
+
+        <p><strong>Can I change what I uploaded?</strong><br>
+        Yes — 7 days to edit. Then it’s sealed.</p>
+
+        <p><strong>Can I buy more than one?</strong><br>
+        Absolutely — build a cluster.</p>
+      </div>
+    </div>
+
+    <!-- RULES -->
+    <div class="accordion-item">
+      <button class="accordion-header">⚖️ Vault Rules</button>
+      <div class="accordion-content">
+        <ul>
+          <li>❌ No hate speech or harassment</li>
+          <li>❌ No porn, gore, or illegal content</li>
+          <li>❌ No doxxing or personal info of others</li>
+          <li>🕊️ Keep it meaningful, artistic, or human</li>
+        </ul>
+        <p>By uploading, you accept the Vault's Terms & Conditions.</p>
+      </div>
+    </div>
+
+    <!-- PRIVACY -->
+    <div class="accordion-item">
+      <button class="accordion-header">🔐 Privacy Policy</button>
+      <div class="accordion-content">
+        <p>We only collect:</p>
+        <ul>
+          <li>Your name</li>
+          <li>Your email</li>
+          <li>Your upload + message</li>
+        </ul>
+        <p>We DO NOT:</p>
+        <ul>
+          <li>Sell your data</li>
+          <li>Store your card info</li>
+          <li>Track you across the web</li>
+        </ul>
+        <p>Payments are handled securely via PayPal.</p>
+      </div>
+    </div>
+
+    <!-- LEGAL — JURISDICTION REMOVED -->
+    <div class="accordion-item">
+      <button class="accordion-header">📇 Legal Info</button>
+      <div class="accordion-content">
+        <p><strong>Company:</strong> Vault of Time (Pty) Ltd</p>
+        <p><strong>Reg No:</strong> 2025/875420/07</p>
+      </div>
+    </div>
 
   </div>
 
@@ -158,7 +291,7 @@
         ✅ Saved. Now complete payment to seal your block.
       </div>
 
-      <!-- PAYPAL SMART BUTTON CONTAINER -->
+      <!-- PAYPAL SMART BUTTON (ONLY AFTER SAVE) -->
       <div id="paypalWrapper" class="hidden">
         <div id="paypal-container-T9TZLXDZ6CLSE"></div>
         <script>
@@ -172,13 +305,21 @@
   </div>
 </div>
 
-<!-- VIEW MODAL -->
+<!-- VIEW MODAL — WITH SHARE BUTTON PLACEHOLDER -->
 <div id="viewModal" class="hidden">
   <div id="viewModalContent">
     <span class="close-view">&times;</span>
     <h2 id="viewBlockTitle"></h2>
+
     <div id="viewBlockMedia"></div>
     <p id="viewBlockMessage"></p>
+
+    <!-- Share button (only active after payment in JS) -->
+    <button id="shareBlockBtn" class="hidden"
+      style="margin-top:15px;padding:10px 16px;border:none;border-radius:6px;background:#d4af37;color:#111;font-weight:bold;cursor:pointer;">
+      📤 Share This Block
+    </button>
+
   </div>
 </div>
 
@@ -190,7 +331,7 @@
   </p>
 </footer>
 
-</div> <!-- end main content -->
+</div> <!-- end MAIN CONTENT -->
 
 <script type="module" src="script.js?v=7777777"></script>
 
