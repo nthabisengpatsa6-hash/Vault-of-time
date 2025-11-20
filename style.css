@@ -476,3 +476,106 @@ footer {
     margin-top: 10px;
   }
 }
+/* ===========================
+   SIDE MENU / ACCORDION FIX
+   =========================== */
+
+/* Menu toggle button */
+.menu-toggle {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  font-size: 32px;
+  cursor: pointer;
+  z-index: 3000;
+  padding: 8px 12px;
+  background: #1c2128;
+  border-radius: 6px;
+  color: #e6edf3;
+}
+
+/* Dark background overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  z-index: 2500;
+}
+
+.overlay.show {
+  display: block;
+}
+
+/* SIDE MENU */
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 280px;                /* ← FIXED WIDTH */
+  max-width: 75vw;
+  background: #1c2128;
+  color: #e6edf3;
+  padding: 20px;
+  box-shadow: 3px 0 10px rgba(0,0,0,0.4);
+  transform: translateX(-100%); /* ← HIDDEN OFF-SCREEN */
+  transition: transform 0.35s ease;
+  z-index: 3001;               /* sits above overlay */
+}
+
+.side-menu.open {
+  transform: translateX(0);     /* ← SLIDES IN */
+}
+
+/* Close button inside menu */
+.side-menu #closeMenu {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #f9d26e;
+}
+
+/* ACCORDION */
+.accordion-item {
+  margin-bottom: 14px;
+}
+
+.accordion-header {
+  width: 100%;
+  background: #2a3038;
+  padding: 10px 12px;
+  border-radius: 6px;
+  text-align: left;
+  border: none;
+  color: #e6edf3;
+  cursor: pointer;
+  transition: background 0.25s;
+  font-weight: bold;
+}
+
+.accordion-header:hover {
+  background: #343b44;
+}
+
+.accordion-header.active {
+  background: #3c444f;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .35s ease;
+  background: #1c2128;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.accordion-content.show {
+  max-height: 600px;
+  padding: 10px 5px;
+}
