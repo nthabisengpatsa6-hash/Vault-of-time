@@ -282,18 +282,28 @@
 </nav>
 
 <!-- TITLE -->
-<div class="header-wrapper">
-  <h1>
-    <span class="clock-icon">🕰️</span>
-    The Vault of Time
-    <span class="clock-icon reverse">🕰️</span>
-  </h1>
-</div>
+<header id="vaultHeader">
+  <div class="header-icons">
+    <svg class="mini-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="20" cy="15" r="10" stroke="#D4AF37" stroke-width="3" fill="none"/>
+      <rect x="28" y="13" width="16" height="4" fill="#D4AF37"/>
+      <rect x="38" y="10" width="6" height="10" fill="#D4AF37"/>
+    </svg>
 
-<div class="release-banner">
-  🔓 The Vault will open in chapters:
-  <strong>100,000 blocks at a time</strong> — until all 1,000,000 are sealed forever.
-</div>
+    <h1 class="vault-title">The Vault of Time</h1>
+
+    <svg class="mini-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="20" cy="15" r="10" stroke="#D4AF37" stroke-width="3" fill="none"/>
+      <rect x="28" y="13" width="16" height="4" fill="#D4AF37"/>
+      <rect x="38" y="10" width="6" height="10" fill="#D4AF37"/>
+    </svg>
+  </div>
+
+  <div id="chapterInfo">
+    <h2 id="chapterName">Chapter 1: The Vault Keepers</h2>
+    <p id="chapterRange">Blocks 1 – 100 000</p>
+  </div>
+</header>
 
 <div class="search-wrapper">
   <input type="number" id="blockSearch" placeholder="Search block #..." min="1" max="1000000" />
