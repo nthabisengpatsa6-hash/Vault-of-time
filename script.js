@@ -36,14 +36,14 @@ const blocksCollection = collection(db, "blocks");
 const TOTAL_BLOCKS = 100000;
 const PAGE_SIZE = 500;
 const MAX_MESSAGE_LENGTH = 300;
-const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
 let currentPage = 1;
 let claimed = [];
-let blockCache = {}; // id -> Firestore data for PAID blocks
+let blockCache = {};
 
 
-// === LOAD CLAIMED BLOCKS (ONLY PAID ONES) ===============
+// === LOAD CLAIMED BLOCKS ==============================
 async function loadClaimedBlocks() {
   try {
     const snap = await getDocs(blocksCollection);
@@ -64,6 +64,7 @@ async function loadClaimedBlocks() {
 
     localStorage.setItem("claimed", JSON.stringify(claimed));
     console.log("Loaded claimed PAID blocks:", claimed.length);
+
   } catch (err) {
     console.error("Error loading claimed blocks, using local cache:", err);
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
@@ -71,14 +72,14 @@ async function loadClaimedBlocks() {
 }
 
 
-// === FETCH BLOCK (fallback / always-fresh for view modal) ===
+// === FETCH BLOCK ======================================
 async function fetchBlock(num) {
   const snap = await getDoc(doc(blocksCollection, String(num)));
   return snap.exists() ? snap.data() : null;
 }
 
 
-// === LOADER ========================
+// === LOADER ===========================================
 function hideLoader() {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
@@ -92,8 +93,12 @@ function hideLoader() {
     if (main) main.classList.add("vault-main-visible");
   }, 1400);
 }
+
+
+// === DOM READY ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-  // === SIDE MENU TOGGLE ===
+
+  // MENU TOGGLE
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const overlay = document.getElementById("overlay");
@@ -114,7 +119,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (overlay) overlay.addEventListener("click", closeMenuFn);
 
   try {
-    // DOM references
+    // DOM REFERENCES
     const grid = document.getElementById("grid");
     const pagination = document.getElementById("pagination");
     const modal = document.getElementById("modal");
@@ -145,23 +150,24 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // === LIVE MESSAGE COUNTER ===
+    // LIVE MESSAGE COUNTER
     if (messageInput && messageCounter) {
       messageInput.addEventListener("input", () => {
-        const length = messageInput.value.length;
-        messageCounter.textContent = `${length}/${MAX_MESSAGE_LENGTH}`;
+        messageCounter.textContent =
+          `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
       });
     }
 
-    // === SEARCH HIGHLIGHT ===
+
+    // SEARCH
     const highlightBlock = (num) => {
       const blocks = [...document.querySelectorAll(".block")];
-      const block = blocks.find((b) => Number(b.textContent) === num);
-      if (!block) return;
+      const target = blocks.find((b) => Number(b.textContent) === num);
+      if (!target) return;
 
-      block.scrollIntoView({ behavior: "smooth", block: "center" });
-      block.classList.add("search-highlight");
-      setTimeout(() => block.classList.remove("search-highlight"), 2000);
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      target.classList.add("search-highlight");
+      setTimeout(() => target.classList.remove("search-highlight"), 2000);
     };
 
     const searchBlock = () => {
@@ -169,17 +175,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!target || target < 1 || target > TOTAL_BLOCKS) return;
 
       const page = Math.ceil(target / PAGE_SIZE);
-
       if (page !== currentPage) {
         currentPage = page;
         renderPage(page);
-        setTimeout(() => highlightBlock(target), 120);
+        setTimeout(() => highlightBlock(target), 150);
       } else {
         highlightBlock(target);
       }
     };
 
-    // === VALIDATION ===
+
+    // VALIDATION
     const valid = () => {
       if (!hiddenBlockNumber.value) return false;
       if (!nameInput.value.trim()) return false;
@@ -187,29 +193,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!fileInput.files.length) return false;
 
       if (messageInput.value.length > MAX_MESSAGE_LENGTH) {
-        alert(`Message too long. Max ${MAX_MESSAGE_LENGTH} characters.`);
+        alert("Message too long.");
         return false;
       }
 
       const file = fileInput.files[0];
-      const fileType = file.type || "";
-
-      const isImage = fileType.startsWith("image/");
-      const isAudio = fileType.startsWith("audio/");
-      if (!isImage && !isAudio) {
-        alert("Please upload either an image or an audio file.");
+      const type = file.type || "";
+      const isImg = type.startsWith("image/");
+      const isAud = type.startsWith("audio/");
+      if (!isImg && !isAud) {
+        alert("Upload an image or audio file.");
         return false;
       }
 
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        alert("File too large. Max 2MB.");
+        alert("File too large (max 2MB).");
         return false;
       }
 
       return true;
     };
 
-    // === PAYPAL RETURN HANDLER ==========================
+
+    // PAYPAL RETURN
     const handlePaypalReturn = async () => {
       const params = new URLSearchParams(window.location.search);
       if (params.get("paid") !== "true") return;
@@ -228,27 +234,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
 
         const numId = Number(pendingBlockId);
-
         if (!claimed.includes(numId)) {
           claimed.push(numId);
           localStorage.setItem("claimed", JSON.stringify(claimed));
         }
 
         const snap = await getDoc(doc(blocksCollection, pendingBlockId));
-        if (snap.exists()) {
-          blockCache[numId] = snap.data();
-        }
+        if (snap.exists()) blockCache[numId] = snap.data();
 
         localStorage.removeItem("pendingBlockId");
 
-        alert("Payment received!🎉 Your block is now sealed in the Vault.");
+        alert("Payment received! 🎉 Your block is sealed.");
+
       } catch (err) {
-        console.error("Error finalising PayPal payment:", err);
-        alert("We received your return from PayPal, but something went wrong. Please contact support.");
+        console.error("Error finalising PayPal:", err);
+        alert("Payment received but an error occurred.");
       }
     };
 
-    // === SAVE (PENDING) ============================
+
+    // SAVE PENDING
     const handleSave = async () => {
       if (!valid()) return;
 
@@ -257,18 +262,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       try {
         const file = fileInput.files[0];
         const fileType = file.type || "";
-
-        const isImage = fileType.startsWith("image/");
-        const isAudio = fileType.startsWith("audio/");
-
-        if (!isImage && !isAudio) {
-          alert("Please upload either an image or an audio file.");
-          return;
-        }
+        const isImg = fileType.startsWith("image/");
+        const isAud = fileType.startsWith("audio/");
 
         const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
         await uploadBytes(fileRef, file);
-
         const mediaUrl = await getDownloadURL(fileRef);
 
         await setDoc(doc(blocksCollection, blockId), {
@@ -277,26 +275,28 @@ document.addEventListener("DOMContentLoaded", async () => {
           email: emailInput.value,
           message: messageInput.value,
           mediaUrl,
-          mediaType: isAudio ? "audio" : "image",
-          imageUrl: isImage ? mediaUrl : null,
-          audioUrl: isAudio ? mediaUrl : null,
+          mediaType: isAud ? "audio" : "image",
+          imageUrl: isImg ? mediaUrl : null,
+          audioUrl: isAud ? mediaUrl : null,
           status: "pending",
           purchasedAt: null
         });
 
         localStorage.setItem("pendingBlockId", blockId);
 
-        if (readyMsg) readyMsg.classList.remove("hidden");
-        if (paypalWrapper) paypalWrapper.classList.remove("hidden");
+        readyMsg.classList.remove("hidden");
+        paypalWrapper.classList.remove("hidden");
+
       } catch (err) {
-        console.error("Error saving block:", err);
-        alert("Upload failed: " + err.message);
+        console.error("Upload error:", err);
+        alert("Upload failed.");
       }
     };
-    // PAGE + PAGINATION ======================
+
+
+    // PAGINATION
     const renderPagination = () => {
       const totalPages = Math.ceil(TOTAL_BLOCKS / PAGE_SIZE);
-
       pagination.innerHTML = "";
 
       const prev = document.createElement("button");
@@ -305,9 +305,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       prev.onclick = () => changePage(currentPage - 1);
       pagination.appendChild(prev);
 
-      const pageInfo = document.createElement("span");
-      pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
-      pagination.appendChild(pageInfo);
+      const info = document.createElement("span");
+      info.textContent = `Page ${currentPage} / ${totalPages}`;
+      pagination.appendChild(info);
 
       const next = document.createElement("button");
       next.textContent = "Next →";
@@ -321,7 +321,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       renderPage(page);
     };
 
-    // === RENDER PAGE (GRID) ===
+
+    // RENDER PAGE =========================================================
     const renderPage = (pageNum) => {
       grid.innerHTML = "";
 
@@ -337,15 +338,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           div.classList.add("claimed");
 
           const data = blockCache[i];
-          const mediaUrl = data?.mediaUrl || data?.imageUrl || null;
-          const mediaType = data?.mediaType || (data?.imageUrl ? "image" : null);
+          const mediaUrl = data?.mediaUrl || data?.imageUrl;
+          const mediaType = data?.mediaType;
 
           if (mediaUrl && mediaType === "image") {
             div.classList.add("claimed-has-image");
             div.style.backgroundImage = `url(${mediaUrl})`;
             div.style.backgroundSize = "cover";
             div.style.backgroundPosition = "center";
-            div.style.backgroundRepeat = "no-repeat";
             div.style.color = "transparent";
           }
 
@@ -354,74 +354,27 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
 
+
+        // === CLICK HANDLER ===
         div.onclick = async () => {
+
+          // --- VIEW CLAIMED BLOCK ---
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
+
             const titleEl = document.getElementById("viewBlockTitle");
             const msgEl = document.getElementById("viewBlockMessage");
             const mediaEl = document.getElementById("viewBlockMedia");
-            const badgeBox = document.getElementById("viewBlockBadge"); // ⭐ badge container
+            const badgeBox = document.getElementById("viewBlockBadge");
 
             if (titleEl) titleEl.textContent = `Block #${i}`;
 
-            // ----------------------------
-            // ⭐ BADGE LOGIC WILL BE INSERTED HERE IN PART 4
-            // ----------------------------
+            // --------------------------
+            // ⭐ BADGE SYSTEM (VIEW MODAL ONLY)
+            // --------------------------
+            let badgeSvg = "";
 
-            const mediaUrl = data?.mediaUrl || data?.imageUrl || null;
-            const mediaType = data?.mediaType || (data?.imageUrl ? "image" : null);
-
-            let mediaHtml = "";
-            if (mediaUrl) {
-              if (mediaType === "audio") {
-                mediaHtml = `
-                  <audio controls style="width:100%;margin:10px 0 5px;">
-                    <source src="${mediaUrl}" type="audio/mpeg" />
-                    Your browser does not support the audio element.
-                  </audio>
-                `;
-              } else {
-                mediaHtml = `<img src="${mediaUrl}" style="max-width:100%;border-radius:8px;" />`;
-              }
-            }
-
-            if (mediaEl) mediaEl.innerHTML = mediaHtml;
-            if (msgEl) msgEl.textContent = data?.message || "";
-
-            if (viewModal) viewModal.classList.remove("hidden");
-            return;
-          }
-
-          // SELECT NEW BLOCK
-          document.querySelectorAll(".block").forEach((b) =>
-            b.classList.remove("selected")
-          );
-          div.classList.add("selected");
-
-          hiddenBlockNumber.value = i;
-
-          const selectedText = document.getElementById("selected-block-text");
-          if (selectedText) {
-            selectedText.textContent = `Selected Block: #${i}`;
-          }
-
-          if (modal) modal.classList.remove("hidden");
-        };
-
-        grid.appendChild(div);
-      }
-
-      renderPagination();
-    };
-    // -----------------------------------------------------
-            // ⭐ BADGE SYSTEM — VAULT KEEPERS (CHAPTER 1)
-            // -----------------------------------------------------
-
-            if (badgeBox) {
-              let badgeSvg = "";
-
-              // Badge 1: Blocks 1–25 000
-              const badge1 = `
+            const badge1 = `
 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="60" cy="60" r="50" stroke="#D4AF37" stroke-width="3"/>
   <circle cx="60" cy="60" r="38" stroke="#00D4FF" stroke-width="1" stroke-dasharray="4 6"/>
@@ -433,8 +386,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   <line x1="50" y1="92" x2="70" y2="92" stroke="#00D4FF" stroke-width="2" stroke-linecap="round"/>
 </svg>`;
 
-              // Badge 2: Blocks 25 001–50 000
-              const badge2 = `
+            const badge2 = `
 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="60" cy="60" r="50" stroke="#D4AF37" stroke-width="3"/>
   <circle cx="60" cy="60" r="40" stroke="#00D4FF" stroke-width="1.5" stroke-dasharray="6 8"/>
@@ -446,8 +398,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   <line x1="60" y1="38" x2="60" y2="80" stroke="#1A1A1A" stroke-width="3" opacity="0.3"/>
 </svg>`;
 
-              // Badge 3: Blocks 50 001–75 000
-              const badge3 = `
+            const badge3 = `
 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="60" cy="60" r="50" stroke="#D4AF37" stroke-width="3"/>
   <rect x="38" y="30" width="8" height="60" fill="#D4AF37" opacity="0.3"/>
@@ -457,8 +408,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   <path d="M60 50 C65 55 62 65 60 68 C58 65 55 55 60 50Z" fill="#00D4FF"/>
 </svg>`;
 
-              // Badge 4: Blocks 75 001–100 000
-              const badge4 = `
+            const badge4 = `
 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <polygon points="60,15 100,60 60,105 20,60" stroke="#D4AF37" stroke-width="3" fill="none"/>
   <path d="M45 70 Q60 85 75 70" stroke="#D4AF37" stroke-width="3" fill="none"/>
@@ -467,39 +417,67 @@ document.addEventListener("DOMContentLoaded", async () => {
   <circle cx="60" cy="40" r="4" fill="#D4AF37"/>
 </svg>`;
 
-              // Determine badge
-              if (i >= 1 && i <= 25000) badgeSvg = badge1;
-              else if (i <= 50000) badgeSvg = badge2;
-              else if (i <= 75000) badgeSvg = badge3;
-              else if (i <= 100000) badgeSvg = badge4;
+            if (i >= 1 && i <= 25000) badgeSvg = badge1;
+            else if (i <= 50000) badgeSvg = badge2;
+            else if (i <= 75000) badgeSvg = badge3;
+            else if (i <= 100000) badgeSvg = badge4;
 
-              badgeBox.innerHTML = badgeSvg;
+            if (badgeBox) badgeBox.innerHTML = badgeSvg;
+
+
+            // --- MEDIA ---
+            const mediaUrl = data?.mediaUrl || data?.imageUrl;
+            const mediaType = data?.mediaType;
+
+            if (mediaEl) {
+              if (mediaUrl && mediaType === "image") {
+                mediaEl.innerHTML =
+                  `<img src="${mediaUrl}" style="max-width:100%;border-radius:8px;" />`;
+              } else if (mediaUrl && mediaType === "audio") {
+                mediaEl.innerHTML = `
+                  <audio controls style="width:100%;margin-top:10px;">
+                    <source src="${mediaUrl}" />
+                  </audio>
+                `;
+              } else {
+                mediaEl.innerHTML = "";
+              }
             }
-    // END OF VIEW MODAL LOGIC
-          }; // end of div.onclick
+
+            if (msgEl) msgEl.textContent = data?.message || "";
+
+            viewModal.classList.remove("hidden");
+            return;
+          }
+
+
+          // --- SELECT NEW BLOCK ---
+          document.querySelectorAll(".block").forEach((b) =>
+            b.classList.remove("selected")
+          );
+          div.classList.add("selected");
+
+          hiddenBlockNumber.value = i;
+
+          const selectedText = document.getElementById("selected-block-text");
+          if (selectedText)
+            selectedText.textContent = `Selected Block: #${i}`;
+
+          modal.classList.remove("hidden");
+        };
 
         grid.appendChild(div);
       }
 
       renderPagination();
-    }; // END renderPage()
+    };
 
 
-    // === CLOSE VIEW MODAL ===
-    if (viewClose) {
-      viewClose.onclick = () => {
-        if (viewModal) viewModal.classList.add("hidden");
-      };
-    }
+    // CLOSE MODALS
+    if (viewClose) viewClose.onclick = () => viewModal.classList.add("hidden");
+    if (closeBtn) closeBtn.onclick = () => modal.classList.add("hidden");
 
-    // === CLOSE UPLOAD MODAL ===
-    if (closeBtn) {
-      closeBtn.onclick = () => {
-        if (modal) modal.classList.add("hidden");
-      };
-    }
-
-    // === RULES BANNER ACKNOWLEDGE ===
+    // RULES ACK
     if (ackBtn && banner) {
       ackBtn.addEventListener("click", () => {
         banner.classList.add("hidden");
@@ -507,65 +485,49 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     }
 
-    // === SEARCH BUTTON ===
-    if (searchBtn) {
-      searchBtn.onclick = searchBlock;
-    }
+    // EVENTS
+    if (searchBtn) searchBtn.onclick = searchBlock;
+    if (saveBtn) saveBtn.onclick = handleSave;
 
-    // === SAVE BUTTON ===
-    if (saveBtn) {
-      saveBtn.onclick = handleSave;
-    }
-
-    // === PAYPAL BUTTON ===
+    // PAYPAL REDIRECT BUTTON
     const payBtn = document.getElementById("paypalBtn");
     if (payBtn) {
       payBtn.onclick = () => {
         const blockId = hiddenBlockNumber.value;
-        if (!blockId) {
-          alert("No block selected.");
-          return;
-        }
-
-        // Set pending
+        if (!blockId) return alert("No block selected.");
         localStorage.setItem("pendingBlockId", blockId);
-
-        // Redirect to PayPal
         window.location.href =
           `https://vaultoftime.com/paypal/pay.php?block=${blockId}`;
       };
     }
 
-    // === EXECUTE PAYPAL RETURN HANDLER ===
+    // FIREBASE INIT
     await handlePaypalReturn();
-
-    // === INITIAL LOAD ===
     await loadClaimedBlocks();
     renderPage(currentPage);
 
   } catch (err) {
-    console.error("FATAL error during Vault initialisation:", err);
-    alert("An error occurred setting up The Vault. Please refresh.");
+    console.error("FATAL Vault init error:", err);
+    alert("An error occurred. Please refresh.");
   }
 
   hideLoader();
 
 }); // END DOMContentLoaded
-/* ============================
-   ACCORDION INTERACTION
-============================ */
 
+
+// ACCORDION LOGIC
 document.querySelectorAll(".accordion-header").forEach((header) => {
   header.addEventListener("click", () => {
     const content = header.nextElementSibling;
-    const alreadyOpen = header.classList.contains("active");
+    const already = header.classList.contains("active");
 
     document.querySelectorAll(".accordion-header")
       .forEach((h) => h.classList.remove("active"));
     document.querySelectorAll(".accordion-content")
       .forEach((c) => c.classList.remove("show"));
 
-    if (!alreadyOpen) {
+    if (!already) {
       header.classList.add("active");
       content.classList.add("show");
     }
