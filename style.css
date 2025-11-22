@@ -627,3 +627,7 @@ footer {
   opacity: 0.8;
   margin-top: 2px;
 }
+.mini-icon:hover {
+  filter: drop-shadow(0 0 4px #d4af37);
+  transition: 0.2s ease;
+}
