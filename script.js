@@ -339,7 +339,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
           const data = blockCache[i];
           const mediaUrl = data?.mediaUrl || data?.imageUrl;
-          const mediaType = data?.mediaType;
+          const mediaType = data?.mediaType || (data?.imageUrl ? "image" : data?.audioUrl ? "audio" : null);
 
           if (mediaUrl && mediaType === "image") {
             div.classList.add("claimed-has-image");
