@@ -92,9 +92,6 @@ function hideLoader() {
     if (main) main.classList.add("vault-main-visible");
   }, 1400);
 }
-
-
-// === MAIN ========================================
 document.addEventListener("DOMContentLoaded", async () => {
   // === SIDE MENU TOGGLE ===
   const menuToggle = document.getElementById("menuToggle");
@@ -189,7 +186,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!emailInput.value.trim()) return false;
       if (!fileInput.files.length) return false;
 
-      // message length
       if (messageInput.value.length > MAX_MESSAGE_LENGTH) {
         alert(`Message too long. Max ${MAX_MESSAGE_LENGTH} characters.`);
         return false;
@@ -198,7 +194,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       const file = fileInput.files[0];
       const fileType = file.type || "";
 
-      // Only allow image OR audio
       const isImage = fileType.startsWith("image/");
       const isAudio = fileType.startsWith("audio/");
       if (!isImage && !isAudio) {
@@ -206,7 +201,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         return false;
       }
 
-      // FILE SIZE
       if (file.size > MAX_FILE_SIZE_BYTES) {
         alert("File too large. Max 2MB.");
         return false;
@@ -214,7 +208,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       return true;
     };
-
 
     // === PAYPAL RETURN HANDLER ==========================
     const handlePaypalReturn = async () => {
@@ -225,7 +218,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!pendingBlockId) return;
 
       try {
-        // Mark as paid
         await setDoc(
           doc(blocksCollection, pendingBlockId),
           {
@@ -237,13 +229,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const numId = Number(pendingBlockId);
 
-        // update local claimed (just in case)
         if (!claimed.includes(numId)) {
           claimed.push(numId);
           localStorage.setItem("claimed", JSON.stringify(claimed));
         }
 
-        // Fetch fresh doc so blockCache can be correct if we want to use it immediately
         const snap = await getDoc(doc(blocksCollection, pendingBlockId));
         if (snap.exists()) {
           blockCache[numId] = snap.data();
@@ -276,13 +266,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
         }
 
-        // Upload to storage
         const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
         await uploadBytes(fileRef, file);
 
         const mediaUrl = await getDownloadURL(fileRef);
 
-        // write pending doc
         await setDoc(doc(blocksCollection, blockId), {
           blockNumber: Number(blockId),
           name: nameInput.value,
@@ -290,7 +278,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           message: messageInput.value,
           mediaUrl,
           mediaType: isAudio ? "audio" : "image",
-          // keep old fields for backwards compatibility / future use
           imageUrl: isImage ? mediaUrl : null,
           audioUrl: isAudio ? mediaUrl : null,
           status: "pending",
@@ -306,8 +293,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert("Upload failed: " + err.message);
       }
     };
-
-
     // PAGE + PAGINATION ======================
     const renderPagination = () => {
       const totalPages = Math.ceil(TOTAL_BLOCKS / PAGE_SIZE);
@@ -336,7 +321,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       renderPage(page);
     };
 
-
     // === RENDER PAGE (GRID) ===
     const renderPage = (pageNum) => {
       grid.innerHTML = "";
@@ -356,33 +340,33 @@ document.addEventListener("DOMContentLoaded", async () => {
           const mediaUrl = data?.mediaUrl || data?.imageUrl || null;
           const mediaType = data?.mediaType || (data?.imageUrl ? "image" : null);
 
-          // Mosaic preview for images
           if (mediaUrl && mediaType === "image") {
             div.classList.add("claimed-has-image");
             div.style.backgroundImage = `url(${mediaUrl})`;
             div.style.backgroundSize = "cover";
             div.style.backgroundPosition = "center";
             div.style.backgroundRepeat = "no-repeat";
-            // number becomes subtle / hidden so the image is the focus
             div.style.color = "transparent";
           }
 
-          // Audio marker – CSS will show an icon
           if (mediaUrl && mediaType === "audio") {
             div.classList.add("claimed-has-audio");
           }
         }
 
         div.onclick = async () => {
-          // VIEW BLOCK (SEALED)
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
             const titleEl = document.getElementById("viewBlockTitle");
             const msgEl = document.getElementById("viewBlockMessage");
             const mediaEl = document.getElementById("viewBlockMedia");
+            const badgeBox = document.getElementById("viewBlockBadge"); // ⭐ badge container
 
             if (titleEl) titleEl.textContent = `Block #${i}`;
-            if (msgEl) msgEl.textContent = data?.message || "";
+
+            // ----------------------------
+            // ⭐ BADGE LOGIC WILL BE INSERTED HERE IN PART 4
+            // ----------------------------
 
             const mediaUrl = data?.mediaUrl || data?.imageUrl || null;
             const mediaType = data?.mediaType || (data?.imageUrl ? "image" : null);
@@ -402,6 +386,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             if (mediaEl) mediaEl.innerHTML = mediaHtml;
+            if (msgEl) msgEl.textContent = data?.message || "";
 
             if (viewModal) viewModal.classList.remove("hidden");
             return;
@@ -428,65 +413,161 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       renderPagination();
     };
+    // -----------------------------------------------------
+            // ⭐ BADGE SYSTEM — VAULT KEEPERS (CHAPTER 1)
+            // -----------------------------------------------------
+
+            if (badgeBox) {
+              let badgeSvg = "";
+
+              // Badge 1: Blocks 1–25 000
+              const badge1 = `
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="60" cy="60" r="50" stroke="#D4AF37" stroke-width="3"/>
+  <circle cx="60" cy="60" r="38" stroke="#00D4FF" stroke-width="1" stroke-dasharray="4 6"/>
+  <path d="M60 30 L60 65" stroke="#D4AF37" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="60" cy="25" r="7" stroke="#D4AF37" stroke-width="3"/>
+  <rect x="57" y="65" width="6" height="8" fill="#D4AF37"/>
+  <rect x="57" y="74" width="6" height="4" fill="#D4AF37"/>
+  <line x1="42" y1="85" x2="78" y2="85" stroke="#00D4FF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="50" y1="92" x2="70" y2="92" stroke="#00D4FF" stroke-width="2" stroke-linecap="round"/>
+</svg>`;
+
+              // Badge 2: Blocks 25 001–50 000
+              const badge2 = `
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="60" cy="60" r="50" stroke="#D4AF37" stroke-width="3"/>
+  <circle cx="60" cy="60" r="40" stroke="#00D4FF" stroke-width="1.5" stroke-dasharray="6 8"/>
+  <circle cx="60" cy="20" r="5" fill="#D4AF37"/>
+  <circle cx="100" cy="60" r="5" fill="#D4AF37"/>
+  <circle cx="60" cy="100" r="5" fill="#D4AF37"/>
+  <circle cx="20" cy="60" r="5" fill="#D4AF37"/>
+  <rect x="52" y="35" width="16" height="50" rx="3" fill="#D4AF37"/>
+  <line x1="60" y1="38" x2="60" y2="80" stroke="#1A1A1A" stroke-width="3" opacity="0.3"/>
+</svg>`;
+
+              // Badge 3: Blocks 50 001–75 000
+              const badge3 = `
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="60" cy="60" r="50" stroke="#D4AF37" stroke-width="3"/>
+  <rect x="38" y="30" width="8" height="60" fill="#D4AF37" opacity="0.3"/>
+  <rect x="74" y="30" width="8" height="60" fill="#D4AF37" opacity="0.3"/>
+  <path d="M60 35 L85 55 L75 90 L45 90 L35 55 Z" fill="#D4AF37"/>
+  <path d="M60 45 L70 60 L60 75 L50 60 Z" fill="#1A1A1A" opacity="0.3"/>
+  <path d="M60 50 C65 55 62 65 60 68 C58 65 55 55 60 50Z" fill="#00D4FF"/>
+</svg>`;
+
+              // Badge 4: Blocks 75 001–100 000
+              const badge4 = `
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <polygon points="60,15 100,60 60,105 20,60" stroke="#D4AF37" stroke-width="3" fill="none"/>
+  <path d="M45 70 Q60 85 75 70" stroke="#D4AF37" stroke-width="3" fill="none"/>
+  <path d="M60 55 C70 65 62 80 60 83 C58 80 50 65 60 55Z" fill="#D4AF37"/>
+  <path d="M60 58 C66 64 63 73 60 75 C57 73 54 64 60 58Z" fill="#00D4FF"/>
+  <circle cx="60" cy="40" r="4" fill="#D4AF37"/>
+</svg>`;
+
+              // Determine badge
+              if (i >= 1 && i <= 25000) badgeSvg = badge1;
+              else if (i <= 50000) badgeSvg = badge2;
+              else if (i <= 75000) badgeSvg = badge3;
+              else if (i <= 100000) badgeSvg = badge4;
+
+              badgeBox.innerHTML = badgeSvg;
+            }
+    // END OF VIEW MODAL LOGIC
+          }; // end of div.onclick
+
+        grid.appendChild(div);
+      }
+
+      renderPagination();
+    }; // END renderPage()
 
 
-    // === INIT FLOW ================================
-    claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
-
-    // 1) Handle PayPal return FIRST so the Firestore doc is marked paid
-    await handlePaypalReturn();
-
-    // 2) Load claimed blocks from Firestore (including new paid ones)
-    await loadClaimedBlocks();
-
-    // 3) Render grid + loader
-    renderPage(currentPage);
-    hideLoader();
-
-    // RULES BANNER
-    if (!localStorage.getItem("vaultRulesOk")) {
-      banner.style.display = "block";
-      grid.style.opacity = "0.4";
-      grid.style.pointerEvents = "none";
+    // === CLOSE VIEW MODAL ===
+    if (viewClose) {
+      viewClose.onclick = () => {
+        if (viewModal) viewModal.classList.add("hidden");
+      };
     }
 
-    ackBtn.onclick = () => {
-      localStorage.setItem("vaultRulesOk", "true");
-      banner.style.display = "none";
-      grid.style.opacity = "1";
-      grid.style.pointerEvents = "auto";
-    };
+    // === CLOSE UPLOAD MODAL ===
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        if (modal) modal.classList.add("hidden");
+      };
+    }
 
-    // ACCORDION (unchanged)
-    document.querySelectorAll(".accordion-header").forEach((header) => {
-      header.addEventListener("click", () => {
-        const content = header.nextElementSibling;
-        const open = header.classList.contains("active");
-
-        document
-          .querySelectorAll(".accordion-header")
-          .forEach((h) => h.classList.remove("active"));
-        document
-          .querySelectorAll(".accordion-content")
-          .forEach((c) => c.classList.remove("show"));
-
-        if (!open) {
-          header.classList.add("active");
-          content.classList.add("show");
-        }
+    // === RULES BANNER ACKNOWLEDGE ===
+    if (ackBtn && banner) {
+      ackBtn.addEventListener("click", () => {
+        banner.classList.add("hidden");
+        document.body.classList.remove("no-scroll");
       });
-    });
+    }
 
-    // EVENTS
-    if (searchBtn) searchBtn.addEventListener("click", searchBlock);
-    if (searchInput) searchInput.addEventListener("change", searchBlock);
+    // === SEARCH BUTTON ===
+    if (searchBtn) {
+      searchBtn.onclick = searchBlock;
+    }
 
-    if (closeBtn) closeBtn.addEventListener("click", () => modal.classList.add("hidden"));
-    if (viewClose) viewClose.addEventListener("click", () => viewModal.classList.add("hidden"));
+    // === SAVE BUTTON ===
+    if (saveBtn) {
+      saveBtn.onclick = handleSave;
+    }
 
-    if (saveBtn) saveBtn.addEventListener("click", handleSave);
+    // === PAYPAL BUTTON ===
+    const payBtn = document.getElementById("paypalBtn");
+    if (payBtn) {
+      payBtn.onclick = () => {
+        const blockId = hiddenBlockNumber.value;
+        if (!blockId) {
+          alert("No block selected.");
+          return;
+        }
+
+        // Set pending
+        localStorage.setItem("pendingBlockId", blockId);
+
+        // Redirect to PayPal
+        window.location.href =
+          `https://vaultoftime.com/paypal/pay.php?block=${blockId}`;
+      };
+    }
+
+    // === EXECUTE PAYPAL RETURN HANDLER ===
+    await handlePaypalReturn();
+
+    // === INITIAL LOAD ===
+    await loadClaimedBlocks();
+    renderPage(currentPage);
+
   } catch (err) {
-    console.error("Vault fatal error:", err);
-    alert("Vault error: " + err.message);
+    console.error("FATAL error during Vault initialisation:", err);
+    alert("An error occurred setting up The Vault. Please refresh.");
   }
+
+  hideLoader();
+
+}); // END DOMContentLoaded
+/* ============================
+   ACCORDION INTERACTION
+============================ */
+
+document.querySelectorAll(".accordion-header").forEach((header) => {
+  header.addEventListener("click", () => {
+    const content = header.nextElementSibling;
+    const alreadyOpen = header.classList.contains("active");
+
+    document.querySelectorAll(".accordion-header")
+      .forEach((h) => h.classList.remove("active"));
+    document.querySelectorAll(".accordion-content")
+      .forEach((c) => c.classList.remove("show"));
+
+    if (!alreadyOpen) {
+      header.classList.add("active");
+      content.classList.add("show");
+    }
+  });
 });
