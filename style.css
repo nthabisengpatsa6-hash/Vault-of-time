@@ -1,6 +1,9 @@
-/* --- GLOBAL THEME --- */
+/* =========================================
+   GLOBAL THEME
+========================================= */
+
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   text-align: center;
   background-color: #0d1117;
   color: #e6edf3;
@@ -8,32 +11,87 @@ body {
   overflow-x: hidden;
 }
 
-/* --- HEADER WRAPPER --- */
+a {
+  color: #4ea4ff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* =========================================
+   HEADER / TITLE AREA
+========================================= */
+
+/* Wrapper used on the main page */
 .header-wrapper {
   position: relative;
   z-index: 100;
-  padding-top: 30px;
+  padding-top: 70px; /* room for burger on mobile */
   background-color: #0d1117;
 }
 
-h1 {
-  margin: 0 auto 10px;
-  display: inline-block;
-  vertical-align: middle;
-  border: none;
-  line-height: 1.2;
-  position: relative;
-  z-index: 10;
+/* Optional container id if you're using it */
+#vaultHeader {
+  text-align: center;
+  padding: 20px 10px;
+  color: #f2f2f2;
 }
 
-.clock-icon {
-  vertical-align: middle;
-  display: inline-block;
-  margin: 0 4px;
+.header-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 6px;
 }
 
+.vault-title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
 
-/* --- GRID / BLOCKS --- */
+.mini-icon {
+  width: 26px;
+  height: 26px;
+  display: inline-block;
+}
+
+.mini-icon:hover {
+  filter: drop-shadow(0 0 4px #d4af37);
+  transition: 0.2s ease;
+}
+
+#chapterInfo h2 {
+  font-size: 1.3rem;
+  margin: 4px 0;
+  color: #ffd700;
+}
+
+#chapterInfo p {
+  font-size: 0.95rem;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* Make header a bit smaller on very small screens */
+@media (max-width: 768px) {
+  .header-wrapper {
+    padding-top: 70px;
+  }
+
+  .vault-title {
+    font-size: 1.7rem;
+  }
+}
+
+/* =========================================
+   GRID / BLOCKS
+========================================= */
+
 .grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
@@ -66,19 +124,21 @@ h1 {
 .block.selected {
   background-color: #f5e79e !important;
   border: 2px solid #d4af37 !important;
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.8),
-              0 0 30px rgba(212, 175, 55, 0.3);
+  box-shadow:
+    0 0 10px rgba(212, 175, 55, 0.8),
+    0 0 30px rgba(212, 175, 55, 0.3);
   transform: scale(1.08);
 }
 
 .block.claimed {
   background-color: #33494d;
   border: 1px solid #1f3337;
-  opacity: 0.85;
+  opacity: 0.9;
   cursor: zoom-in !important;
   color: #cbd5df;
 }
 
+/* Claimed block with image preview */
 .block.claimed-has-image {
   background-size: cover !important;
   background-position: center !important;
@@ -87,12 +147,15 @@ h1 {
   text-shadow: none !important;
 }
 
+/* Claimed block with audio only */
 .block.claimed-has-audio {
-  background: #33494d url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23d4af37' viewBox='0 0 24 24'%3E%3Cpath d='M12 3a1 1 0 0 0-1 1v16a1 1 0 0 0 2 0V4a1 1 0 0 0-1-1zm5 3a1 1 0 0 0-1 1v10a1 1 0 0 0 2 0V7a1 1 0 0 0-1-1zM7 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1z'/%3E%3C/svg%3E") center/60% no-repeat;
+  background: #33494d
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23d4af37' viewBox='0 0 24 24'%3E%3Cpath d='M12 3a1 1 0 0 0-1 1v16a1 1 0 0 0 2 0V4a1 1 0 0 0-1-1zm5 3a1 1 0 0 0-1 1v10a1 1 0 0 0 2 0V7a1 1 0 0 0-1-1zM7 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1z'/%3E%3C/svg%3E")
+    center/60% no-repeat;
   color: #e6edf3 !important;
 }
 
-/* SEARCH HIGHLIGHT */
+/* Search highlight pulse */
 .search-highlight {
   position: relative;
   z-index: 5;
@@ -108,389 +171,48 @@ h1 {
 }
 
 @keyframes pulseHighlight {
-  0% { box-shadow: 0 0 0px 0 rgba(255,240,150,1); }
-  100% { box-shadow: 0 0 25px 8px rgba(255,240,150,0.85); }
+  0% {
+    box-shadow: 0 0 0px 0 rgba(255, 240, 150, 1);
+  }
+  100% {
+    box-shadow: 0 0 25px 8px rgba(255, 240, 150, 0.85);
+  }
 }
 
-
-/* -------------------------- */
-/*       SIDE MENU FIX        */
-/* -------------------------- */
-
-.menu-toggle {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  font-size: 28px;
-  cursor: pointer;
-  z-index: 1500;
-  background: #1c2128;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid #2f333a;
+/* Pagination (simple) */
+#pagination {
+  margin: 10px auto 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  display: none;
-  z-index: 1490;
-}
-
-.overlay.show {
-  display: block;
-}
-
-.side-menu {
-  position: fixed;
-  top: 0;
-  left: -320px;
-  width: 320px;
-  height: 100%;
-  background: #1a1f25;
-  padding: 25px 20px;
-  box-shadow: 4px 0 15px rgba(0,0,0,0.5);
-  z-index: 2000;
-  transition: left 0.3s ease;
-  text-align: left;
-  overflow-y: auto;
-}
-
-.side-menu.open {
-  left: 0;
-}
-
-.side-menu h2 {
-  margin-top: 20px;
-  text-align: center;
-}
-
-#closeMenu {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 28px;
-  cursor: pointer;
-}
-
-/* ACCORDION */
-.accordion-item {
-  margin: 15px 0;
-}
-
-.accordion-header {
-  width: 100%;
-  background: #2a3138;
-  padding: 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  color: #e6edf3;
-  text-align: left;
-  font-weight: bold;
-  border: none;
-}
-
-.accordion-content {
-  max-height: 0;
-  overflow: hidden;
-  color: #bfc8d2;
+#pagination button {
   background: #1f252b;
-  margin-top: 5px;
-  padding: 0 12px;
+  border: 1px solid #2f333a;
+  color: #e6edf3;
+  padding: 4px 10px;
   border-radius: 6px;
-  transition: max-height 0.3s ease;
-}
-
-.accordion-header.active + .accordion-content {
-  max-height: 500px;
-  padding: 12px;
-}
-
-
-/* --- MODALS --- */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 3000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .4s ease;
-}
-
-.modal:not(.hidden) {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.modal-content {
-  background-color: #1c2128;
-  padding: 2rem;
-  border-radius: 12px;
-  max-width: 400px;
-  width: 90%;
-  text-align: center;
-  color: #e6edf3;
-  box-shadow: 0 0 25px rgba(0,0,0,0.6);
-}
-
-.close-button {
-  position: absolute;
-  top: 12px;
-  right: 18px;
-  font-size: 28px;
   cursor: pointer;
-}
-#viewBlockBadge {
-  margin-top: 8px;
-  margin-bottom: 12px;
+  font-size: 0.85rem;
 }
 
-.vault-badge {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto;
-  display: block;
+#pagination button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
-/* --- VIEW MODAL --- */
-#viewModal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 4000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .3s ease;
+/* Search input row if you have one */
+.search-wrapper {
+  margin: 12px auto 0;
 }
 
-#viewModal:not(.hidden) {
-  opacity: 1;
-  pointer-events: auto;
-}
+/* =========================================
+   SIDE MENU + OVERLAY + ACCORDION
+========================================= */
 
-#viewModalContent {
-  background: #1c2128;
-  padding: 1.8rem;
-  border-radius: 12px;
-  max-width: 420px;
-  width: 90%;
-  color: #e6edf3;
-}
-
-.close-view {
-  position: absolute;
-  top: 20px;
-  right: 25px;
-  font-size: 28px;
-  cursor: pointer;
-}
-
-
-/* FOOTER (unchanged) */
-footer {
-  margin-top: 40px;
-  padding-bottom: 25px;
-  opacity: 0.7;
-}
-/* ============================
-   SIDE MENU + OVERLAY RESTORE
-   ============================ */
-
-/* MENU TOGGLE (hamburger) */
-.menu-toggle {
-  position: fixed;
-  top: 18px;
-  left: 18px;
-  font-size: 28px;
-  cursor: pointer;
-  z-index: 3000;
-  background: #1c2128;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid #2b3138;
-  color: #e6edf3;
-}
-
-/* OVERLAY BEHIND SIDE MENU */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 2500;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .3s ease;
-}
-
-.overlay.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* SIDE MENU PANEL */
-.side-menu {
-  position: fixed;
-  top: 0;
-  left: -320px;
-  width: 300px;
-  height: 100%;
-  background: #11161c;
-  border-right: 1px solid #2b3138;
-  box-shadow: 3px 0 12px rgba(0,0,0,0.4);
-  padding: 25px 20px;
-  z-index: 3500;
-  overflow-y: auto;
-  transition: left .35s ease;
-}
-
-.side-menu.open {
-  left: 0;
-}
-
-.side-menu h2 {
-  margin-top: 0;
-  color: #f9d26e;
-}
-
-/* CLOSE BUTTON */
-#closeMenu {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  font-size: 30px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #f9d26e;
-}
-
-/* ACCORDION */
-.accordion-item {
-  margin-bottom: 15px;
-}
-
-.accordion-header {
-  background: #1c2128;
-  color: #e6edf3;
-  padding: 10px;
-  text-align: left;
-  width: 100%;
-  border: none;
-  cursor: pointer;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.accordion-header.active {
-  background: #2a313a;
-}
-
-.accordion-content {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height .3s ease;
-  text-align: left;
-  padding-left: 5px;
-}
-
-.accordion-content.show {
-  max-height: 500px;
-  padding-top: 8px;
-}
-/* === FIX: SIDE MENU + OVERLAY (mobile & desktop) === */
-
-/* MENU TOGGLE BUTTON */
-.menu-toggle {
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  font-size: 32px;
-  cursor: pointer;
-  z-index: 2000;
-  color: #e6edf3;
-  background: #1c2128;
-  padding: 6px 10px;
-  border-radius: 6px;
-}
-
-/* SIDE MENU BASE */
-.side-menu {
-  position: fixed;
-  top: 0;
-  left: -260px; /* hidden by default */
-  width: 260px;
-  height: 100%;
-  background: #13171d;
-  box-shadow: 3px 0 12px rgba(0,0,0,0.4);
-  padding: 20px;
-  overflow-y: auto;
-  transition: left 0.35s ease;
-  z-index: 3000;
-}
-
-.side-menu.open {
-  left: 0;
-}
-
-/* CLOSE BUTTON */
-#closeMenu {
-  position: absolute;
-  right: 15px;
-  top: 15px;
-  font-size: 32px;
-  color: #e6edf3;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-/* DARK OVERLAY */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  z-index: 2500;
-}
-
-.overlay.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* MOBILE FIX: Push grid down so menu does not cover the header */
-@media (max-width: 768px) {
-  .header-wrapper {
-    padding-top: 70px; 
-  }
-
-  h1 {
-    font-size: 1.8rem;
-  }
-
-  .search-wrapper {
-    margin-top: 10px;
-  }
-}
-/* ===========================
-   SIDE MENU / ACCORDION FIX
-   =========================== */
-
-/* Menu toggle button */
+/* Burger button */
 .menu-toggle {
   position: fixed;
   top: 15px;
@@ -502,9 +224,10 @@ footer {
   background: #1c2128;
   border-radius: 6px;
   color: #e6edf3;
+  border: 1px solid #2b3138;
 }
 
-/* Dark background overlay */
+/* Dark background overlay behind menu */
 .overlay {
   position: fixed;
   inset: 0;
@@ -517,28 +240,30 @@ footer {
   display: block;
 }
 
-/* SIDE MENU */
+/* Side menu panel */
 .side-menu {
   position: fixed;
   top: 0;
   left: 0;
   height: 100%;
-  width: 280px;                /* ← FIXED WIDTH */
+  width: 280px;
   max-width: 75vw;
   background: #1c2128;
   color: #e6edf3;
   padding: 20px;
-  box-shadow: 3px 0 10px rgba(0,0,0,0.4);
-  transform: translateX(-100%); /* ← HIDDEN OFF-SCREEN */
+  box-shadow: 3px 0 10px rgba(0, 0, 0, 0.4);
+  transform: translateX(-100%);
   transition: transform 0.35s ease;
-  z-index: 3001;               /* sits above overlay */
+  z-index: 3001;
+  overflow-y: auto;
+  text-align: left;
 }
 
 .side-menu.open {
-  transform: translateX(0);     /* ← SLIDES IN */
+  transform: translateX(0);
 }
 
-/* Close button inside menu */
+/* Close button inside the menu */
 .side-menu #closeMenu {
   position: absolute;
   top: 10px;
@@ -550,7 +275,14 @@ footer {
   color: #f9d26e;
 }
 
-/* ACCORDION */
+.side-menu h2 {
+  margin-top: 4px;
+  margin-bottom: 16px;
+  text-align: center;
+  color: #f9d26e;
+}
+
+/* Accordion items */
 .accordion-item {
   margin-bottom: 14px;
 }
@@ -565,7 +297,8 @@ footer {
   color: #e6edf3;
   cursor: pointer;
   transition: background 0.25s;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 15px;
 }
 
 .accordion-header:hover {
@@ -579,69 +312,198 @@ footer {
 .accordion-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height .35s ease;
+  transition: max-height 0.35s ease;
   background: #1c2128;
-  padding-left: 5px;
-  padding-right: 5px;
+  padding: 0 5px;
+  border-radius: 6px;
+  color: #bfc8d2;
+  font-size: 0.9rem;
 }
 
 .accordion-content.show {
   max-height: 600px;
-  padding: 10px 5px;
-}
-#vaultHeader {
-  text-align: center;
-  padding: 20px 10px;
-  color: #f2f2f2;
+  padding: 10px 8px 8px;
 }
 
-.header-icons {
+/* Legend link in menu – let it keep the underlined look */
+.legend-link {
+  display: block;
+  margin: 10px 0 4px;
+}
+
+/* =========================================
+   MODALS (UPLOAD + VIEW)
+========================================= */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 6px;
+  z-index: 3000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
 }
 
-.vault-title {
-  font-size: 1.9rem;
-  font-weight: 700;
-  margin: 0;
-  color: #ffffff;
+.modal:not(.hidden) {
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.mini-icon {
-  width: 26px;
-  height: 26px;
-  fill: none;
+.modal-content {
+  position: relative;
+  background-color: #1c2128;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  color: #e6edf3;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.6);
 }
 
-#chapterInfo h2 {
-  font-size: 1.3rem;
-  margin: 4px 0;
-  color: #ffd700;
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 28px;
+  cursor: pointer;
 }
 
-#chapterInfo p {
-  font-size: 0.95rem;
-  opacity: 0.8;
-  margin-top: 2px;
+/* View Modal (for claimed blocks) */
+#viewModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
-.mini-icon:hover {
-  filter: drop-shadow(0 0 4px #d4af37);
-  transition: 0.2s ease;
+
+#viewModal:not(.hidden) {
+  opacity: 1;
+  pointer-events: auto;
 }
-/* LEGEND PAGE */
+
+#viewModalContent {
+  position: relative;
+  background: #1c2128;
+  padding: 1.8rem;
+  border-radius: 12px;
+  max-width: 420px;
+  width: 90%;
+  color: #e6edf3;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.65);
+  text-align: center;
+}
+
+.close-view {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+/* Badge container above the media */
+#viewBlockBadge {
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+/* Make any injected SVG badge a consistent size */
+#viewBlockBadge svg {
+  width: 80px;
+  height: 80px;
+  display: block;
+  margin: 0 auto 10px;
+}
+
+/* If you ever wrap it in .vault-badge, this will still behave */
+.vault-badge {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+/* Media inside the view modal */
+#viewBlockMedia img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 10px 0 8px;
+}
+
+#viewBlockMedia audio {
+  width: 100%;
+  margin: 10px 0 6px;
+}
+
+/* Message text */
+#viewBlockMessage {
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* =========================================
+   BANNERS, BUTTONS, FOOTER
+========================================= */
+
+#rules-banner {
+  background: #11161c;
+  padding: 10px 14px;
+  margin: 0 auto 10px;
+  max-width: 800px;
+  border-bottom: 1px solid #2b3138;
+  font-size: 0.9rem;
+}
+
+#rules-banner.hidden {
+  display: none;
+}
+
+button,
+input[type="button"],
+input[type="submit"] {
+  font-family: inherit;
+}
+
+/* Simple footer */
+footer {
+  margin-top: 40px;
+  padding-bottom: 25px;
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+/* =========================================
+   LEGEND PAGE (SEPARATE MANUSCRIPT VIBE)
+   Apply to <body class="legend-body"> in legend.html
+========================================= */
+
 .legend-body {
-  background: #111;
-  color: #eee;
-  font-family: Arial, sans-serif;
-  padding: 20px;
+  background: #10100c url("https://www.transparenttextures.com/patterns/aged-paper.png");
+  color: #2b2115;
+  font-family: "Georgia", "Times New Roman", serif;
+  margin: 0;
 }
 
 .legend-container {
-  max-width: 750px;
-  margin: auto;
+  max-width: 760px;
+  margin: 30px auto 60px;
+  padding: 20px 18px 30px;
+  background: rgba(245, 236, 215, 0.96);
+  border-radius: 10px;
+  box-shadow:
+    0 0 30px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(90, 70, 40, 0.4);
 }
 
 .legend-header {
@@ -650,9 +512,15 @@ footer {
 }
 
 .legend-header h1 {
-  color: #ffd700;
+  color: #6a4a1b;
   font-size: 2rem;
-  margin: 10px 0;
+  margin: 10px 0 6px;
+}
+
+.legend-header p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #4c3617;
 }
 
 .legend-icon {
@@ -661,40 +529,47 @@ footer {
 }
 
 .legend-section {
-  margin-bottom: 30px;
+  margin-bottom: 26px;
 }
 
 .legend-section h2 {
-  color: #ffd700;
-  margin-bottom: 8px;
+  color: #6a4a1b;
+  margin-bottom: 6px;
+  font-size: 1.2rem;
 }
 
 .legend-section h3 {
-  color: #00d4ff;
+  color: #b06022;
   margin: 6px 0;
+  font-size: 1rem;
 }
 
 .legend-section p {
-  line-height: 1.6;
-  opacity: 0.9;
+  line-height: 1.7;
+  font-size: 0.96rem;
+  color: #3a2a15;
+}
+
+/* Back button at bottom */
+.legend-back {
+  text-align: center;
+  margin-top: 32px;
 }
 
 .legend-button {
   display: inline-block;
   padding: 10px 18px;
-  background: #222;
-  color: #ffd700;
-  border: 1px solid #ffd700;
+  background: #f5e6c8;
+  color: #6a4a1b;
+  border: 1px solid #b08a4a;
   border-radius: 6px;
   text-decoration: none;
-  transition: 0.2s;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: background 0.2s, transform 0.15s;
 }
 
 .legend-button:hover {
-  background: #333;
-}
-
-.legend-back {
-  text-align: center;
-  margin-top: 40px;
-}
+  background: #f0d9aa;
+  transform: translateY(-1px);
+  }
