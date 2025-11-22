@@ -248,7 +248,17 @@ h1 {
   font-size: 28px;
   cursor: pointer;
 }
+#viewBlockBadge {
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
 
+.vault-badge {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: block;
+}
 
 /* --- VIEW MODAL --- */
 #viewModal {
