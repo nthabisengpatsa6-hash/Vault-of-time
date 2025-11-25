@@ -21,18 +21,53 @@ a:hover {
 }
 
 /* =========================================
+   NEW VAULT LOADER (SPINNING V)
+========================================= */
+
+#vault-loader {
+  position: fixed;
+  inset: 0;
+  background: #0d1117;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity .6s ease;
+}
+
+.loader-icon {
+  width: 80px;
+  height: 80px;
+  animation: spin 2s linear infinite;
+  opacity: 0.9;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Visible only after loader fades */
+#vault-main-content {
+  opacity: 0;
+  transition: opacity .6s ease;
+}
+
+#vault-main-content.vault-main-visible {
+  opacity: 1;
+}
+
+/* =========================================
    HEADER / TITLE AREA
 ========================================= */
 
-/* Wrapper used on the main page */
 .header-wrapper {
   position: relative;
   z-index: 100;
-  padding-top: 70px; /* room for burger on mobile */
+  padding-top: 70px;
   background-color: #0d1117;
 }
 
-/* Optional container id if you're using it */
 #vaultHeader {
   text-align: center;
   padding: 20px 10px;
@@ -52,6 +87,7 @@ a:hover {
   font-weight: 700;
   margin: 0;
   color: #ffffff;
+  cursor: pointer;
 }
 
 .mini-icon {
@@ -77,15 +113,9 @@ a:hover {
   margin-top: 2px;
 }
 
-/* Make header a bit smaller on very small screens */
 @media (max-width: 768px) {
-  .header-wrapper {
-    padding-top: 70px;
-  }
-
-  .vault-title {
-    font-size: 1.7rem;
-  }
+  .header-wrapper { padding-top: 70px; }
+  .vault-title { font-size: 1.7rem; }
 }
 
 /* =========================================
@@ -138,7 +168,6 @@ a:hover {
   color: #cbd5df;
 }
 
-/* Claimed block with image preview */
 .block.claimed-has-image {
   background-size: cover !important;
   background-position: center !important;
@@ -147,19 +176,13 @@ a:hover {
   text-shadow: none !important;
 }
 
-/* Claimed block with audio only */
 .block.claimed-has-audio {
   background: #33494d
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23d4af37' viewBox='0 0 24 24'%3E%3Cpath d='M12 3a1 1 0 0 0-1 1v16a1 1 0 0 0 2 0V4a1 1 0 0 0-1-1zm5 3a1 1 0 0 0-1 1v10a1 1 0 0 0 2 0V7a1 1 0 0 0-1-1zM7 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1z'/%3E%3C/svg%3E")
     center/60% no-repeat;
-  color: #e6edf3 !important;
 }
 
-/* Search highlight pulse */
-.search-highlight {
-  position: relative;
-  z-index: 5;
-}
+.search-highlight { position: relative; z-index: 5; }
 
 .search-highlight::after {
   content: "";
@@ -171,21 +194,16 @@ a:hover {
 }
 
 @keyframes pulseHighlight {
-  0% {
-    box-shadow: 0 0 0px 0 rgba(255, 240, 150, 1);
-  }
-  100% {
-    box-shadow: 0 0 25px 8px rgba(255, 240, 150, 0.85);
-  }
+  0% { box-shadow: 0 0 0px 0 rgba(255, 240, 150, 1); }
+  100% { box-shadow: 0 0 25px 8px rgba(255, 240, 150, 0.85); }
 }
 
-/* Pagination (simple) */
 #pagination {
   margin: 10px auto 25px;
   display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 10px;
+  justify-content: center;
+  align-items: center;
 }
 
 #pagination button {
@@ -203,7 +221,6 @@ a:hover {
   cursor: default;
 }
 
-/* Search input row if you have one */
 .search-wrapper {
   margin: 12px auto 0;
 }
@@ -212,7 +229,6 @@ a:hover {
    SIDE MENU + OVERLAY + ACCORDION
 ========================================= */
 
-/* Burger button */
 .menu-toggle {
   position: fixed;
   top: 15px;
@@ -227,7 +243,6 @@ a:hover {
   border: 1px solid #2b3138;
 }
 
-/* Dark background overlay behind menu */
 .overlay {
   position: fixed;
   inset: 0;
@@ -236,11 +251,8 @@ a:hover {
   z-index: 2500;
 }
 
-.overlay.show {
-  display: block;
-}
+.overlay.show { display: block; }
 
-/* Side menu panel */
 .side-menu {
   position: fixed;
   top: 0;
@@ -259,12 +271,9 @@ a:hover {
   text-align: left;
 }
 
-.side-menu.open {
-  transform: translateX(0);
-}
+.side-menu.open { transform: translateX(0); }
 
-/* Close button inside the menu */
-.side-menu #closeMenu {
+#closeMenu {
   position: absolute;
   top: 10px;
   right: 15px;
@@ -276,13 +285,11 @@ a:hover {
 }
 
 .side-menu h2 {
-  margin-top: 4px;
-  margin-bottom: 16px;
+  margin: 4px 0 16px;
   text-align: center;
   color: #f9d26e;
 }
 
-/* Accordion items */
 .accordion-item {
   margin-bottom: 14px;
 }
@@ -301,13 +308,9 @@ a:hover {
   font-size: 15px;
 }
 
-.accordion-header:hover {
-  background: #343b44;
-}
+.accordion-header:hover { background: #343b44; }
 
-.accordion-header.active {
-  background: #3c444f;
-}
+.accordion-header.active { background: #3c444f; }
 
 .accordion-content {
   max-height: 0;
@@ -325,7 +328,6 @@ a:hover {
   padding: 10px 8px 8px;
 }
 
-/* Legend link in menu – let it keep the underlined look */
 .legend-link {
   display: block;
   margin: 10px 0 4px;
@@ -338,7 +340,7 @@ a:hover {
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0,0,0,0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -362,7 +364,7 @@ a:hover {
   width: 90%;
   text-align: center;
   color: #e6edf3;
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 25px rgba(0,0,0,0.6);
 }
 
 .close-button {
@@ -373,11 +375,10 @@ a:hover {
   cursor: pointer;
 }
 
-/* View Modal (for claimed blocks) */
 #viewModal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0,0,0,0.75);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -400,7 +401,7 @@ a:hover {
   max-width: 420px;
   width: 90%;
   color: #e6edf3;
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 0 25px rgba(0,0,0,0.65);
   text-align: center;
 }
 
@@ -412,21 +413,18 @@ a:hover {
   cursor: pointer;
 }
 
-/* Badge container above the media */
 #viewBlockBadge {
   margin-top: 8px;
   margin-bottom: 12px;
 }
 
-/* Make any injected SVG badge a consistent size */
 #viewBlockBadge svg {
   width: 80px;
   height: 80px;
-  display: block;
   margin: 0 auto 10px;
+  display: block;
 }
 
-/* If you ever wrap it in .vault-badge, this will still behave */
 .vault-badge {
   width: 80px;
   height: 80px;
@@ -434,7 +432,6 @@ a:hover {
   display: block;
 }
 
-/* Media inside the view modal */
 #viewBlockMedia img {
   max-width: 100%;
   border-radius: 8px;
@@ -446,7 +443,6 @@ a:hover {
   margin: 10px 0 6px;
 }
 
-/* Message text */
 #viewBlockMessage {
   margin-top: 8px;
   line-height: 1.5;
@@ -465,9 +461,7 @@ a:hover {
   font-size: 0.9rem;
 }
 
-#rules-banner.hidden {
-  display: none;
-}
+#rules-banner.hidden { display: none; }
 
 button,
 input[type="button"],
@@ -475,7 +469,6 @@ input[type="submit"] {
   font-family: inherit;
 }
 
-/* Spinner */
 .btn-spinner {
   width: 18px;
   height: 18px;
@@ -487,15 +480,8 @@ input[type="submit"] {
   animation: spin 0.7s linear infinite;
 }
 
-.hidden {
-  display: none !important;
-}
+.hidden { display: none !important; }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-/* Simple footer */
 footer {
   margin-top: 40px;
   padding-bottom: 25px;
@@ -504,8 +490,7 @@ footer {
 }
 
 /* =========================================
-   LEGEND PAGE (SEPARATE MANUSCRIPT VIBE)
-   Apply to <body class="legend-body"> in legend.html
+   LEGEND PAGE
 ========================================= */
 
 .legend-body {
@@ -522,8 +507,8 @@ footer {
   background: rgba(245, 236, 215, 0.96);
   border-radius: 10px;
   box-shadow:
-    0 0 30px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(90, 70, 40, 0.4);
+    0 0 30px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(90,70,40,0.4);
 }
 
 .legend-header {
@@ -570,7 +555,6 @@ footer {
   color: #3a2a15;
 }
 
-/* Back button at bottom */
 .legend-back {
   text-align: center;
   margin-top: 32px;
@@ -592,4 +576,4 @@ footer {
 .legend-button:hover {
   background: #f0d9aa;
   transform: translateY(-1px);
-  }
+}
