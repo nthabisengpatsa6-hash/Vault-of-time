@@ -679,3 +679,13 @@ footer {
   font-size: 1rem;
   opacity: 0.85;
 }
+
+/* Smooth fade-in of main content after loader */
+#vault-main-content {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+#vault-main-content.vault-main-visible {
+  opacity: 1;
+}
