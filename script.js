@@ -72,7 +72,7 @@ async function loadClaimedBlocks() {
 }
 
 
-// === FETCH BLOCK ======================================
+// === FETCH SINGLE BLOCK ===============================
 async function fetchBlock(num) {
   const snap = await getDoc(doc(blocksCollection, String(num)));
   return snap.exists() ? snap.data() : null;
@@ -84,6 +84,7 @@ function hideLoader() {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
 
+  // Slight delay so the loader feels intentional
   setTimeout(() => {
     if (loader) {
       loader.style.opacity = 0;
@@ -91,7 +92,7 @@ function hideLoader() {
       setTimeout(() => loader.remove(), 400);
     }
     if (main) main.classList.add("vault-main-visible");
-  }, 1400);
+  }, 1600);
 }
 
 
@@ -117,6 +118,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (menuToggle) menuToggle.addEventListener("click", openMenu);
   if (closeMenu) closeMenu.addEventListener("click", closeMenuFn);
   if (overlay) overlay.addEventListener("click", closeMenuFn);
+
+  // Make header title clickable back to home
+  const headerTitle = document.querySelector(".vault-title");
+  if (headerTitle) {
+    headerTitle.style.cursor = "pointer";
+    headerTitle.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+  }
 
   try {
     // DOM REFERENCES
@@ -144,7 +154,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const searchBtn = document.getElementById("searchBtn");
     const saveBtn = document.getElementById("uploadBtn");
     const hiddenBlockNumber = document.getElementById("blockNumber");
-    
+
     if (!grid) {
       alert("Vault error: grid container missing.");
       return;
@@ -157,7 +167,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
       });
     }
-
 
     // SEARCH
     const highlightBlock = (num) => {
@@ -183,7 +192,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         highlightBlock(target);
       }
     };
-
 
     // VALIDATION
     const valid = () => {
@@ -215,7 +223,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
 
-    // PAYPAL RETURN
+    // PAYPAL RETURN HANDLER
     const handlePaypalReturn = async () => {
       const params = new URLSearchParams(window.location.search);
       if (params.get("paid") !== "true") return;
@@ -253,7 +261,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
 
-    // SAVE PENDING
+    // SAVE PENDING DATA (NO PAYMENT YET)
     const handleSave = async () => {
       if (!valid()) return;
 
@@ -323,65 +331,42 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     // RENDER PAGE ======================================================
-const renderPage = (pageNum) => {
+    const renderPage = (pageNum) => {
+      grid.innerHTML = "";
 
-  // ——— 1. Grab loader + main content ———
-  const loader = document.getElementById("vault-loader");
-  const main = document.getElementById("vault-main-content");
+      const start = (pageNum - 1) * PAGE_SIZE + 1;
+      const end = Math.min(start + PAGE_SIZE - 1, TOTAL_BLOCKS);
 
-  // Clear grid
-  grid.innerHTML = "";
+      for (let i = start; i <= end; i++) {
+        const div = document.createElement("div");
+        div.className = "block";
+        div.textContent = i;
 
-  // Render blocks
-  const start = (pageNum - 1) * PAGE_SIZE;
-  const end = Math.min(start + PAGE_SIZE, TOTAL_BLOCKS);
+        if (claimed.includes(i)) {
+          div.classList.add("claimed");
 
-  for (let i = start; i <= end; i++) {
-    const div = document.createElement("div");
-    div.className = "block";
-    div.textContent = i;
+          const data = blockCache[i];
+          const mediaUrl = data?.mediaUrl || data?.imageUrl;
+          const mediaType =
+            data?.mediaType ||
+            (data?.imageUrl ? "image" : data?.audioUrl ? "audio" : null);
 
-    if (claimed.includes(i)) {
-      div.classList.add("claimed");
-    }
+          if (mediaUrl && mediaType === "image") {
+            div.classList.add("claimed-has-image");
+            div.style.backgroundImage = `url(${mediaUrl})`;
+            div.style.backgroundSize = "cover";
+            div.style.backgroundPosition = "center";
+            div.style.color = "transparent";
+          }
 
-    const data = blockCache[i];
-    const mediaUrl = data?.mediaUrl || null;
-    const mediaType = data?.mediaType || null;
+          if (mediaUrl && mediaType === "audio") {
+            div.classList.add("claimed-has-audio");
+          }
+        }
 
-    // Claimed image
-    if (mediaUrl && mediaType === "image") {
-      div.classList.add("claimed-has-image");
-      div.style.backgroundImage = `url('${mediaUrl}')`;
-      div.style.backgroundSize = "cover";
-      div.style.backgroundPosition = "center";
-      div.style.color = "transparent";
-    }
-
-    // Claimed audio
-    if (mediaUrl && mediaType === "audio") {
-      div.classList.add("claimed-has-audio");
-      div.style.color = "transparent";
-    }
-
-    grid.appendChild(div);
-  }
-
-  // ——— 2. Hide loader AFTER blocks finish ———
-  // Small timeout ensures smooth fade
-  setTimeout(() => {
-    if (loader) {
-      loader.style.opacity = "0";
-      setTimeout(() => {
-        loader.style.display = "none";
-        if (main) main.classList.add("vault-main-visible");
-      }, 500);
-    }
-  }, 300);
-};
-    
-
-          // --- VIEW CLAIMED BLOCK ---
+        // CLICK HANDLER FOR EACH BLOCK
+        div.onclick = async () => {
+          // VIEW CLAIMED BLOCK
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
 
@@ -392,9 +377,7 @@ const renderPage = (pageNum) => {
 
             if (titleEl) titleEl.textContent = `Block #${i}`;
 
-            // --------------------------
-            // ⭐ BADGE SYSTEM (VIEW MODAL ONLY)
-            // --------------------------
+            // BADGES
             let badgeSvg = "";
 
             const badge1 = `
@@ -447,8 +430,7 @@ const renderPage = (pageNum) => {
 
             if (badgeBox) badgeBox.innerHTML = badgeSvg;
 
-
-            // --- MEDIA ---
+            // MEDIA
             const mediaUrl = data?.mediaUrl || data?.imageUrl;
             const mediaType = data?.mediaType;
 
@@ -473,8 +455,7 @@ const renderPage = (pageNum) => {
             return;
           }
 
-
-          // --- SELECT NEW BLOCK ---
+          // SELECT NEW BLOCK (UNCLAIMED)
           document.querySelectorAll(".block").forEach((b) =>
             b.classList.remove("selected")
           );
@@ -509,30 +490,27 @@ const renderPage = (pageNum) => {
     }
 
     // EVENTS
-if (searchBtn) searchBtn.onclick = searchBlock;
+    if (searchBtn) searchBtn.onclick = searchBlock;
 
-if (saveBtn) {
-  saveBtn.onclick = async () => {
-    // lock UI
-    const originalText = saveBtn.textContent;
-    saveBtn.disabled = true;
-    saveBtn.textContent = "Saving…";
+    if (saveBtn) {
+      saveBtn.onclick = async () => {
+        const originalText = saveBtn.textContent;
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Saving…";
 
-    try {
-      // this already runs validation + upload + Firestore write
-      await handleSave();
-    } catch (err) {
-      console.error("Save failed:", err);
-      alert("❌ Error saving. Please try again.");
-    } finally {
-      // restore button
-      saveBtn.disabled = false;
-      saveBtn.textContent = originalText;
+        try {
+          await handleSave();
+        } catch (err) {
+          console.error("Save failed:", err);
+          alert("❌ Error saving. Please try again.");
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = originalText;
+        }
+      };
     }
-  };
-}
 
-    // PAYPAL REDIRECT BUTTON
+    // PAYPAL REDIRECT BUTTON (if used separately)
     const payBtn = document.getElementById("paypalBtn");
     if (payBtn) {
       payBtn.onclick = () => {
@@ -544,7 +522,7 @@ if (saveBtn) {
       };
     }
 
-    // FIREBASE INIT
+    // INIT
     await handlePaypalReturn();
     await loadClaimedBlocks();
     renderPage(currentPage);
@@ -559,10 +537,15 @@ if (saveBtn) {
 }); // END DOMContentLoaded
 
 
-// ACCORDION LOGIC
+// ACCORDION LOGIC (SKIP LEGEND LINK)
 document.querySelectorAll(".accordion-header").forEach((header) => {
+  // If it's the Legend <a>, let the link behave normally
+  if (header.tagName.toLowerCase() === "a") return;
+
   header.addEventListener("click", () => {
     const content = header.nextElementSibling;
+    if (!content || !content.classList.contains("accordion-content")) return;
+
     const already = header.classList.contains("active");
 
     document.querySelectorAll(".accordion-header")
@@ -576,4 +559,3 @@ document.querySelectorAll(".accordion-header").forEach((header) => {
     }
   });
 });
-
