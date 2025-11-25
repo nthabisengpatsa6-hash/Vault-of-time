@@ -381,9 +381,6 @@ const renderPage = (pageNum) => {
 };
     
 
-        // === CLICK HANDLER ===
-        div.onclick = async () => {
-
           // --- VIEW CLAIMED BLOCK ---
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
