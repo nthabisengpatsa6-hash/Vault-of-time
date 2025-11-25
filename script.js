@@ -553,3 +553,15 @@ document.querySelectorAll(".accordion-header").forEach((header) => {
     }
   });
 });
+
+window.addEventListener("load", () => {
+  const loader = document.getElementById("vault-loader");
+  const main = document.getElementById("vault-main-content");
+
+  loader.style.opacity = "0";
+
+  setTimeout(() => {
+    loader.style.display = "none";
+    if (main) main.classList.add("vault-main-visible");
+  }, 600);
+});
