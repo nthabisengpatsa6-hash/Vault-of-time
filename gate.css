@@ -152,3 +152,7 @@ body {
 .doors-open .right-door {
   transform: translateX(100%);
 }
+
+.doors-hidden {
+  opacity: 0;
+}
