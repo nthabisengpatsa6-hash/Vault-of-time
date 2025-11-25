@@ -24,6 +24,8 @@
       padding: 20px;
       animation: fadeIn 1.2s ease forwards;
       opacity: 0;
+      position: relative;
+      z-index: 10;
     }
 
     @keyframes fadeIn {
@@ -63,15 +65,15 @@
       font-weight: bold;
       cursor: pointer;
       font-size: 1rem;
-      transition: 0.2s;
       color: #111;
+      transition: 0.2s;
     }
 
     button:hover {
       transform: scale(1.05);
     }
 
-    /* Shake animation for wrong answer */
+    /* Shake animation */
     .shake {
       animation: shakeAnim 0.4s ease;
     }
@@ -85,7 +87,7 @@
       100% { transform: translateX(0); }
     }
 
-    /* Confetti burst (simple) */
+    /* Confetti */
     .confetti {
       position: fixed;
       width: 6px;
@@ -93,14 +95,59 @@
       background: #d4af37;
       top: -20px;
       animation: fall 1.5s linear forwards;
+      z-index: 99999;
     }
 
     @keyframes fall {
       to { transform: translateY(120vh) rotate(360deg); }
     }
-  </style>
 
+    /* === VAULT DOORS === */
+    #vault-doors {
+      position: fixed;
+      inset: 0;
+      z-index: 5000;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    #vault-doors.doors-visible {
+      opacity: 1;
+    }
+
+    .door {
+      width: 50%;
+      height: 100%;
+      background: #0b0b0f;
+      border: 2px solid #d4af37;
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7);
+      transition: transform 1.2s ease-out;
+    }
+
+    .door-left {
+      border-right: 2px solid #d4af37;
+      transform: translateX(0);
+    }
+
+    .door-right {
+      border-left: 2px solid #d4af37;
+      transform: translateX(0);
+    }
+
+    #vault-doors.doors-open .door-left {
+      transform: translateX(-100%);
+    }
+
+    #vault-doors.doors-open .door-right {
+      transform: translateX(100%);
+    }
+
+  </style>
 </head>
+
 <body>
 
   <div class="gate-container">
@@ -118,6 +165,8 @@
       Incorrect. Try again.
     </p>
   </div>
+
+
 
 <script>
   const btn = document.getElementById("enterBtn");
@@ -139,35 +188,48 @@
 
   btn.addEventListener("click", () => {
     const userAnswer = input.value.trim().toLowerCase();
-
     const correct = ["memory", "memories"];
 
     if (correct.includes(userAnswer)) {
-      // success animation
+      // Confetti
       spawnConfetti();
 
+      const doors = document.getElementById("vault-doors");
+
+      // Fade in doors
+      doors.classList.add("doors-visible");
+
+      // Open doors
+      setTimeout(() => {
+        doors.classList.add("doors-open");
+      }, 50);
+
+      // Redirect after door animation
       setTimeout(() => {
         window.location.href = "vault.html";
-      }, 1200);
+      }, 1800);
 
     } else {
-      // incorrect answer animation
+      // Wrong answer
       errorMsg.style.display = "block";
       input.classList.add("shake");
 
       setTimeout(() => input.classList.remove("shake"), 500);
     }
   });
+
+  // Press Enter
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") btn.click();
+  });
 </script>
-<!-- Dramatic Opening Doors -->
-<div id="vault-doors" class="doors-hidden">
-  <div class="door left-door"></div>
-  <div class="door right-door"></div>
-</div>
-  <!-- VAULT DOORS OVERLAY -->
+
+
+<!-- VAULT DOORS OVERLAY (KEEP ONLY THIS ONE) -->
 <div id="vault-doors" class="doors-hidden">
   <div class="door door-left"></div>
   <div class="door door-right"></div>
 </div>
+
 </body>
 </html>
