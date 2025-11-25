@@ -475,6 +475,26 @@ input[type="submit"] {
   font-family: inherit;
 }
 
+/* Spinner */
+.btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #d4af37;
+  border-top-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 8px;
+  animation: spin 0.7s linear infinite;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 /* Simple footer */
 footer {
   margin-top: 40px;
