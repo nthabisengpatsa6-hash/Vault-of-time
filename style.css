@@ -19,7 +19,55 @@ a {
 a:hover {
   text-decoration: underline;
 }
+/* NEW REAL V + SPINNING CIRCLE LOADER */
+#vault-loader {
+  position: fixed;
+  inset: 0;
+  background: #0d1117;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.6s ease;
+}
 
+.vault-loader-inner {
+  position: relative;
+  width: 110px;
+  height: 110px;
+}
+
+.vault-loader-circle {
+  position: absolute;
+  inset: 0;
+  border: 6px solid rgba(212, 175, 55, 0.25);
+  border-top-color: #d4af37;
+  border-radius: 50%;
+  animation: spin 1.4s linear infinite;
+}
+
+.vault-loader-v {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 55px;
+  height: 55px;
+  transform: translate(-50%, -50%);
+}
+
+.vault-loader-text {
+  margin-top: 130px;
+  text-align: center;
+  color: #e6edf3;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 /* =========================================
    NEW VAULT LOADER (SPINNING V)
 ========================================= */
