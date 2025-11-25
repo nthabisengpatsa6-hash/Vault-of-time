@@ -3,306 +3,162 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vault of Time</title>
+  <title>The Vault Gate</title>
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="vault-assets/favicon.svg" />
+  <style>
+    body {
+      margin: 0;
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: "Poppins", sans-serif;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="style.css" />
+    .gate-container {
+      text-align: center;
+      max-width: 500px;
+      padding: 20px;
+      animation: fadeIn 1.2s ease forwards;
+      opacity: 0;
+    }
 
-  <!-- PayPal -->
-  <script 
-    src="https://www.paypal.com/sdk/js?client-id=BAARqxcLBGQEGzz_884ntis7qCccdM2tHQgqot4oqffaKaohFGfaySQblJunzpMskuY5_MlbTTO_fPaGsA&components=hosted-buttons&disable-funding=venmo&currency=USD">
-  </script>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #d4af37;
+    }
+
+    p {
+      font-size: 1rem;
+      opacity: 0.8;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 90%;
+      padding: 12px;
+      border-radius: 6px;
+      background: #1c2128;
+      border: 1px solid #2f333a;
+      color: white;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    button {
+      padding: 12px 25px;
+      background: #d4af37;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: 0.2s;
+      color: #111;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    /* Shake animation for wrong answer */
+    .shake {
+      animation: shakeAnim 0.4s ease;
+    }
+
+    @keyframes shakeAnim {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* Confetti burst (simple) */
+    .confetti {
+      position: fixed;
+      width: 6px;
+      height: 14px;
+      background: #d4af37;
+      top: -20px;
+      animation: fall 1.5s linear forwards;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(120vh) rotate(360deg); }
+    }
+  </style>
+
 </head>
-
 <body>
 
-<div id="vault-loader">
-  <div class="vault-loader-inner">
-    <div class="vault-ring"></div>
-    <div class="vault-v">V</div>
-    <p class="vault-loader-text">Opening the Vault...</p>
-  </div>
-</div>
+  <div class="gate-container">
+    <h1>🗝️ Unlock The Vault</h1>
+    <p>Answer the riddle to enter:</p>
 
-<!-- MAIN CONTENT -->
-<div id="vault-main-content">
+    <p><em>“What outlives us,  
+    grows because of us,  
+    yet holds what we leave behind?”</em></p>
 
-<!-- RULES BANNER -->
-<div id="rules-banner" style="display:none;
-  width:100%;
-  background:#2d1f07;
-  border-bottom:2px solid #d4af37;
-  color:#f1d58a;
-  padding:12px;
-  text-align:center;
-  font-size:14px;
-  line-height:1.4;
-  position:fixed;
-  top:0;
-  left:0;
-  z-index:5000;">
-  Before buying a block, please read <strong>“How to Buy”</strong> and <strong>“Vault Rules”</strong> in the menu.
-  <br>
-  <button id="acknowledgeBtn" style="margin-top:6px;padding:6px 18px;border:none;border-radius:4px;background:#d4af37;color:#000;font-weight:bold;cursor:pointer;">
-    I Understand
-  </button>
-</div>
+    <input type="text" id="answer" placeholder="Type your answer..." autocomplete="off" />
+    <button id="enterBtn">Enter</button>
 
-<!-- MENU -->
-<div class="menu-toggle" id="menuToggle">☰</div>
-<div class="overlay" id="overlay"></div>
-
-<nav class="side-menu" id="sideMenu">
-  <button id="closeMenu">&times;</button>
-  <h2>Vault Menu</h2>
-
-  <div class="accordion">
-
-    <!-- ABOUT -->
-    <div class="accordion-item">
-      <button class="accordion-header">📜 About The Vault</button>
-      <div class="accordion-content">
-        <p>The Vault of Time is a global memory wall — built by ordinary people, one block at a time.</p>
-        <p>Each block is a tiny monument: a story, a tribute, an artwork, a warning, a love note, a scream, a prayer.</p>
-        <p>We're living through chaotic times. This is how we say: <strong>“We were here.”</strong></p>
-        <p><strong>Exactly 1,000,000 blocks will ever exist.</strong></p>
-        <p>Our long-term goal is to <strong>preserve the Vault for decades</strong> and eventually
-      have it <strong>archived as a permanent digital monument</strong>.</p>
-      </div>
-    </div>
-    
-     <div class="accordion-item">
-  <a href="legend.html" class="accordion-header">
-    📖 The Legend
-  </a>
-     </div>
-    
-    <!-- HOW TO BUY (UPDATED) -->
-    <div class="accordion-item">
-      <button class="accordion-header">💳 How To Buy</button>
-      <div class="accordion-content">
-        <ol>
-          <li>Pick a block from the grid.</li>
-          <li>Enter your name + email.</li>
-          <li>(Optional) Write a message.</li>
-          <li>Upload an image (max 2MB).</li>
-
-          <li><strong>Click “Save Details” and wait.</strong><br>
-              The PayPal button will appear automatically.</li>
-
-          <li>Pay securely (via card or PayPal).</li>
-          <li>Your block becomes visible instantly — forever.</li>
-        </ol>
-        <p>🧱 You can edit your block for 7 days.</p>
-        <p>⏳ After that, it becomes permanent.</p>
-      </div>
-    </div>
-
-    <!-- FAQ -->
-    <div class="accordion-item">
-      <button class="accordion-header">❓ Frequently Asked Questions</button>
-      <div class="accordion-content">
-        <p><strong>Why does this exist?</strong><br>
-        Because history books don’t record regular people — but we still matter.</p>
-
-        <p><strong>Do I need crypto?</strong><br>
-        Nope. Just a card.</p>
-
-        <p><strong>Can I upload anything?</strong><br>
-        As long as it's legal, safe, and under 2MB.</p>
-
-        <p><strong>Can I change what I uploaded?</strong><br>
-        Yes — 7 days to edit. Then it’s sealed.</p>
-
-        <p><strong>Can I buy more than one?</strong><br>
-        Absolutely — build a cluster.</p>
-      </div>
-    </div>
-
-    <!-- RULES -->
-    <div class="accordion-item">
-      <button class="accordion-header">⚖️ Vault Rules</button>
-      <div class="accordion-content">
-        <ul>
-          <li>❌ No hate speech or harassment</li>
-          <li>❌ No porn, gore, or illegal content</li>
-          <li>❌ No doxxing or personal info of others</li>
-          <li>🕊️ Keep it meaningful, artistic, or human</li>
-        </ul>
-        <p>By uploading, you accept the Vault's Terms & Conditions.</p>
-      </div>
-    </div>
-
-    <!-- PRIVACY -->
-    <div class="accordion-item">
-      <button class="accordion-header">🔐 Privacy Policy</button>
-      <div class="accordion-content">
-        <p>We only collect:</p>
-        <ul>
-          <li>Your name</li>
-          <li>Your email</li>
-          <li>Your upload + message</li>
-        </ul>
-        <p>We DO NOT:</p>
-        <ul>
-          <li>Sell your data</li>
-          <li>Store your card info</li>
-          <li>Track you across the web</li>
-        </ul>
-        <p>Payments are handled securely via PayPal.</p>
-      </div>
-    </div>
-
-    <!-- PRICING & CHAPTERS -->
-<div class="accordion-item">
-  <button class="accordion-header">💰 Pricing & Chapters</button>
-  <div class="accordion-content">
-    <p>
-      The Vault opens in <strong>10 chapters</strong> of <strong>100,000 blocks</strong> each,
-      for a total of <strong>1,000,000 blocks</strong>.
-    </p>
-
-    <p>
-      Each chapter has its own price. Earlier chapters are cheaper because
-      they are helping to <strong>seed the project</strong> and fund long-term costs
-      like hosting, storage and future archiving.
-    </p>
-
-    <p><strong>Current pricing:</strong></p>
-    <ul>
-      <li><strong>Chapter 1:</strong> $6 per block (current)</li>
-      <li><strong>Chapter 2:</strong> $8 per block (planned)</li>
-      <li><strong>Chapter 3:</strong> $10 per block (planned)</li>
-      <li>Chapters 4–10: To be announced closer to launch.</li>
-    </ul>
-
-    <p>
-      No subscriptions, no renewals — you pay once, and your block is part
-      of that chapter <strong>forever</strong>.
+    <p id="error" style="color:#ff6b6b; margin-top:12px; display:none;">
+      Incorrect. Try again.
     </p>
   </div>
-</div>
-    
-    <!-- LEGAL — JURISDICTION REMOVED -->
-    <div class="accordion-item">
-      <button class="accordion-header">📇 Legal Info</button>
-      <div class="accordion-content">
-        <p><strong>Company:</strong> Vault of Time (Pty) Ltd</p>
-        <p><strong>Reg No:</strong> 2025/875420/07</p>
-      </div>
-    </div>
 
-  </div>
+<script>
+  const btn = document.getElementById("enterBtn");
+  const input = document.getElementById("answer");
+  const errorMsg = document.getElementById("error");
 
-  <p style="font-size:12px;color:#777;margin-top:25px;">
-    © 2025 Vault Of Time (Pty) Ltd
-  </p>
-</nav>
+  function spawnConfetti() {
+    for (let i = 0; i < 25; i++) {
+      const c = document.createElement("div");
+      c.classList.add("confetti");
+      c.style.left = Math.random() * 100 + "vw";
+      c.style.background = Math.random() > 0.5 ? "#d4af37" : "#00d4ff";
+      c.style.animationDuration = (1 + Math.random()) + "s";
+      document.body.appendChild(c);
 
-<!-- TITLE -->
-<header id="vaultHeader">
-  <div class="header-icons">
-    <svg class="mini-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="20" cy="15" r="10" stroke="#D4AF37" stroke-width="3" fill="none"/>
-      <rect x="28" y="13" width="16" height="4" fill="#D4AF37"/>
-      <rect x="38" y="10" width="6" height="10" fill="#D4AF37"/>
-    </svg>
+      setTimeout(() => c.remove(), 1800);
+    }
+  }
 
-    <h1 class="vault-title">The Vault of Time</h1>
+  btn.addEventListener("click", () => {
+    const userAnswer = input.value.trim().toLowerCase();
 
-    <svg class="mini-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="20" cy="15" r="10" stroke="#D4AF37" stroke-width="3" fill="none"/>
-      <rect x="28" y="13" width="16" height="4" fill="#D4AF37"/>
-      <rect x="38" y="10" width="6" height="10" fill="#D4AF37"/>
-    </svg>
-  </div>
+    const correct = ["memory", "memories"];
 
-  <div id="chapterInfo">
-    <h2 id="chapterName">Chapter 1: The Vault Keepers</h2>
-    <p id="chapterRange">Blocks 1 – 100 000</p>
-  </div>
-</header>
+    if (correct.includes(userAnswer)) {
+      // success animation
+      spawnConfetti();
 
-<div class="search-wrapper">
-  <input type="number" id="blockSearch" placeholder="Search block #..." min="1" max="1000000" />
-  <button id="searchBtn">🔍</button>
-</div>
+      setTimeout(() => {
+        window.location.href = "vault.html";
+      }, 1200);
 
-<!-- BLOCK GRID -->
-<div class="grid-container" id="grid"></div>
-<div id="pagination"></div>
+    } else {
+      // incorrect answer animation
+      errorMsg.style.display = "block";
+      input.classList.add("shake");
 
-<!-- CLAIM MODAL -->
-<div class="modal hidden" id="modal">
-  <div class="modal-content">
-    <span class="close-button">&times;</span>
-    <h2>Claim Your Block</h2>
-    <p id="selected-block-text"></p>
-
-    <form id="blockForm">
-      <input type="hidden" id="blockNumber">
-      <input type="text" id="name" placeholder="Your Name" required>
-      <input type="email" id="email" placeholder="Your Email" required>
-      <textarea id="message" placeholder="Optional message…" maxlength="300"></textarea>
-      <p id="messageCounter" style="font-size:12px; opacity:0.7; margin-top:4px;">0/300</p>
-      <input type="file" id="fileUpload" accept="image/*,audio/*" required>
-
-      <button type="button" id="uploadBtn" class="vault-btn">
-  <span class="btn-text">Save Details</span>
-  <span class="btn-spinner hidden"></span>
-      </button>
-
-      <div id="ready-message" class="hidden">
-        ✅ Saved. Now complete payment to seal your block.
-      </div>
-
-      <!-- PAYPAL SMART BUTTON (ONLY AFTER SAVE) -->
-      <div id="paypalWrapper" class="hidden">
-        <div id="paypal-container-T9TZLXDZ6CLSE"></div>
-        <script>
-          paypal.HostedButtons({
-            hostedButtonId: "T9TZLXDZ6CLSE",
-          }).render("#paypal-container-T9TZLXDZ6CLSE");
-        </script>
-      </div>
-
-    </form>
-  </div>
-</div>
-
-<!-- VIEW MODAL — WITH SHARE BUTTON PLACEHOLDER -->
-<div id="viewModal" class="hidden">
-  <div id="viewModalContent">
-    <span class="close-view">&times;</span>
-    <h2 id="viewBlockTitle"></h2>
-    <div id="viewBlockBadge"></div>   <!-- ⭐ badge goes here -->
-    
-    <div id="viewBlockMedia"></div>
-    <p id="viewBlockMessage"></p>
-
-    <!-- Share button (only active after payment in JS) -->
-    <button id="shareBlockBtn" class="hidden"
-      style="margin-top:15px;padding:10px 16px;border:none;border-radius:6px;background:#d4af37;color:#111;font-weight:bold;cursor:pointer;">
-      📤 Share This Block
-    </button>
-
-  </div>
-</div>
-
-<footer>
-  <p>
-    <a href="contact.html">📩 Contact Us</a> | 
-    <a href="terms.html">📜 Terms & Conditions</a><br>
-    <small style="color:#777;">© 2025 Vault Of Time (Pty) Ltd</small>
-  </p>
-</footer>
-
-</div> <!-- end MAIN CONTENT -->
-
-<script type="module" src="script.js?v=7777777"></script>
+      setTimeout(() => input.classList.remove("shake"), 500);
+    }
+  });
+</script>
 
 </body>
 </html>
