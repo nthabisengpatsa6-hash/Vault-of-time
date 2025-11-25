@@ -144,55 +144,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const searchBtn = document.getElementById("searchBtn");
     const saveBtn = document.getElementById("uploadBtn");
     const hiddenBlockNumber = document.getElementById("blockNumber");
-    // --- PATCH: Add loader & disable behaviour to Save Details button ---
-saveBtn.addEventListener("click", async () => {
-  // create spinner if missing
-  if (!saveBtn.querySelector(".btn-spinner")) {
-    saveBtn.innerHTML = `
-      <span class="btn-spinner" 
-        style="width:14px;height:14px;border:2px solid #fff;
-        border-top-color:transparent;border-radius:50%;
-        display:inline-block;margin-right:8px;vertical-align:middle;
-        animation:spin 0.7s linear infinite;"></span>
-      <span class="btn-text">Saving…</span>
-    `;
-  }
-
-  saveBtn.disabled = true;
-  saveBtn.style.opacity = "0.7";
-  saveBtn.style.cursor = "not-allowed";
-
-  try {
-    await saveBlockDetails();  // your existing save function
-
-    document.getElementById("ready-message").classList.remove("hidden");
-    document.getElementById("paypalWrapper").classList.remove("hidden");
-
-  } catch (err) {
-    alert("❌ Error saving. Please try again.");
-    console.error(err);
-
-  } finally {
-    saveBtn.disabled = false;
-    saveBtn.style.opacity = "1";
-    saveBtn.style.cursor = "pointer";
-
-    const textSpan = saveBtn.querySelector(".btn-text");
-    const spinner = saveBtn.querySelector(".btn-spinner");
-
-    if (textSpan) textSpan.textContent = "Save Details";
-    if (spinner) spinner.remove();
-  }
-});
-
-// spinner animation keyframes
-const style = document.createElement("style");
-style.innerHTML = `
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}`;
-document.head.appendChild(style);
+    
     if (!grid) {
       alert("Vault error: grid container missing.");
       return;
@@ -534,8 +486,28 @@ document.head.appendChild(style);
     }
 
     // EVENTS
-    if (searchBtn) searchBtn.onclick = searchBlock;
-    if (saveBtn) saveBtn.onclick = handleSave;
+if (searchBtn) searchBtn.onclick = searchBlock;
+
+if (saveBtn) {
+  saveBtn.onclick = async () => {
+    // lock UI
+    const originalText = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving…";
+
+    try {
+      // this already runs validation + upload + Firestore write
+      await handleSave();
+    } catch (err) {
+      console.error("Save failed:", err);
+      alert("❌ Error saving. Please try again.");
+    } finally {
+      // restore button
+      saveBtn.disabled = false;
+      saveBtn.textContent = originalText;
+    }
+  };
+}
 
     // PAYPAL REDIRECT BUTTON
     const payBtn = document.getElementById("paypalBtn");
