@@ -322,38 +322,64 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
 
-    // RENDER PAGE =========================================================
-    const renderPage = (pageNum) => {
-      grid.innerHTML = "";
+    // RENDER PAGE ======================================================
+const renderPage = (pageNum) => {
 
-      const start = (pageNum - 1) * PAGE_SIZE + 1;
-      const end = Math.min(start + PAGE_SIZE - 1, TOTAL_BLOCKS);
+  // ——— 1. Grab loader + main content ———
+  const loader = document.getElementById("vault-loader");
+  const main = document.getElementById("vault-main-content");
 
-      for (let i = start; i <= end; i++) {
-        const div = document.createElement("div");
-        div.className = "block";
-        div.textContent = i;
+  // Clear grid
+  grid.innerHTML = "";
 
-        if (claimed.includes(i)) {
-          div.classList.add("claimed");
+  // Render blocks
+  const start = (pageNum - 1) * PAGE_SIZE;
+  const end = Math.min(start + PAGE_SIZE, TOTAL_BLOCKS);
 
-          const data = blockCache[i];
-          const mediaUrl = data?.mediaUrl || data?.imageUrl;
-          const mediaType = data?.mediaType || (data?.imageUrl ? "image" : data?.audioUrl ? "audio" : null);
+  for (let i = start; i <= end; i++) {
+    const div = document.createElement("div");
+    div.className = "block";
+    div.textContent = i;
 
-          if (mediaUrl && mediaType === "image") {
-            div.classList.add("claimed-has-image");
-            div.style.backgroundImage = `url(${mediaUrl})`;
-            div.style.backgroundSize = "cover";
-            div.style.backgroundPosition = "center";
-            div.style.color = "transparent";
-          }
+    if (claimed.includes(i)) {
+      div.classList.add("claimed");
+    }
 
-          if (mediaUrl && mediaType === "audio") {
-            div.classList.add("claimed-has-audio");
-          }
-        }
+    const data = blockCache[i];
+    const mediaUrl = data?.mediaUrl || null;
+    const mediaType = data?.mediaType || null;
 
+    // Claimed image
+    if (mediaUrl && mediaType === "image") {
+      div.classList.add("claimed-has-image");
+      div.style.backgroundImage = `url('${mediaUrl}')`;
+      div.style.backgroundSize = "cover";
+      div.style.backgroundPosition = "center";
+      div.style.color = "transparent";
+    }
+
+    // Claimed audio
+    if (mediaUrl && mediaType === "audio") {
+      div.classList.add("claimed-has-audio");
+      div.style.color = "transparent";
+    }
+
+    grid.appendChild(div);
+  }
+
+  // ——— 2. Hide loader AFTER blocks finish ———
+  // Small timeout ensures smooth fade
+  setTimeout(() => {
+    if (loader) {
+      loader.style.opacity = "0";
+      setTimeout(() => {
+        loader.style.display = "none";
+        if (main) main.classList.add("vault-main-visible");
+      }, 500);
+    }
+  }, 300);
+};
+    
 
         // === CLICK HANDLER ===
         div.onclick = async () => {
@@ -554,14 +580,3 @@ document.querySelectorAll(".accordion-header").forEach((header) => {
   });
 });
 
-window.addEventListener("load", () => {
-  const loader = document.getElementById("vault-loader");
-  const main = document.getElementById("vault-main-content");
-
-  loader.style.opacity = "0";
-
-  setTimeout(() => {
-    loader.style.display = "none";
-    if (main) main.classList.add("vault-main-visible");
-  }, 600);
-});
