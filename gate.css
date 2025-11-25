@@ -112,3 +112,43 @@ body {
   50% { border-color: #ffffff; }
   100% { border-color: #d4af37; }
 }
+
+/* === DOOR ANIMATION === */
+#vault-doors {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.door {
+  flex: 1;
+  background: #111;
+  background-image: linear-gradient(to bottom, #222, #000);
+  box-shadow: inset 0 0 80px rgba(0,0,0,0.8);
+  transition: transform 1.4s ease-in-out;
+}
+
+.left-door {
+  border-right: 2px solid gold;
+}
+
+.right-door {
+  border-left: 2px solid gold;
+}
+
+.doors-hidden {
+  display: none;
+}
+
+.doors-open .left-door {
+  transform: translateX(-100%);
+}
+
+.doors-open .right-door {
+  transform: translateX(100%);
+}
