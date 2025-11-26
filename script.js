@@ -293,7 +293,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         localStorage.setItem("pendingBlockId", blockId);
 
         readyMsg.classList.remove("hidden");
-paymentButtons.classList.remove("hidden");
+        paymentButtons.classList.remove("hidden");
+        const payLink = document.getElementById("externalPayBtn");
+        payLink.href = `https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE?block=${blockId}`;
 
       } catch (err) {
         console.error("Upload error:", err);
