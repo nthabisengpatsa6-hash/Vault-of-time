@@ -36,10 +36,6 @@
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- PayPal -->
-  <script 
-    src="https://www.paypal.com/sdk/js?client-id=BAARqxcLBGQEGzz_884ntis7qCccdM2tHQgqot4oqffaKaohFGfaySQblJunzpMskuY5_MlbTTO_fPaGsA&components=hosted-buttons&disable-funding=venmo&currency=USD">
-  </script>
 </head>
 
 <body>
@@ -284,37 +280,27 @@
         ✅ Saved. Now complete payment to seal your block.
       </div>
 
-      <!-- STACKED PAYMENT BUTTONS -->
-<div id="paymentButtons" class="hidden" style="margin-top:20px;">
-  
-  <!-- PAYPAL BUTTON (AUTO-RENDERED) -->
-  <div id="paypal-container-T9TZLXDZ6CLSE" style="margin-bottom:12px;"></div>
-  <script>
-    paypal.HostedButtons({
-      hostedButtonId: "T9TZLXDZ6CLSE",
-    }).render("#paypal-container-T9TZLXDZ6CLSE");
-  </script>
-
-  <!-- CARD PAYMENT BUTTON -->
+      <div id="paymentButtons" class="hidden" style="margin-top:20px;">
   <a 
-    href="https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE"
+    href="https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE?block={BLOCK_ID_PLACEHOLDER}"
+    id="externalPayBtn"
     target="_blank"
     style="
       display:block;
       text-align:center;
       width:100%;
-      background:#003087;
-      color:#fff;
+      background:#ffc439;
+      color:#111;
       padding:14px;
       border-radius:6px;
-      font-size:1.1rem;
+      font-size:1.2rem;
       font-weight:bold;
       text-decoration:none;
-      margin-top:8px;
     "
   >
-    Pay with Debit / Credit Card
+    🔒 Complete Payment
   </a>
+      </div>
 
 </div>
 
