@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const viewClose = document.querySelector(".close-view");
 
     const readyMsg = document.getElementById("ready-message");
-    const paypalWrapper = document.getElementById("paypalWrapper");
+    const paymentButtons = document.getElementById("paymentButtons");
 
     const banner = document.getElementById("rules-banner");
     const ackBtn = document.getElementById("acknowledgeBtn");
@@ -293,7 +293,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         localStorage.setItem("pendingBlockId", blockId);
 
         readyMsg.classList.remove("hidden");
-        paypalWrapper.classList.remove("hidden");
+paymentButtons.classList.remove("hidden");
 
       } catch (err) {
         console.error("Upload error:", err);
