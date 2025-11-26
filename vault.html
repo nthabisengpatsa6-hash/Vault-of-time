@@ -284,33 +284,39 @@
         ✅ Saved. Now complete payment to seal your block.
       </div>
 
-      <!-- PAYPAL SMART BUTTON (ONLY AFTER SAVE) -->
-      <div id="paypalWrapper" class="hidden">
-        <div id="paypal-container-T9TZLXDZ6CLSE"></div>
-        <script>
-          paypal.HostedButtons({
-            hostedButtonId: "T9TZLXDZ6CLSE",
-          }).render("#paypal-container-T9TZLXDZ6CLSE");
-        </script>
+      <!-- STACKED PAYMENT BUTTONS -->
+<div id="paymentButtons" class="hidden" style="margin-top:20px;">
+  
+  <!-- PAYPAL BUTTON (AUTO-RENDERED) -->
+  <div id="paypal-container-T9TZLXDZ6CLSE" style="margin-bottom:12px;"></div>
+  <script>
+    paypal.HostedButtons({
+      hostedButtonId: "T9TZLXDZ6CLSE",
+    }).render("#paypal-container-T9TZLXDZ6CLSE");
+  </script>
 
-        <!-- CHECKOUT (CARD PAYMENT) BUTTON -->
-<a 
-  href="https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE" 
-  target="_blank"
-  style="
-    display:block;
-    background:#1a3cff;
-    color:white;
-    padding:12px;
-    text-align:center;
-    border-radius:6px;
-    font-weight:bold;
-    font-size:1rem;
-    margin-top:15px;
-    text-decoration:none;">
-  Checkout
-</a>
-      </div>
+  <!-- CARD PAYMENT BUTTON -->
+  <a 
+    href="https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE"
+    target="_blank"
+    style="
+      display:block;
+      text-align:center;
+      width:100%;
+      background:#003087;
+      color:#fff;
+      padding:14px;
+      border-radius:6px;
+      font-size:1.1rem;
+      font-weight:bold;
+      text-decoration:none;
+      margin-top:8px;
+    "
+  >
+    Pay with Debit / Credit Card
+  </a>
+
+</div>
 
     </form>
   </div>
