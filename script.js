@@ -40,6 +40,7 @@ const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
 let currentPage = 1;
 let claimed = [];
+let reserved = [];   // ⬅️ NEW
 let blockCache = {};
 
 
@@ -49,6 +50,7 @@ async function loadClaimedBlocks() {
     const snap = await getDocs(blocksCollection);
 
     claimed = [];
+    reserved = [];
     blockCache = {};
 
     snap.docs.forEach((d) => {
@@ -56,18 +58,33 @@ async function loadClaimedBlocks() {
       const data = d.data();
       if (!data) return;
 
+      // Cache everything we know about this block
+      blockCache[idNum] = data;
+
+      // Paid = fully claimed
       if (data.status === "paid") {
         claimed.push(idNum);
-        blockCache[idNum] = data;
+      }
+      // Reserved but not paid yet
+      else if (data.isReserved === true) {
+        reserved.push(idNum);
       }
     });
 
     localStorage.setItem("claimed", JSON.stringify(claimed));
-    console.log("Loaded claimed PAID blocks:", claimed.length);
+    localStorage.setItem("reserved", JSON.stringify(reserved));
+
+    console.log(
+      "Loaded → Claimed:",
+      claimed.length,
+      "Reserved:",
+      reserved.length
+    );
 
   } catch (err) {
-    console.error("Error loading claimed blocks, using local cache:", err);
+    console.error("Error loading block states:", err);
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
+    reserved = JSON.parse(localStorage.getItem("reserved") || "[]");
   }
 }
 
@@ -343,7 +360,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         const div = document.createElement("div");
         div.className = "block";
         div.textContent = i;
-
+        // Reserved (but not yet paid)
+if (reserved.includes(i)) {
+  div.classList.add("reserved");
+  div.textContent = `${i} (R)`; // optional visual cue
+  div.onclick = () => alert("This block is temporarily reserved.");
+  grid.appendChild(div);
+  continue; // skip rest of loop
+}
         if (claimed.includes(i)) {
           div.classList.add("claimed");
 
