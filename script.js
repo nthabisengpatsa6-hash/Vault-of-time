@@ -53,7 +53,7 @@ async function loadClaimedBlocks() {
     reservedBlocks = [];
     blockCache = {};
 
-    snap.docs.forEach((d) => {
+  snap.docs.forEach(async (d) => {
   const idNum = Number(d.id);
   const data = d.data();
   if (!data) return;
@@ -105,7 +105,7 @@ console.log(
   "Loaded → Claimed:",
   claimed.length,
   "Reserved:",
-  reserved.length
+  reservedBlocks.length
 );
 
   } catch (err) {
