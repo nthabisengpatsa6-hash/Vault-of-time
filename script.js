@@ -555,7 +555,23 @@ if (reserved.includes(i)) {
 
     // EVENTS
     if (searchBtn) searchBtn.onclick = searchBlock;
+    const reserveBtn = document.getElementById("reserveBtn");
+if (reserveBtn) {
+  reserveBtn.onclick = async () => {
+    const blockId = hiddenBlockNumber.value;
+    const userEmail = emailInput.value.trim();
 
+    if (!blockId) return alert("No block selected.");
+    if (!userEmail) return alert("Enter your email before reserving.");
+
+    const success = await reserveBlock(blockId, userEmail);
+    if (success) {
+      modal.classList.add("hidden");
+      await loadClaimedBlocks();
+      renderPage(currentPage);
+    }
+  };
+}
     if (saveBtn) {
       saveBtn.onclick = async () => {
         const originalText = saveBtn.textContent;
