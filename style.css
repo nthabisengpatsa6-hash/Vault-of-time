@@ -216,6 +216,15 @@ a:hover {
   color: #cbd5df;
 }
 
+.block.reserved {
+  background: #b59f39 !important;
+  border: 1px solid #8a7729 !important;
+  cursor: not-allowed !important;
+  opacity: 0.85;
+  color: #111;
+  font-weight: bold;
+}
+
 .block.claimed-has-image {
   background-size: cover !important;
   background-position: center !important;
