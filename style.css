@@ -689,3 +689,17 @@ footer {
 #vault-main-content.vault-main-visible {
   opacity: 1;
 }
+
+/* ===== PIXEL-ART MELT MODE ===== */
+
+.grid-container {
+  gap: 1px !important; /* change to 0 for perfect melting */
+}
+
+.block {
+  border: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background-clip: content-box !important;
+}
