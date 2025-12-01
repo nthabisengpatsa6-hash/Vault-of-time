@@ -99,7 +99,7 @@ async function loadClaimedBlocks() {
 
 // ⬇️ NOW ADD THESE HERE (after the loop)
 localStorage.setItem("claimed", JSON.stringify(claimed));
-localStorage.setItem("reservedBlocks", JSON.stringify(reserved));
+localStorage.setItem("reservedBlocks", JSON.stringify(reservedBlocks));
 
 console.log(
   "Loaded → Claimed:",
