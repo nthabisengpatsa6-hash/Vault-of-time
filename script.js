@@ -62,14 +62,16 @@ async function loadClaimedBlocks() {
       blockCache[idNum] = data;
 
       // Paid = fully claimed
-      if (data.status === "paid") {
-        claimed.push(idNum);
-      }
-      // Reserved but not paid yet
-      else if (data.isReserved === true) {
-        reserved.push(idNum);
-      }
-    });
+if (data.status === "paid") {
+  claimed.push(idNum);
+  blockCache[idNum] = data;
+}
+
+// Reserved but not paid yet
+else if (data.reserved === true) {
+  reserved.push(idNum);
+  blockCache[idNum] = data;
+}
 
     localStorage.setItem("claimed", JSON.stringify(claimed));
     localStorage.setItem("reserved", JSON.stringify(reserved));
