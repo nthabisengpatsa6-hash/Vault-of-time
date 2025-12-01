@@ -54,34 +54,34 @@ async function loadClaimedBlocks() {
     blockCache = {};
 
     snap.docs.forEach((d) => {
-      const idNum = Number(d.id);
-      const data = d.data();
-      if (!data) return;
+  const idNum = Number(d.id);
+  const data = d.data();
+  if (!data) return;
 
-      // Cache everything we know about this block
-      blockCache[idNum] = data;
-
-      // Paid = fully claimed
-if (data.status === "paid") {
-  claimed.push(idNum);
   blockCache[idNum] = data;
-}
 
-// Reserved but not paid yet
-else if (data.reserved === true) {
-  reserved.push(idNum);
-  blockCache[idNum] = data;
-}
+  if (data.status === "paid") {
+    claimed.push(idNum);
+    blockCache[idNum] = data;
+  }
 
-    localStorage.setItem("claimed", JSON.stringify(claimed));
-    localStorage.setItem("reserved", JSON.stringify(reserved));
+  else if (data.reserved === true) {
+    reserved.push(idNum);
+    blockCache[idNum] = data;
+  }
 
-    console.log(
-      "Loaded → Claimed:",
-      claimed.length,
-      "Reserved:",
-      reserved.length
-    );
+});   // ← loop is finished RIGHT HERE
+
+// ⬇️ NOW ADD THESE HERE (after the loop)
+localStorage.setItem("claimed", JSON.stringify(claimed));
+localStorage.setItem("reserved", JSON.stringify(reserved));
+
+console.log(
+  "Loaded → Claimed:",
+  claimed.length,
+  "Reserved:",
+  reserved.length
+);
 
   } catch (err) {
     console.error("Error loading block states:", err);
