@@ -40,7 +40,7 @@ const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
 let currentPage = 1;
 let claimed = [];
-let reserved = [];   // ⬅️ NEW
+let reservedBlocks = [];   // ⬅️ NEW
 let blockCache = {};
 
 
@@ -50,7 +50,7 @@ async function loadClaimedBlocks() {
     const snap = await getDocs(blocksCollection);
 
     claimed = [];
-    reserved = [];
+    reservedBlocks = [];
     blockCache = {};
 
     snap.docs.forEach((d) => {
@@ -91,7 +91,7 @@ async function loadClaimedBlocks() {
   }
 
   else if (data.reserved === true) {
-    reserved.push(idNum);
+    reservedBlocks.push(idNum);
     blockCache[idNum] = data;
   }
 
@@ -99,7 +99,7 @@ async function loadClaimedBlocks() {
 
 // ⬇️ NOW ADD THESE HERE (after the loop)
 localStorage.setItem("claimed", JSON.stringify(claimed));
-localStorage.setItem("reserved", JSON.stringify(reserved));
+localStorage.setItem("reservedBlocks", JSON.stringify(reserved));
 
 console.log(
   "Loaded → Claimed:",
@@ -111,7 +111,7 @@ console.log(
   } catch (err) {
     console.error("Error loading block states:", err);
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
-    reserved = JSON.parse(localStorage.getItem("reserved") || "[]");
+    reservedBlocks = JSON.parse(localStorage.getItem("reservedBlocks") || "[]");
   }
 }
 
@@ -426,7 +426,7 @@ async function reserveBlock(blockId, userEmail) {
         div.className = "block";
         div.textContent = i;
         // Reserved (but not yet paid)
-if (reserved.includes(i)) {
+if (reservedBlocks.includes(i)) {
   div.classList.add("reserved");
   div.textContent = `${i} (R)`; // optional visual cue
   div.onclick = () => alert("This block is temporarily reserved.");
