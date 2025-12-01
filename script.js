@@ -59,7 +59,32 @@ async function loadClaimedBlocks() {
   if (!data) return;
 
   blockCache[idNum] = data;
+  // === AUTO-RELEASE EXPIRED RESERVATIONS ===
+  if (data.reserved === true && data.reservedAt) {
+    const now = Date.now();
+    const reservedTime = data.reservedAt.toMillis(); // Firestore timestamp → ms
 
+    const fifteenMinutes = 15 * 60 * 1000;
+
+    // If reservation expired, clear it
+    if (now - reservedTime > fifteenMinutes) {
+      console.log("Auto-releasing expired reservation:", idNum);
+
+      await setDoc(
+        doc(blocksCollection, String(idNum)),
+        {
+          reserved: false,
+          reservedBy: null,
+          reservedAt: null
+        },
+        { merge: true }
+      );
+
+      data.reserved = false;
+      data.reservedBy = null;
+      data.reservedAt = null;
+    }
+  }
   if (data.status === "paid") {
     claimed.push(idNum);
     blockCache[idNum] = data;
