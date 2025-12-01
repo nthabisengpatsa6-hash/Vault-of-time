@@ -348,6 +348,44 @@ document.addEventListener("DOMContentLoaded", async () => {
       renderPage(page);
     };
 
+    // === RESERVE BLOCK ======================================
+async function reserveBlock(blockId, userEmail) {
+  try {
+    const blockRef = doc(blocksCollection, String(blockId));
+    const snap = await getDoc(blockRef);
+
+    // If already paid, prevent reservation
+    if (snap.exists() && snap.data().status === "paid") {
+      alert("This block is already purchased.");
+      return false;
+    }
+
+    // If someone else reserved it, prevent reservation
+    if (snap.exists() && snap.data().reserved === true) {
+      alert("Someone else has reserved this block. Try another.");
+      return false;
+    }
+
+    // Reserve it
+    await setDoc(
+      blockRef,
+      {
+        reserved: true,
+        reservedBy: userEmail,
+        reservedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    alert("Block reserved for 15 minutes! Complete your purchase.");
+    return true;
+
+  } catch (err) {
+    console.error("Reservation error:", err);
+    alert("Could not reserve block. Try again.");
+    return false;
+  }
+}
 
     // RENDER PAGE ======================================================
     const renderPage = (pageNum) => {
