@@ -425,13 +425,27 @@ async function reserveBlock(blockId, userEmail) {
         const div = document.createElement("div");
         div.className = "block";
         div.textContent = i;
-        // Reserved (but not yet paid)
+        // === RESERVED BLOCKS ===
 if (reservedBlocks.includes(i)) {
-  div.classList.add("reserved");
-  div.textContent = `${i} (R)`; // optional visual cue
-  div.onclick = () => alert("This block is temporarily reserved.");
-  grid.appendChild(div);
-  continue; // skip rest of loop
+  const data = blockCache[i];
+  const reservedBy = data?.reservedBy || null;
+
+  const userEmail = emailInput?.value?.trim() || null;
+
+  // If THIS USER reserved it → allow clicking
+  if (userEmail && reservedBy === userEmail) {
+    div.classList.add("reserved-owner");
+    div.textContent = `${i} (Your Reserved Block)`;
+    // Let them open modal to upload/save
+    // (behave as normal unclaimed block)
+  } else {
+    // Someone else reserved it → block access
+    div.classList.add("reserved");
+    div.textContent = `${i} (R)`;
+    div.onclick = () => alert("Someone else has reserved this block.");
+    grid.appendChild(div);
+    continue;
+  }
 }
         if (claimed.includes(i)) {
           div.classList.add("claimed");
