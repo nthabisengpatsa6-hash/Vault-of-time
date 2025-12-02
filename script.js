@@ -528,7 +528,6 @@ if (reservedBlocks.includes(i)) {
   document.getElementById("lockedMsg").classList.add("hidden");
   document.getElementById("reservedWarning")?.classList.add("hidden");
 }
-          }
 
           // VIEW CLAIMED BLOCK
           if (claimed.includes(i)) {
