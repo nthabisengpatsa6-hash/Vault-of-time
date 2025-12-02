@@ -142,12 +142,7 @@ function hideLoader() {
 
 // === DOM READY ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-//Restore stored email for reserved-block access
-  const savedEmail =
-    localStorage.getItem("userEmail");
-  if (savedEmail && emailInput) {
-    emailInput.value = savedEmail;
-  }
+
   // MENU TOGGLE
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
