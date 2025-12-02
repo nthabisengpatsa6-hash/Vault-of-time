@@ -484,37 +484,50 @@ document.addEventListener("DOMContentLoaded", async () => {
             emailInput.value = storedEmail;
           }
 
-          // RESERVED CLICK HANDLING
-          if (reservedBlocks.includes(i)) {
-            const data = blockCache[i];
-            const reservedBy = data?.reservedBy || null;
+          // RESERVED BLOCK HANDLING — NEW LOCKED FORM VERSION
+if (reservedBlocks.includes(i)) {
+  const data = blockCache[i];
+  const reservedBy = data?.reservedBy || null;
 
-            const storedEmail2 = localStorage.getItem("userEmail");
-            const typedEmail = emailInput?.value?.trim() || "";
-            const userEmail = typedEmail || storedEmail2 || "";
+  const savedEmail = localStorage.getItem("userEmail");
+  const typedEmail = emailInput?.value?.trim() || null;
+  const userEmail = typedEmail || savedEmail;
 
-            if (!userEmail || reservedBy !== userEmail) {
-              // not the owner → show warning + disable upload
-              if (modal) modal.classList.remove("hidden");
-              if (reservedWarning) reservedWarning.classList.remove("hidden");
+  // If NOT the owner — lock the whole form UI
+  if (!userEmail || reservedBy !== userEmail) {
+    modal.classList.remove("hidden");
 
-              hiddenBlockNumber.value = i;
+    // Show old warning message
+    const warning = document.getElementById("reservedWarning");
+    if (warning) warning.classList.remove("hidden");
 
-              const selectedText =
-                document.getElementById("selected-block-text");
-              if (selectedText) {
-                selectedText.textContent =
-                  `Block #${i} (Reserved by another user)`;
-              }
+    // Disable entire form visually + functionally
+    const form = document.getElementById("blockForm");
+    form.classList.add("locked-form");
 
-              if (uploadBtn) {
-                uploadBtn.disabled = true;
-                uploadBtn.style.opacity = "0.5";
-              }
+    // Show locked note
+    const lockedMsg = document.getElementById("lockedMsg");
+    lockedMsg.classList.remove("hidden");
 
-              return;
-            }
-            // else: reserved by this user → allow normal flow
+    // Set display text
+    const selectedText = document.getElementById("selected-block-text");
+    if (selectedText) {
+      selectedText.textContent = `Block #${i} (Reserved by another user)`;
+    }
+
+    // Disable Upload button
+    const uploadBtn = document.getElementById("uploadBtn");
+    uploadBtn.disabled = true;
+    uploadBtn.style.opacity = "0.3";
+
+    return; // STOP — user cannot continue
+  }
+
+  // If the user IS the reserver → fully unlock the form
+  document.getElementById("blockForm").classList.remove("locked-form");
+  document.getElementById("lockedMsg").classList.add("hidden");
+  document.getElementById("reservedWarning")?.classList.add("hidden");
+}
           }
 
           // VIEW CLAIMED BLOCK
