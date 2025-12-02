@@ -621,3 +621,38 @@ footer {
 }
 
 .hidden { display: none !important; }
+
+/* ===== STRONG SEARCH HIGHLIGHT (WORKS IN MELT MODE) ===== */
+
+.search-highlight {
+  position: relative;
+  z-index: 10 !important;
+}
+
+.search-highlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0 !important; /* because melt mode is square */
+  box-shadow:
+    0 0 20px 6px rgba(255, 255, 150, 0.95),
+    0 0 40px 10px rgba(255, 255, 170, 0.7),
+    0 0 60px 14px rgba(255, 255, 200, 0.5);
+  animation: searchPulse 1.2s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes searchPulse {
+  0% {
+    box-shadow:
+      0 0 0px 0 rgba(255, 255, 150, 1),
+      0 0 0px 0 rgba(255, 255, 170, 0.7),
+      0 0 0px 0 rgba(255, 255, 200, 0.5);
+  }
+  100% {
+    box-shadow:
+      0 0 20px 6px rgba(255, 255, 150, 0.95),
+      0 0 40px 10px rgba(255, 255, 170, 0.7),
+      0 0 60px 14px rgba(255, 255, 200, 0.5);
+  }
+}
