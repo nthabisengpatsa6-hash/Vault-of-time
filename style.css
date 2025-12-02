@@ -712,3 +712,44 @@ footer {
   padding: 0 !important;
   background-clip: content-box !important;
 }
+
+.reserve-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reserve-info-icon {
+  width: 18px;
+  height: 18px;
+  background: #d4af37;
+  color: #000;
+  font-weight: bold;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.reserve-tooltip {
+  display: none;
+  position: absolute;
+  top: 28px;
+  right: 0;
+  width: 260px;
+  background: #111;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  z-index: 5000;
+  border: 1px solid #d4af37;
+}
+
+.reserve-tooltip.show {
+  display: block;
+}
