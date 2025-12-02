@@ -753,3 +753,18 @@ footer {
 .reserve-tooltip.show {
   display: block;
 }
+
+.reserved-warning {
+  background: rgba(255, 200, 0, 0.15);
+  border: 1px solid #d4af37;
+  color: #fff;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.hidden {
+  display: none !important;
+}
