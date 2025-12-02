@@ -568,9 +568,6 @@ if (claimed.includes(i)) {
           const selectedText = document.getElementById("selected-block-text");
           if (selectedText)
             selectedText.textContent = `Selected Block: #${i}`;
-// RESET reserved warning + enable upload button
-const warning = document.getElementById("reservedWarning");
-if (warning) warning.classList.add("hidden");
 
 const uploadBtn = document.getElementById("uploadBtn");
 if (uploadBtn) {
