@@ -527,94 +527,42 @@ if (reservedBlocks.includes(i)) {
     return;
   }
 }
-          // VIEW CLAIMED BLOCK
-          if (claimed.includes(i)) {
-            const data = await fetchBlock(i);
+          // VIEW CLAIMED BLOCK (no badges)
+if (claimed.includes(i)) {
+  const data = await fetchBlock(i);
 
-            const titleEl = document.getElementById("viewBlockTitle");
-            const msgEl = document.getElementById("viewBlockMessage");
-            const mediaEl = document.getElementById("viewBlockMedia");
-            const badgeBox = document.getElementById("viewBlockBadge");
+  // Title
+  const titleEl = document.getElementById("viewBlockTitle");
+  if (titleEl) titleEl.textContent = `Block #${i}`;
 
-            if (titleEl) titleEl.textContent = `Block #${i}`;
+  // Message
+  const msgEl = document.getElementById("viewBlockMessage");
+  if (msgEl) msgEl.textContent = data?.message || "";
 
-            // BADGES
-            let badgeSvg = "";
+  // Media
+  const mediaEl = document.getElementById("viewBlockMedia");
+  if (mediaEl) {
+    const mediaUrl = data?.mediaUrl || data?.imageUrl;
+    const mediaType = data?.mediaType;
 
-            const badge1 = `
-<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="60" cy="60" r="50" stroke="#D4AF37" stroke-width="3"/>
-  <circle cx="60" cy="60" r="38" stroke="#00D4FF" stroke-width="1" stroke-dasharray="4 6"/>
-  <path d="M60 30 L60 65" stroke="#D4AF37" stroke-width="4" stroke-linecap="round"/>
-  <circle cx="60" cy="25" r="7" stroke="#D4AF37" stroke-width="3"/>
-  <rect x="57" y="65" width="6" height="8" fill="#D4AF37"/>
-  <rect x="57" y="74" width="6" height="4" fill="#D4AF37"/>
-  <line x1="42" y1="85" x2="78" y2="85" stroke="#00D4FF" stroke-width="2" stroke-linecap="round"/>
-  <line x1="50" y1="92" x2="70" y2="92" stroke="#00D4FF" stroke-width="2" stroke-linecap="round"/>
-</svg>`;
+    if (mediaUrl && mediaType === "image") {
+      mediaEl.innerHTML =
+        `<img src="${mediaUrl}" style="max-width:100%;border-radius:8px;" />`;
+    } else if (mediaUrl && mediaType === "audio") {
+      mediaEl.innerHTML = `
+        <audio controls style="width:100%;margin-top:10px;">
+          <source src="${mediaUrl}" />
+        </audio>
+      `;
+    } else {
+      mediaEl.innerHTML = "";
+    }
+  }
 
-            const badge2 = `
-<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="60" cy="60" r="50" stroke="#D4AF37" stroke-width="3"/>
-  <circle cx="60" cy="60" r="40" stroke="#00D4FF" stroke-width="1.5" stroke-dasharray="6 8"/>
-  <circle cx="60" cy="20" r="5" fill="#D4AF37"/>
-  <circle cx="100" cy="60" r="5" fill="#D4AF37"/>
-  <circle cx="60" cy="100" r="5" fill="#D4AF37"/>
-  <circle cx="20" cy="60" r="5" fill="#D4AF37"/>
-  <rect x="52" y="35" width="16" height="50" rx="3" fill="#D4AF37"/>
-  <line x1="60" y1="38" x2="60" y2="80" stroke="#1A1A1A" stroke-width="3" opacity="0.3"/>
-</svg>`;
-
-            const badge3 = `
-<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="60" cy="60" r="50" stroke="#D4AF37" stroke-width="3"/>
-  <rect x="38" y="30" width="8" height="60" fill="#D4AF37" opacity="0.3"/>
-  <rect x="74" y="30" width="8" height="60" fill="#D4AF37" opacity="0.3"/>
-  <path d="M60 35 L85 55 L75 90 L45 90 L35 55 Z" fill="#D4AF37"/>
-  <path d="M60 45 L70 60 L60 75 L50 60 Z" fill="#1A1A1A" opacity="0.3"/>
-  <path d="M60 50 C65 55 62 65 60 68 C58 65 55 55 60 50Z" fill="#00D4FF"/>
-</svg>`;
-
-            const badge4 = `
-<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <polygon points="60,15 100,60 60,105 20,60" stroke="#D4AF37" stroke-width="3" fill="none"/>
-  <path d="M45 70 Q60 85 75 70" stroke="#D4AF37" stroke-width="3" fill="none"/>
-  <path d="M60 55 C70 65 62 80 60 83 C58 80 50 65 60 55Z" fill="#D4AF37"/>
-  <path d="M60 58 C66 64 63 73 60 75 C57 73 54 64 60 58Z" fill="#00D4FF"/>
-  <circle cx="60" cy="40" r="4" fill="#D4AF37"/>
-</svg>`;
-
-            if (i >= 1 && i <= 25000) badgeSvg = badge1;
-            else if (i <= 50000) badgeSvg = badge2;
-            else if (i <= 75000) badgeSvg = badge3;
-            else if (i <= 100000) badgeSvg = badge4;
-
-            if (badgeBox) badgeBox.innerHTML = badgeSvg;
-
-            // MEDIA
-            const mediaUrl = data?.mediaUrl || data?.imageUrl;
-            const mediaType = data?.mediaType;
-
-            if (mediaEl) {
-              if (mediaUrl && mediaType === "image") {
-                mediaEl.innerHTML =
-                  `<img src="${mediaUrl}" style="max-width:100%;border-radius:8px;" />`;
-              } else if (mediaUrl && mediaType === "audio") {
-                mediaEl.innerHTML = `
-                  <audio controls style="width:100%;margin-top:10px;">
-                    <source src="${mediaUrl}" />
-                  </audio>
-                `;
-              } else {
-                mediaEl.innerHTML = "";
-              }
-            }
-
-            if (msgEl) msgEl.textContent = data?.message || "";
-
-            viewModal.classList.remove("hidden");
-            return;
-          }
+  // Show modal
+  viewModal.classList.remove("hidden");
+  return;
+}
 
           // SELECT NEW BLOCK (UNCLAIMED)
           document.querySelectorAll(".block").forEach((b) =>
