@@ -142,7 +142,12 @@ function hideLoader() {
 
 // === DOM READY ========================================
 document.addEventListener("DOMContentLoaded", async () => {
-
+//Restore stored email for reserved-block access
+  const savedEmail =
+    localStorage.getItem("userEmail");
+  if (savedEmail && emailInput) {
+    emailInput.value = savedEmail;
+  }
   // MENU TOGGLE
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
@@ -430,7 +435,7 @@ if (reservedBlocks.includes(i)) {
   const data = blockCache[i];
   const reservedBy = data?.reservedBy || null;
 
-  const userEmail = emailInput?.value?.trim() || null;
+  
 
   // If THIS USER reserved it → allow clicking
   if (userEmail && reservedBy === userEmail) {
@@ -636,6 +641,10 @@ if (reserveBtn) {
 
     const success = await reserveBlock(blockId, userEmail);
     if (success) {
+
+      //STORE EMAIL for future access (the FIX!)
+      localStorage.setItem("userEmail", userEmail);
+      
       modal.classList.add("hidden");
       await loadClaimedBlocks();
       renderPage(currentPage);
