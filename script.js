@@ -435,7 +435,8 @@ if (reservedBlocks.includes(i)) {
   const data = blockCache[i];
   const reservedBy = data?.reservedBy || null;
 
-  
+  const savedEmail = localStorage.getItem("userEmail");
+const userEmail = emailInput?.value?.trim() || savedEmail || null;
 
   // If THIS USER reserved it → allow clicking
   if (userEmail && reservedBy === userEmail) {
