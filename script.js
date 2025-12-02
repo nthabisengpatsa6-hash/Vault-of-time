@@ -189,7 +189,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const messageInput = document.getElementById("message");
     const messageCounter = document.getElementById("messageCounter");
     const fileInput = document.getElementById("fileUpload");
-
+// ⭐ Restore stored email for reserved-block access
+const savedEmail = localStorage.getItem("userEmail");
+if (savedEmail && emailInput) {
+  emailInput.value = savedEmail;
+}
     const closeBtn = document.querySelector(".close-button");
     const viewClose = document.querySelector(".close-view");
 
