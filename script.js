@@ -476,26 +476,38 @@ const userEmail = emailInput?.value?.trim() || savedEmail || null;
 
         // CLICK HANDLER FOR EACH BLOCK
         div.onclick = async () => {
-          // RESERVED BLOCK CLICK — allow viewing BUT warn & restrict uploading
+          // === RESERVED BLOCK HANDLING ===
 if (reservedBlocks.includes(i)) {
-  modal.classList.remove("hidden");
+  const data = blockCache[i];
+  const reservedBy = data?.reservedBy || null;
 
-  const warning = document.getElementById("reservedWarning");
-  if (warning) warning.classList.remove("hidden");
+  const savedEmail = localStorage.getItem("userEmail");
+  const userEmail = emailInput?.value?.trim() || savedEmail || null;
 
-  hiddenBlockNumber.value = i;
+  // 1. If it's YOUR reserved block → treat as normal unclaimed block
+  if (userEmail && reservedBy === userEmail) {
+    // allow full access
+    // no return — let normal flow continue
+  } else {
+    // 2. Someone else reserved it → show warning only
+    modal.classList.remove("hidden");
 
-  // SHOW basic reserved message
-  const selectedText = document.getElementById("selected-block-text");
-  if (selectedText) {
-    selectedText.textContent = `Block #${i} (Reserved)`;
+    const warning = document.getElementById("reservedWarning");
+    if (warning) warning.classList.remove("hidden");
+
+    hiddenBlockNumber.value = i;
+
+    const selectedText = document.getElementById("selected-block-text");
+    if (selectedText) {
+      selectedText.textContent = `Block #${i} (Reserved by another user)`;
+    }
+
+    // disable upload
+    document.getElementById("uploadBtn").disabled = true;
+    document.getElementById("uploadBtn").style.opacity = "0.5";
+
+    return; // stop further flow
   }
-
-  // Disable upload/save buttons, but still allow viewing
-  document.getElementById("uploadBtn").disabled = true;
-  document.getElementById("uploadBtn").style.opacity = "0.5";
-
-  return; // stop normal flow
 }
           // VIEW CLAIMED BLOCK
           if (claimed.includes(i)) {
