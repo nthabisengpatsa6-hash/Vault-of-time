@@ -656,3 +656,22 @@ footer {
       0 0 60px 14px rgba(255, 255, 200, 0.5);
   }
 }
+
+/* ===== LOCKED FORM STYLE ===== */
+.locked-form {
+  opacity: 0.45;
+  pointer-events: none;
+  filter: grayscale(0.9);
+}
+
+.locked-warning-msg {
+  background: rgba(255, 200, 0, 0.2);
+  border: 1px solid #d4af37;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+  font-size: 14px;
+}
