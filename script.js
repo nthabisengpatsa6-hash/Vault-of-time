@@ -471,6 +471,27 @@ if (reservedBlocks.includes(i)) {
 
         // CLICK HANDLER FOR EACH BLOCK
         div.onclick = async () => {
+          // RESERVED BLOCK CLICK — allow viewing BUT warn & restrict uploading
+if (reservedBlocks.includes(i)) {
+  modal.classList.remove("hidden");
+
+  const warning = document.getElementById("reservedWarning");
+  if (warning) warning.classList.remove("hidden");
+
+  hiddenBlockNumber.value = i;
+
+  // SHOW basic reserved message
+  const selectedText = document.getElementById("selected-block-text");
+  if (selectedText) {
+    selectedText.textContent = `Block #${i} (Reserved)`;
+  }
+
+  // Disable upload/save buttons, but still allow viewing
+  document.getElementById("uploadBtn").disabled = true;
+  document.getElementById("uploadBtn").style.opacity = "0.5";
+
+  return; // stop normal flow
+}
           // VIEW CLAIMED BLOCK
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
