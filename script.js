@@ -495,21 +495,20 @@ if (reservedBlocks.includes(i)) {
   const savedEmail = localStorage.getItem("userEmail");
   const userEmail = emailInput?.value?.trim() || savedEmail || null;
 
-  // === RESERVED BLOCK CLICK HANDLING (NEW LOGIC) ===
+  // RESERVED BLOCK HANDLING — FINAL VERSION
 if (reservedBlocks.includes(i)) {
   const data = blockCache[i];
   const reservedBy = data?.reservedBy || null;
 
-  // get stored email + typed email
   const savedEmail = localStorage.getItem("userEmail");
   const typedEmail = emailInput?.value?.trim() || null;
   const userEmail = typedEmail || savedEmail;
 
-  // If THIS user reserved it → allow access
+  // If THIS user reserved the block → allow normal flow
   if (userEmail && reservedBy === userEmail) {
-    // allow normal flow
+    // continue to claimed/unclaimed logic below
   } else {
-    // Show warning modal only
+    // Show warning modal + disable uploading
     modal.classList.remove("hidden");
 
     const warning = document.getElementById("reservedWarning");
@@ -522,11 +521,10 @@ if (reservedBlocks.includes(i)) {
       selectedText.textContent = `Block #${i} (Reserved by another user)`;
     }
 
-    // Disable upload
     document.getElementById("uploadBtn").disabled = true;
     document.getElementById("uploadBtn").style.opacity = "0.5";
 
-    return; // STOP — user cannot edit it
+    return;
   }
 }
           // VIEW CLAIMED BLOCK
