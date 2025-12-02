@@ -170,33 +170,40 @@ a:hover {
    GRID / BLOCKS
 ========================================= */
 
+/* =========================================
+   PIXEL-ART FIXED GRID (50 COLUMNS)
+========================================= */
+
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(20, 1fr);
-  gap: 5px;
-  justify-content: center;
+  grid-template-columns: repeat(50, 1fr); /* FIXED 50 COLUMNS */
+  gap: 1px;
   margin: 20px auto;
-  max-width: 95vw;
+  max-width: 100%;
+  overflow-x: auto;            /* Allow horizontal scroll on mobile */
+  -webkit-overflow-scrolling: touch;
+  justify-content: center;
 }
 
+/* PERFECT SQUARE BLOCKS */
 .block {
   aspect-ratio: 1 / 1;
   background: #5b626b;
-  border: 1px solid #2f333a;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: clamp(8px, 2vw, 12px);
-  transition: all 0.25s ease;
-  border-radius: 4px;
-  position: relative;
+  font-size: clamp(8px, 1.4vw, 12px);
+  transition: background 0.25s ease;
   color: #e6edf3;
 }
 
-.block:hover:not(.claimed) {
-  background: #707881;
-  transform: scale(1.05);
+/* Hover (desktop only) */
+@media (hover: hover) {
+  .block:hover:not(.claimed):not(.reserved) {
+    background: #707881;
+  }
 }
 
 .block.selected {
