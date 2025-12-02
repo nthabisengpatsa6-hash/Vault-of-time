@@ -599,6 +599,21 @@ if (reserveBtn) {
     }
   };
 }
+    // === TOOLTIP FOR RESERVE BUTTON ===
+const infoIcon = document.querySelector(".reserve-info-icon");
+const tooltip = document.querySelector(".reserve-tooltip");
+
+if (infoIcon && tooltip) {
+  infoIcon.addEventListener("click", () => {
+    tooltip.classList.toggle("show");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".reserve-wrapper")) {
+      tooltip.classList.remove("show");
+    }
+  });
+}
     if (saveBtn) {
       saveBtn.onclick = async () => {
         const originalText = saveBtn.textContent;
