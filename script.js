@@ -487,15 +487,7 @@ const savedEmail = localStorage.getItem("userEmail");
 if (savedEmail && emailInput && !emailInput.value.trim()) {
   emailInput.value = savedEmail;
 }
-          // === RESERVED BLOCK HANDLING ===
-if (reservedBlocks.includes(i)) {
-  const data = blockCache[i];
-  const reservedBy = data?.reservedBy || null;
-
-  const savedEmail = localStorage.getItem("userEmail");
-  const userEmail = emailInput?.value?.trim() || savedEmail || null;
-
-  // RESERVED BLOCK HANDLING — FINAL VERSION
+      // RESERVED BLOCK HANDLING — FINAL VERSION
 if (reservedBlocks.includes(i)) {
   const data = blockCache[i];
   const reservedBy = data?.reservedBy || null;
@@ -506,7 +498,7 @@ if (reservedBlocks.includes(i)) {
 
   // If THIS user reserved the block → allow normal flow
   if (userEmail && reservedBy === userEmail) {
-    // continue to claimed/unclaimed logic below
+    // continue downward to claimed/unclaimed logic
   } else {
     // Show warning modal + disable uploading
     modal.classList.remove("hidden");
@@ -524,9 +516,10 @@ if (reservedBlocks.includes(i)) {
     document.getElementById("uploadBtn").disabled = true;
     document.getElementById("uploadBtn").style.opacity = "0.5";
 
-    return;
+    return; 
   }
 }
+
           // VIEW CLAIMED BLOCK (no badges)
 if (claimed.includes(i)) {
   const data = await fetchBlock(i);
