@@ -277,23 +277,34 @@
       </button>
 
       <!-- RESERVE BUTTON -->
-<button 
-  type="button" 
-  id="reserveBtn"
-  style="
-    width:100%;
-    margin-top:12px;
-    padding:12px;
-    background:#d4af37;
-    color:#111;
-    font-weight:bold;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-  "
->
-  ⏳ Reserve Block (15 min)
-</button>
+<div class="reserve-wrapper" style="width:100%; margin-top:12px;">
+  
+  <button
+    type="button"
+    id="reserveBtn"
+    style="
+      width:100%;
+      padding:12px;
+      background:#d4af37;
+      color:#111;
+      font-weight:bold;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+    "
+  >
+    ⏳ Reserve Block (15 min)
+  </button>
+
+  <span class="reserve-info-icon">i</span>
+
+  <div class="reserve-tooltip">
+    Reserve holds this block for 15 minutes so nobody else can take it 
+    while you upload or choose more blocks.<br><br>
+    If time runs out, the block opens again.
+  </div>
+
+</div>
       
       <div id="ready-message" class="hidden">
         ✅ Saved. Now complete payment to seal your block.
