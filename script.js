@@ -341,7 +341,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const payLink = document.getElementById("externalPayBtn");
         if (payLink) {
           payLink.href =
-            `https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE?block=${blockId}`;
+            `https://www.paypal.com/ncp/payment/MXNGF43VB6EYJ?block=${blockId}`;
         }
 
       } catch (err) {
