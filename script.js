@@ -63,13 +63,13 @@ async function loadClaimedBlocks() {
 
       blockCache[idNum] = data;
 
-      // Auto-release expired reservations (15 minutes)
+      // Auto-release expired reservations (30 minutes)
       if (data.reserved === true && data.reservedAt) {
         const now = Date.now();
         const reservedTime = data.reservedAt.toMillis();
-        const fifteenMinutes = 15 * 60 * 1000;
+        const thirtyMinutes = 30 * 60 * 1000;
 
-        if (now - reservedTime > fifteenMinutes) {
+        if (now - reservedTime > thirtyMinutes) {
           console.log("Auto-releasing expired reservation:", idNum);
 
           await setDoc(
