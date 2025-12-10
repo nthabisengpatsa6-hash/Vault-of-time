@@ -403,7 +403,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           { merge: true }
         );
 
-        alert("Block reserved for 15 minutes! Complete your purchase.");
+        alert("Block reserved for 30 minutes! Complete your purchase.");
         return true;
       } catch (err) {
         console.error("Reservation error:", err);
