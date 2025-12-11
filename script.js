@@ -619,7 +619,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             
 
             // If the user IS the reserver, the form is already unlocked by the fix at the top!
-          }
+        
 
           // VIEW CLAIMED BLOCK
           if (claimed.includes(i)) {
