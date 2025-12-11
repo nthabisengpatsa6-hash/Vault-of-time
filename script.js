@@ -67,7 +67,8 @@ async function loadClaimedBlocks() {
       blockCache[idNum] = data;
 
       // --- NEW: AUTO-RELEASE WITH 2-HOUR LOGIC ---
-      if (data.reserved === true && data.reservedAt) {
+      // FIX: Only check timer if it is NOT paid yet
+        if (data.reserved === true && data.reservedAt && data.status !== "paid") {
         const now = Date.now();
         const reservedTime = data.reservedAt.toMillis();
         
