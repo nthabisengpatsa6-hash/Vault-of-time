@@ -486,31 +486,18 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
 
-        // CLICK HANDLER
+   // CLICK HANDLER
         div.onclick = async () => {
-          // --- NEW: MULTI-SELECT CLICK LOGIC ---
-        // --- NEW: MULTI-SELECT CLICK LOGIC (WITH SHIFT) ---
-          if (isMultiSelect) {
-             // 1. Check if valid (not paid)
-             if (claimed.includes(i)) return alert("This block is already purchased.");
-             
-             // 2. Check if reserved by someone else
-             if (reservedBlocks.includes(i)) {
-                 const data = blockCache[i];
-                 const savedEmail = localStorage.getItem("userEmail");
-                 if (!data || data.reservedBy !== savedEmail) {
-                     return alert("This block is reserved by another user.");
-                 }
-             }
-
-                      // ============================================================
+          
+          // ============================================================
           // --- FIX START: RESET EVERYTHING ---
-          // This forces the form to unlock before we check the new block
+          // This runs on EVERY click to ensure no "sticky" locks
           // ============================================================
           const form = document.getElementById("blockForm");
           const lockedMsg = document.getElementById("lockedMsg");
           const warning = document.getElementById("reservedWarning");
           const uploadBtn = document.getElementById("uploadBtn");
+          const selectedText = document.getElementById("selected-block-text");
 
           // 1. Unlock the form styles
           if (form) form.classList.remove("locked-form");
@@ -527,15 +514,27 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
           // --- FIX END ---
 
+
+          // --- MULTI-SELECT LOGIC ---
+          if (isMultiSelect) {
+             // 1. Check if valid (not paid)
+             if (claimed.includes(i)) return alert("This block is already purchased.");
+             
+             // 2. Check if reserved by someone else
+             if (reservedBlocks.includes(i)) {
+                 const data = blockCache[i];
+                 const savedEmail = localStorage.getItem("userEmail");
+                 if (!data || data.reservedBy !== savedEmail) {
+                     return alert("This block is reserved by another user.");
+                 }
+             }
+
              // 3. SHIFT CLICK LOGIC (Range Selection)
-             // We check if Shift key is pressed AND we have a previous click
              if (window.event.shiftKey && lastClickedId !== null) {
                  const start = Math.min(lastClickedId, i);
                  const end = Math.max(lastClickedId, i);
                  
-                 // Loop through the range
                  for (let k = start; k <= end; k++) {
-                     // Skip if already purchased or reserved by others
                      if (claimed.includes(k)) continue;
                      if (reservedBlocks.includes(k)) {
                         const d = blockCache[k];
@@ -543,14 +542,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                         if (!d || d.reservedBy !== myEmail) continue;
                      }
 
-                     // Add to selection if not already there
                      if (!selectedBatch.includes(k)) {
                          if (selectedBatch.length >= 500) {
                              alert("Max 500 blocks limit reached.");
                              break;
                          }
                          selectedBatch.push(k);
-                         // Find the DOM element to highlight it immediately
                          const el = document.querySelector(`.block[data-block-id='${k}']`);
                          if (el) el.classList.add("multi-selected");
                      }
@@ -559,127 +556,97 @@ document.addEventListener("DOMContentLoaded", async () => {
              // 4. NORMAL CLICK LOGIC (Single Toggle)
              else {
                  if (selectedBatch.includes(i)) {
-                     // Deselect
                      selectedBatch = selectedBatch.filter(id => id !== i);
                      div.classList.remove("multi-selected");
                  } else {
-                     // Select
                      if (selectedBatch.length >= 500) return alert("Max 500 blocks limit reached.");
                      selectedBatch.push(i);
                      div.classList.add("multi-selected");
                  }
-                 // Remember this click for the next Shift-Click
                  lastClickedId = i;
              }
 
-             // 5. Update the floating bar count
              updateBulkBar();
              return; 
           }
-          // --- END NEW LOGIC ---
-         
-          // restore saved email if empty
+          // --- END MULTI-SELECT ---
+
+
+          // Restore saved email if empty
           const storedEmail = localStorage.getItem("userEmail");
           if (storedEmail && emailInput && !emailInput.value.trim()) {
             emailInput.value = storedEmail;
           }
 
-          // RESERVED BLOCK HANDLING — NEW LOCKED FORM VERSION
-if (reservedBlocks.includes(i)) {
-  const data = blockCache[i];
-  const reservedBy = data?.reservedBy || null;
+          // RESERVED BLOCK HANDLING
+          if (reservedBlocks.includes(i)) {
+            const data = blockCache[i];
+            const reservedBy = data?.reservedBy || null;
 
-  const savedEmail = localStorage.getItem("userEmail");
-  const typedEmail = emailInput?.value?.trim() || null;
-  const userEmail = typedEmail || savedEmail;
+            const savedEmail = localStorage.getItem("userEmail");
+            const typedEmail = emailInput?.value?.trim() || null;
+            const userEmail = typedEmail || savedEmail;
 
-  // If NOT the owner — lock the whole form UI
-  if (!userEmail || reservedBy !== userEmail) {
-    modal.classList.remove("hidden");
+            // If NOT the owner — lock the whole form UI
+            if (!userEmail || reservedBy !== userEmail) {
+              modal.classList.remove("hidden");
 
-    // Show old warning message
-    const warning = document.getElementById("reservedWarning");
-    if (warning) warning.classList.remove("hidden");
+              if (warning) warning.classList.remove("hidden");
+              if (form) form.classList.add("locked-form");
+              if (lockedMsg) lockedMsg.classList.remove("hidden");
 
-    // Disable entire form visually + functionally
-    const form = document.getElementById("blockForm");
-    form.classList.add("locked-form");
+              if (selectedText) {
+                selectedText.textContent = `Block #${i} (Reserved by another user)`;
+              }
 
-    // Show locked note
-    const lockedMsg = document.getElementById("lockedMsg");
-    lockedMsg.classList.remove("hidden");
+              if (uploadBtn) {
+                  uploadBtn.disabled = true;
+                  uploadBtn.style.opacity = "0.3";
+              }
 
-    // Set display text
-    const selectedText = document.getElementById("selected-block-text");
-    if (selectedText) {
-      selectedText.textContent = `Block #${i} (Reserved by another user)`;
-    }
+              return; // STOP — user cannot continue
+            }
 
-    // Disable Upload button
-    const uploadBtn = document.getElementById("uploadBtn");
-    uploadBtn.disabled = true;
-    uploadBtn.style.opacity = "0.3";
-
-    return; // STOP — user cannot continue
-  }
-
-  // If the user IS the reserver → fully unlock the form
-  document.getElementById("blockForm").classList.remove("locked-form");
-  document.getElementById("lockedMsg").classList.add("hidden");
-  document.getElementById("reservedWarning")?.classList.add("hidden");
-}
+            // If the user IS the reserver, the form is already unlocked by the fix at the top!
+          }
 
           // VIEW CLAIMED BLOCK
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
 
-            // --- NEW: CHECK IF LOGGED-IN OWNER ---
-            // Check if the user is logged in AND if the email matches this block
+            // Check if logged-in owner
             const ownerEmail = data?.reservedBy || data?.email; 
-            
             if (loggedInUserEmail && ownerEmail && loggedInUserEmail.toLowerCase() === ownerEmail.toLowerCase()) {
-                // IT MATCHES! Open the Edit Form instead of the View Popup
-                
-                // Visual selection
+                // IT MATCHES! Open the Edit Form
                 document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
                 div.classList.add("selected");
 
-                // Pre-fill the form
                 hiddenBlockNumber.value = i;
-                const selectedText = document.getElementById("selected-block-text");
                 if (selectedText) selectedText.textContent = `Editing Block: #${i}`;
                 
-                // Fill details so they don't have to re-type
                 nameInput.value = data.name || "";
                 emailInput.value = data.email || ""; 
                 messageInput.value = data.message || "";
                 
-                // IMPORTANT: Ensure the Save button is enabled
-                const uploadBtn = document.getElementById("uploadBtn");
                 if (uploadBtn) {
                     uploadBtn.disabled = false;
                     uploadBtn.style.opacity = "1";
-                    uploadBtn.textContent = "Update Content"; // Change text to show it's an update
+                    uploadBtn.textContent = "Update Content"; 
                 }
 
-                // Show the Upload Modal
                 modal.classList.remove("hidden");
-                return; // Stop here! Do not open the View Modal.
+                return; 
             }
-            // --- END NEW LOGIC ---
 
-
-            // STANDARD VIEW (For strangers or logged-out users)
+            // Standard View for non-owners
             const titleEl = document.getElementById("viewBlockTitle");
             const msgEl = document.getElementById("viewBlockMessage");
             const mediaEl = document.getElementById("viewBlockMedia");
-            const ownerEditBtn = document.getElementById("ownerEditBtn"); // The button we added earlier
+            const ownerEditBtn = document.getElementById("ownerEditBtn");
 
             if (titleEl) titleEl.textContent = `Block #${i}`;
             if (msgEl) msgEl.textContent = data?.message || "";
 
-            // Hide the "I own this" button if we are logged in (since we auto-opened it anyway)
-            // or show it if we are not logged in but want to claim it manually
             if (ownerEditBtn) {
                  if (loggedInUserEmail) {
                      ownerEditBtn.classList.add("hidden"); 
@@ -693,14 +660,9 @@ if (reservedBlocks.includes(i)) {
               const mediaType = data?.mediaType;
 
               if (mediaUrl && mediaType === "image") {
-                mediaEl.innerHTML =
-                  `<img src="${mediaUrl}" style="max-width:100%;border-radius:8px;" />`;
+                mediaEl.innerHTML = `<img src="${mediaUrl}" style="max-width:100%;border-radius:8px;" />`;
               } else if (mediaUrl && mediaType === "audio") {
-                mediaEl.innerHTML = `
-                  <audio controls style="width:100%;margin-top:10px;">
-                    <source src="${mediaUrl}" />
-                  </audio>
-                `;
+                mediaEl.innerHTML = `<audio controls style="width:100%;margin-top:10px;"><source src="${mediaUrl}" /></audio>`;
               } else {
                 mediaEl.innerHTML = "<p style='opacity:0.6; font-style:italic;'>This block has been secured, but the owner has not uploaded content yet.</p>";
               }
@@ -710,7 +672,7 @@ if (reservedBlocks.includes(i)) {
             return;
           }
 
-          // UNCLAIMED / UNRESERVED or reserved-by-this-user → select for upload
+          // UNCLAIMED / AVAILABLE → Select for upload
           document.querySelectorAll(".block").forEach((b) =>
             b.classList.remove("selected")
           );
@@ -718,7 +680,6 @@ if (reservedBlocks.includes(i)) {
 
           hiddenBlockNumber.value = i;
 
-          const selectedText = document.getElementById("selected-block-text");
           if (selectedText) {
             selectedText.textContent = `Selected Block: #${i}`;
           }
