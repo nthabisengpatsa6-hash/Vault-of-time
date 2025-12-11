@@ -577,16 +577,7 @@ document.addEventListener("DOMContentLoaded", async () => {
              return; 
           }
           // --- END NEW LOGIC ---
-          const reservedWarning = document.getElementById("reservedWarning");
-          const uploadBtn = document.getElementById("uploadBtn");
-
-          // reset warning + upload btn
-          if (reservedWarning) reservedWarning.classList.add("hidden");
-          if (uploadBtn) {
-            uploadBtn.disabled = false;
-            uploadBtn.style.opacity = "1";
-          }
-
+         
           // restore saved email if empty
           const storedEmail = localStorage.getItem("userEmail");
           if (storedEmail && emailInput && !emailInput.value.trim()) {
