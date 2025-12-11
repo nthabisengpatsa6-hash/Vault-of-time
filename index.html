@@ -250,6 +250,16 @@
 <div class="search-wrapper">
   <input type="number" id="blockSearch" placeholder="Search block #..." min="1" max="1000000" />
   <button id="searchBtn">🔍</button>
+  
+  <label class="multi-select-toggle">
+    <input type="checkbox" id="multiSelectMode" />
+    <span>Enable Multi-Select</span>
+  </label>
+</div>
+
+<div id="bulkActionBar" class="hidden">
+    <span id="bulkCount">0 Blocks Selected</span>
+    <button id="bulkReserveBtn">Reserve All</button>
 </div>
 
 <!-- BLOCK GRID -->
