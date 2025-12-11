@@ -205,6 +205,43 @@ a:hover {
   color: #cbd5df;
 }
 
+/* =========================================
+   "PAID BUT EMPTY" BLOCK STYLES
+   ========================================= */
+
+.block.claimed-empty {
+    background-color: #1a1a1a !important; /* Dark Grey */
+    border: 1px solid #444 !important;    /* Subtle Border */
+    color: #555 !important;               /* Dark Text Number */
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Add a Lock Icon in the center */
+.block.claimed-empty::after {
+    content: "🔒";             /* Lock Emoji */
+    font-size: 14px;
+    opacity: 0.5;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Optional: Make it glow slightly on hover */
+.block.claimed-empty:hover {
+    border-color: #D4AF37 !important;
+    color: #D4AF37 !important;
+}
+
+.block.claimed-empty:hover::after {
+    opacity: 1;
+    filter: drop-shadow(0 0 5px #D4AF37);
+}
+
 /* Image blocks */
 .block.claimed-has-image {
   background-size: cover;
