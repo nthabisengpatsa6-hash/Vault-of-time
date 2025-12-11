@@ -614,12 +614,60 @@ if (reservedBlocks.includes(i)) {
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
 
+            // --- NEW: CHECK IF LOGGED-IN OWNER ---
+            // Check if the user is logged in AND if the email matches this block
+            const ownerEmail = data?.reservedBy || data?.email; 
+            
+            if (loggedInUserEmail && ownerEmail && loggedInUserEmail.toLowerCase() === ownerEmail.toLowerCase()) {
+                // IT MATCHES! Open the Edit Form instead of the View Popup
+                
+                // Visual selection
+                document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
+                div.classList.add("selected");
+
+                // Pre-fill the form
+                hiddenBlockNumber.value = i;
+                const selectedText = document.getElementById("selected-block-text");
+                if (selectedText) selectedText.textContent = `Editing Block: #${i}`;
+                
+                // Fill details so they don't have to re-type
+                nameInput.value = data.name || "";
+                emailInput.value = data.email || ""; 
+                messageInput.value = data.message || "";
+                
+                // IMPORTANT: Ensure the Save button is enabled
+                const uploadBtn = document.getElementById("uploadBtn");
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.style.opacity = "1";
+                    uploadBtn.textContent = "Update Content"; // Change text to show it's an update
+                }
+
+                // Show the Upload Modal
+                modal.classList.remove("hidden");
+                return; // Stop here! Do not open the View Modal.
+            }
+            // --- END NEW LOGIC ---
+
+
+            // STANDARD VIEW (For strangers or logged-out users)
             const titleEl = document.getElementById("viewBlockTitle");
             const msgEl = document.getElementById("viewBlockMessage");
             const mediaEl = document.getElementById("viewBlockMedia");
+            const ownerEditBtn = document.getElementById("ownerEditBtn"); // The button we added earlier
 
             if (titleEl) titleEl.textContent = `Block #${i}`;
             if (msgEl) msgEl.textContent = data?.message || "";
+
+            // Hide the "I own this" button if we are logged in (since we auto-opened it anyway)
+            // or show it if we are not logged in but want to claim it manually
+            if (ownerEditBtn) {
+                 if (loggedInUserEmail) {
+                     ownerEditBtn.classList.add("hidden"); 
+                 } else {
+                     ownerEditBtn.classList.remove("hidden");
+                 }
+            }
 
             if (mediaEl) {
               const mediaUrl = data?.mediaUrl || data?.imageUrl;
@@ -635,7 +683,7 @@ if (reservedBlocks.includes(i)) {
                   </audio>
                 `;
               } else {
-                mediaEl.innerHTML = "";
+                mediaEl.innerHTML = "<p style='opacity:0.6; font-style:italic;'>This block has been secured, but the owner has not uploaded content yet.</p>";
               }
             }
 
