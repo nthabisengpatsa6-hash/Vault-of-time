@@ -583,12 +583,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             const data = blockCache[i];
             const reservedBy = data?.reservedBy || null;
 
+            // Gather all possible ways the user might be identified
             const savedEmail = localStorage.getItem("userEmail");
             const typedEmail = emailInput?.value?.trim() || null;
-            const userEmail = typedEmail || savedEmail;
+            
+            // --- FIX: PRIORITIZE LOGGED IN USER ---
+            // If loggedInUserEmail exists, we use that first.
+            const userEmail = loggedInUserEmail || typedEmail || savedEmail; 
 
             // If NOT the owner — lock the whole form UI
-            if (!userEmail || reservedBy !== userEmail) {
+            if (!userEmail || !reservedBy || userEmail.toLowerCase() !== reservedBy.toLowerCase()) {
               modal.classList.remove("hidden");
 
               if (warning) warning.classList.remove("hidden");
@@ -606,6 +610,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
               return; // STOP — user cannot continue
             }
+
+            // If we reach this point, the user is the owner! 
+            // We do nothing else here, allowing the code to continue to the upload form.
+          }
+            
 
             // If the user IS the reserver, the form is already unlocked by the fix at the top!
           }
