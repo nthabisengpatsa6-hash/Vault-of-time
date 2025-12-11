@@ -79,7 +79,13 @@
 <nav class="side-menu" id="sideMenu">
   <button id="closeMenu">&times;</button>
   <h2>Vault Menu</h2>
-
+<div class="accordion">
+    
+    <div class="accordion-item">
+      <button id="menuLoginBtn" class="accordion-header" style="color: #D4AF37; font-weight: bold; border-bottom: 1px solid #D4AF37;">
+        🔑 Owner Login
+      </button>
+    </div>
   <div class="accordion">
 
     <!-- ABOUT -->
@@ -397,6 +403,29 @@
    emailjs.init("O9ZTyJYVkoIrBxFdQ"); 
    })();
 </script>
+
+<div id="loginModal" class="hidden" style="position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center;">
+  
+  <div class="modal-content" style="background: #161b22; padding: 30px; border: 1px solid #D4AF37; border-radius: 8px; max-width: 400px; width: 90%; text-align: center; position: relative;">
+    
+    <span class="close-login" style="position: absolute; top: 10px; right: 15px; color: #aaa; font-size: 24px; cursor: pointer;">&times;</span>
+    
+    <h2 style="color:#D4AF37; margin-bottom: 20px;">Owner Login</h2>
+    
+    <div id="loginStep1">
+        <p style="color: #ccc; margin-bottom: 15px;">Enter the email used to purchase your blocks.</p>
+        <input type="email" id="loginEmailInput" placeholder="name@example.com" style="width:100%; padding:12px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #333; background: #0d1117; color: white;">
+        <button id="loginSendBtn" style="width:100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; border-radius: 4px;">Send Login Code</button>
+    </div>
+
+    <div id="loginStep2" class="hidden">
+        <p style="color: #ccc; margin-bottom: 15px;">Check your email for the code.</p>
+        <input type="text" id="loginCodeInput" placeholder="123456" style="width:100%; padding:12px; margin-bottom: 15px; letter-spacing: 5px; text-align: center; font-size: 20px; border-radius: 4px; border: 1px solid #333; background: #0d1117; color: white;">
+        <button id="loginConfirmBtn" style="width:100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; border-radius: 4px;">Verify</button>
+    </div>
+
+  </div>
+</div>
   
 <script type="module" src="script.js?v=7777777"></script>
 
