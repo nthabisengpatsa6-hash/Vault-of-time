@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reservation System | Vault of Time</title>
+  <title>Reservation & Login System | Vault of Time</title>
   <link rel="icon" type="image/svg+xml" href="vault-assets/favicon.svg" />
   <link rel="stylesheet" href="style.css" />
   
   <style>
-    /* Simple internal styles for this page text */
     body {
         background-color: #0d1117;
         color: #e6e6e6;
@@ -42,6 +41,13 @@
         padding: 15px;
         margin: 20px 0;
     }
+
+    .security-box {
+        background: rgba(76, 175, 80, 0.1); /* Slight green tint for security */
+        border-left: 4px solid #4CAF50;
+        padding: 15px;
+        margin: 20px 0;
+    }
     
     li { margin-bottom: 10px; }
   </style>
@@ -51,27 +57,49 @@
   <div class="reservation-container">
     <a href="index.html" class="back-link">← Back to The Vault</a>
 
-    <h1>The Reservation System</h1>
+    <h1>System Guide: Reservations & Login</h1>
     
-    <p>To ensure fairness and security for larger contributions to the Vault of Time, we utilize a specialized Reservation System for bulk purchases.</p>
+    <p>The Vault of Time uses a specialized system to ensure fair access during reservations and secure access for owners.</p>
 
-    <h2>How It Works</h2>
+    <hr style="border: 0; border-top: 1px solid #333; margin: 30px 0;">
+
+    <h2>Part 1: Buying & Reservations</h2>
     <ol>
-        <li><strong>Select Your Blocks:</strong> Toggle "Multi-Select" and click the blocks you wish to own.</li>
+        <li><strong>Select Your Blocks:</strong> Toggle "Multi-Select" (Shift+Click) to choose your blocks.</li>
         <li><strong>Reserve:</strong> Click "Reserve All" and enter your details.</li>
-        <li><strong>The 2-Hour Window:</strong> The system instantly locks these blocks for <strong>2 hours</strong>. During this time, no one else can purchase them.</li>
-        <li><strong>Quote & Payment:</strong> You will receive a generated quote and payment link in your email inbox.</li>
-        <li><strong>Confirmation:</strong> Once payment is verified, the reservation is lifted, and the blocks become permanently yours to build upon.</li>
+        <li><strong>The 2-Hour Window:</strong> The system locks these blocks for <strong>2 hours</strong>. No one else can take them.</li>
+        <li><strong>Payment:</strong> You will receive a quote via email. Once paid, the blocks are permanently yours.</li>
     </ol>
 
     <div class="highlight-box">
-        <h3>⚠️ Important</h3>
-        <p><strong>You have strictly 2 hours to complete the payment.</strong><br>
-        If payment is not received within this window, the system automatically releases the blocks back to the public pool.</p>
+        <h3>⚠️ Reservation Rule</h3>
+        <p><strong>You strictly have 2 hours to complete the payment.</strong><br>
+        If payment is not confirmed within this window, the system automatically releases the blocks back to the public.</p>
     </div>
 
-    <h2>Why is this necessary?</h2>
-    <p>Because the Vault is a finite space of 1,000,000 blocks, managing large "neighborhoods" requires manual verification to prevent hoarding or accidental double-booking. This system allows you to secure your space immediately while we process the administrative details.</p>
+    <hr style="border: 0; border-top: 1px solid #333; margin: 30px 0;">
+
+    <h2>Part 2: Owner Login & Editing</h2>
+    <p>Once you own a block, you can edit its content at any time using our secure login system.</p>
+
+    <h3>How to Edit Your Blocks</h3>
+    <ol>
+        <li>Open the Menu and click <strong>🔑 Owner Login</strong>.</li>
+        <li>Enter the email address you used to purchase the blocks.</li>
+        <li>We will email you a <strong>6-digit Verification Code</strong>.</li>
+        <li>Enter the code on the site to verify your identity.</li>
+        <li><strong>Success:</strong> You can now click on <em>any</em> of your empty blocks, and the upload form will open immediately.</li>
+    </ol>
+
+    <div class="security-box">
+        <h3>🔐 Security & Privacy</h3>
+        <p><strong>We do not have access to your account.</strong></p>
+        <ul>
+            <li>The code sent to your email is a <strong>One-Time Pin (OTP)</strong>.</li>
+            <li>It is randomly generated instantly and is valid for <strong>one session only</strong>.</li>
+            <li><strong>For your security:</strong> If you refresh the page or close the tab, you are automatically logged out. You will need to request a new code to log back in.</li>
+        </ul>
+    </div>
 
     <p style="margin-top:40px; text-align:center; color:#777; font-size: 0.9rem;">
         © 2025 Vault Of Time (Pty) Ltd
