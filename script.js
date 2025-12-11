@@ -503,6 +503,30 @@ document.addEventListener("DOMContentLoaded", async () => {
                  }
              }
 
+                      // ============================================================
+          // --- FIX START: RESET EVERYTHING ---
+          // This forces the form to unlock before we check the new block
+          // ============================================================
+          const form = document.getElementById("blockForm");
+          const lockedMsg = document.getElementById("lockedMsg");
+          const warning = document.getElementById("reservedWarning");
+          const uploadBtn = document.getElementById("uploadBtn");
+
+          // 1. Unlock the form styles
+          if (form) form.classList.remove("locked-form");
+          
+          // 2. Hide all warning messages
+          if (lockedMsg) lockedMsg.classList.add("hidden");
+          if (warning) warning.classList.add("hidden");
+
+          // 3. Re-enable the button
+          if (uploadBtn) {
+              uploadBtn.disabled = false;
+              uploadBtn.style.opacity = "1";
+              uploadBtn.textContent = "Save Details"; 
+          }
+          // --- FIX END ---
+
              // 3. SHIFT CLICK LOGIC (Range Selection)
              // We check if Shift key is pressed AND we have a previous click
              if (window.event.shiftKey && lastClickedId !== null) {
