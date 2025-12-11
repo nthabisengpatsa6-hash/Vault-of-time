@@ -41,7 +41,7 @@ const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 // ADD THESE TWO NEW LINES:
 let isMultiSelect = false;
 let selectedBatch = [];
-
+let lastClickedId = null;
 let currentPage = 1;
 let claimed = [];          // paid blocks
 let reservedBlocks = [];   // reserved but not paid
@@ -484,7 +484,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         // CLICK HANDLER
         div.onclick = async () => {
           // --- NEW: MULTI-SELECT CLICK LOGIC ---
-        if (isMultiSelect) {
+        // --- NEW: MULTI-SELECT CLICK LOGIC (WITH SHIFT) ---
+          if (isMultiSelect) {
              // 1. Check if valid (not paid)
              if (claimed.includes(i)) return alert("This block is already purchased.");
              
@@ -492,29 +493,61 @@ document.addEventListener("DOMContentLoaded", async () => {
              if (reservedBlocks.includes(i)) {
                  const data = blockCache[i];
                  const savedEmail = localStorage.getItem("userEmail");
-                 // If no data loaded yet, or reserved by someone else, block it
                  if (!data || data.reservedBy !== savedEmail) {
                      return alert("This block is reserved by another user.");
                  }
              }
 
-             // 3. Toggle Selection
-             if (selectedBatch.includes(i)) {
-                 // Deselect: Remove from array
-                 selectedBatch = selectedBatch.filter(id => id !== i);
-                 div.classList.remove("multi-selected");
-             } else {
-                 // Select: Add to array
-                 if (selectedBatch.length >= 500) return alert("Max 500 blocks at a time.");
-                 selectedBatch.push(i);
-                 div.classList.add("multi-selected");
+             // 3. SHIFT CLICK LOGIC (Range Selection)
+             // We check if Shift key is pressed AND we have a previous click
+             if (window.event.shiftKey && lastClickedId !== null) {
+                 const start = Math.min(lastClickedId, i);
+                 const end = Math.max(lastClickedId, i);
+                 
+                 // Loop through the range
+                 for (let k = start; k <= end; k++) {
+                     // Skip if already purchased or reserved by others
+                     if (claimed.includes(k)) continue;
+                     if (reservedBlocks.includes(k)) {
+                        const d = blockCache[k];
+                        const myEmail = localStorage.getItem("userEmail");
+                        if (!d || d.reservedBy !== myEmail) continue;
+                     }
+
+                     // Add to selection if not already there
+                     if (!selectedBatch.includes(k)) {
+                         if (selectedBatch.length >= 500) {
+                             alert("Max 500 blocks limit reached.");
+                             break;
+                         }
+                         selectedBatch.push(k);
+                         // Find the DOM element to highlight it immediately
+                         const el = document.querySelector(`.block[data-block-id='${k}']`);
+                         if (el) el.classList.add("multi-selected");
+                     }
+                 }
+             } 
+             // 4. NORMAL CLICK LOGIC (Single Toggle)
+             else {
+                 if (selectedBatch.includes(i)) {
+                     // Deselect
+                     selectedBatch = selectedBatch.filter(id => id !== i);
+                     div.classList.remove("multi-selected");
+                 } else {
+                     // Select
+                     if (selectedBatch.length >= 500) return alert("Max 500 blocks limit reached.");
+                     selectedBatch.push(i);
+                     div.classList.add("multi-selected");
+                 }
+                 // Remember this click for the next Shift-Click
+                 lastClickedId = i;
              }
 
-             // 4. Update the floating bar count
+             // 5. Update the floating bar count
              updateBulkBar();
-             return; // <--- STOP HERE! Do not open the standard popup.
-        }
-        // --- END NEW LOGIC ---
+             return; 
+          }
+          // --- END NEW LOGIC ---
           const reservedWarning = document.getElementById("reservedWarning");
           const uploadBtn = document.getElementById("uploadBtn");
 
