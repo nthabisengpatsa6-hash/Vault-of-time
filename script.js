@@ -773,6 +773,63 @@ if (reservedBlocks.includes(i)) {
     console.error("FATAL Vault init error:", err);
     alert("An error occurred. Please refresh.");
   }
+// ================= BULK RESERVE BUTTON LOGIC =================
+    const bulkBtn = document.getElementById("bulkReserveBtn");
 
+    if (bulkBtn) {
+      bulkBtn.addEventListener("click", async () => {
+        if (selectedBatch.length === 0) return;
+
+        // 1. Get User Details
+        const name = prompt("Please enter your Name for the quote:");
+        if (!name) return; // User cancelled
+        
+        const email = prompt("Please enter your Email address where we will send the quote:");
+        if (!email) return; // User cancelled
+
+        // 2. Change Button to show it's working
+        const originalText = bulkBtn.textContent;
+        bulkBtn.textContent = "Reserving...";
+        bulkBtn.disabled = true;
+
+        try {
+          // 3. Loop through selected blocks and update Firestore
+          // We use Promise.all to do them all at once
+          const promises = selectedBatch.map(blockId => {
+            return setDoc(
+                doc(blocksCollection, String(blockId)), 
+                {
+                    reserved: true,
+                    reservedBy: email,
+                    reservedName: name, 
+                    reservedAt: serverTimestamp(),
+                    isBulk: true,       // <--- This flag tells the system "2 Hours"
+                    status: "pending_quote"
+                }, 
+                { merge: true }
+            );
+          });
+
+          // Wait for all blocks to finish
+          await Promise.all(promises);
+
+          // 4. Success Message
+          alert(
+            `SUCCESS! \n\nBlocks ${selectedBatch.join(", ")} have been reserved.\n\n` +
+            `You have 2 HOURS to complete payment.\n` +
+            `A quote will be emailed to you shortly.`
+          );
+
+          // 5. Reload to update the grid
+          location.reload(); 
+
+        } catch (err) {
+          console.error("Bulk reserve error:", err);
+          alert("Something went wrong reserving the blocks. Please try again.");
+          bulkBtn.textContent = originalText;
+          bulkBtn.disabled = false;
+        }
+      });
+    }
   hideLoader();
 });
