@@ -460,6 +460,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         // CLAIMED appearance
+     // CLAIMED appearance
         if (claimed.includes(i)) {
           div.classList.add("claimed");
 
@@ -474,11 +475,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             div.style.backgroundImage = `url(${mediaUrl})`;
             div.style.backgroundSize = "cover";
             div.style.backgroundPosition = "center";
-            div.style.color = "transparent";
-          }
-
-          if (mediaUrl && mediaType === "audio") {
+            div.style.color = "transparent"; // Hide the number
+          } 
+          else if (mediaUrl && mediaType === "audio") {
             div.classList.add("claimed-has-audio");
+          } 
+          else {
+            // --- NEW: It is paid, but has no content yet ---
+            div.classList.add("claimed-empty");
           }
         }
 
