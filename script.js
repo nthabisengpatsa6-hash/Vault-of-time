@@ -47,8 +47,6 @@ let claimed = [];          // paid blocks
 let reservedBlocks = [];   // reserved but not paid
 let blockCache = {};       // id → firestore data
 
-
-
 // =========== LOAD CLAIMED + RESERVED BLOCKS =========
 async function loadClaimedBlocks() {
   try {
@@ -67,7 +65,6 @@ async function loadClaimedBlocks() {
 
       blockCache[idNum] = data;
 
-      // Auto-release expired reservations (30 minutes)
       // --- NEW: AUTO-RELEASE WITH 2-HOUR LOGIC ---
       if (data.reserved === true && data.reservedAt) {
         const now = Date.now();
@@ -105,25 +102,6 @@ async function loadClaimedBlocks() {
         }
       }
       // --- END NEW LOGIC ---
-
-        if (now - reservedTime > thirtyMinutes) {
-          console.log("Auto-releasing expired reservation:", idNum);
-
-          await setDoc(
-            doc(blocksCollection, String(idNum)),
-            {
-              reserved: false,
-              reservedBy: null,
-              reservedAt: null
-            },
-            { merge: true }
-          );
-
-          data.reserved = false;
-          data.reservedBy = null;
-          data.reservedAt = null;
-        }
-      }
 
       if (data.status === "paid") {
         claimed.push(idNum);
