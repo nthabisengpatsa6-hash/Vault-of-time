@@ -785,62 +785,84 @@ if (reservedBlocks.includes(i)) {
     alert("An error occurred. Please refresh.");
   }
 // ================= BULK RESERVE BUTTON LOGIC =================
-    const bulkBtn = document.getElementById("bulkReserveBtn");
+    // ================= BULK RESERVE BUTTON LOGIC =================
+const bulkBtn = document.getElementById("bulkReserveBtn");
 
-    if (bulkBtn) {
-      bulkBtn.addEventListener("click", async () => {
-        if (selectedBatch.length === 0) return;
+if (bulkBtn) {
+  bulkBtn.addEventListener("click", async () => {
+    if (selectedBatch.length === 0) return;
 
-        // 1. Get User Details
-        const name = prompt("Please enter your Name for the quote:");
-        if (!name) return; // User cancelled
-        
-        const email = prompt("Please enter your Email address where we will send the quote:");
-        if (!email) return; // User cancelled
+    // 1. Get User Details
+    const name = prompt("Please enter your Name for the quote:");
+    if (!name) return; // User cancelled
+    
+    const email = prompt("Please enter your Email address for the quote:");
+    if (!email) return; // User cancelled
 
-        // 2. Change Button to show it's working
-        const originalText = bulkBtn.textContent;
-        bulkBtn.textContent = "Reserving...";
-        bulkBtn.disabled = true;
+    // 2. Change Button Text
+    const originalText = bulkBtn.textContent;
+    bulkBtn.textContent = "Processing...";
+    bulkBtn.disabled = true;
 
-        try {
-          // 3. Loop through selected blocks and update Firestore
-          // We use Promise.all to do them all at once
-          const promises = selectedBatch.map(blockId => {
-            return setDoc(
-                doc(blocksCollection, String(blockId)), 
-                {
-                    reserved: true,
-                    reservedBy: email,
-                    reservedName: name, 
-                    reservedAt: serverTimestamp(),
-                    isBulk: true,       // <--- This flag tells the system "2 Hours"
-                    status: "pending_quote"
-                }, 
-                { merge: true }
-            );
-          });
+    // 3. Calculate Costs
+    const pricePerBlock = 6; // $6 for Chapter 1
+    const totalCost = selectedBatch.length * pricePerBlock;
+    const blockListString = selectedBatch.join(", ");
 
-          // Wait for all blocks to finish
-          await Promise.all(promises);
-
-          // 4. Success Message
-          alert(
-            `SUCCESS! \n\nBlocks ${selectedBatch.join(", ")} have been reserved.\n\n` +
-            `You have 2 HOURS to complete payment.\n` +
-            `A quote will be emailed to you shortly.`
-          );
-
-          // 5. Reload to update the grid
-          location.reload(); 
-
-        } catch (err) {
-          console.error("Bulk reserve error:", err);
-          alert("Something went wrong reserving the blocks. Please try again.");
-          bulkBtn.textContent = originalText;
-          bulkBtn.disabled = false;
-        }
+    try {
+      // 4. Update Firestore
+      // We assume setDoc, doc, serverTimestamp, blocksCollection are imported at the top
+      // (If you get an error here, let me know, but they should be global based on your file)
+      
+      const promises = selectedBatch.map(blockId => {
+        return setDoc(
+            doc(blocksCollection, String(blockId)), 
+            {
+                reserved: true,
+                reservedBy: email,
+                reservedName: name, 
+                reservedAt: serverTimestamp(),
+                isBulk: true,
+                status: "pending_quote"
+            }, 
+            { merge: true }
+        );
       });
+
+      await Promise.all(promises);
+
+      // 5. SEND EMAIL NOTIFICATION (The New Part!)
+      // PASTE YOUR IDS HERE:
+      const serviceID = "service_pmuwoaa";   
+      const templateID = "template_xraan78"; 
+
+      const emailParams = {
+          name: name,
+          email: email,
+          block_count: selectedBatch.length,
+          total_cost: totalCost,
+          block_list: blockListString
+      };
+
+      await emailjs.send(serviceID, templateID, emailParams);
+      console.log("Email notification sent!");
+
+      // 6. Success Message
+      alert(
+        `SUCCESS! \n\nBlocks have been reserved.` +
+        `\nTotal Estimated Cost: $${totalCost}` +
+        `\n\nWe have received your request. Check your inbox shortly for the official payment link.`
+      );
+
+      location.reload(); 
+
+    } catch (err) {
+      console.error("Bulk reserve error:", err);
+      alert("Something went wrong. Please try again.");
+      bulkBtn.textContent = originalText;
+      bulkBtn.disabled = false;
     }
+  });
+}
   hideLoader();
 });
