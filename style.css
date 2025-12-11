@@ -675,3 +675,79 @@ footer {
   text-align: center;
   font-size: 14px;
 }
+
+/* =========================================
+   NEW RESERVATION SYSTEM STYLES
+   ========================================= */
+
+/* 1. Multi-Select Toggle (Next to Search) */
+.multi-select-toggle {
+    margin-left: 15px;
+    color: #D4AF37; /* Gold */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    user-select: none;
+}
+
+.multi-select-toggle input {
+    cursor: pointer;
+    accent-color: #D4AF37; 
+    width: 16px;
+    height: 16px;
+}
+
+/* 2. The "Selected" Block Look */
+.block.multi-selected {
+    border: 2px solid #D4AF37 !important; 
+    background-color: rgba(212, 175, 55, 0.4) !important; 
+    transform: scale(0.9); 
+    box-shadow: 0 0 10px #D4AF37;
+    z-index: 10; 
+}
+
+/* 3. The Floating Bulk Action Bar */
+#bulkActionBar {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111; 
+    border: 2px solid #D4AF37; 
+    padding: 15px 30px;
+    border-radius: 50px; 
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    transition: all 0.3s ease;
+}
+
+#bulkActionBar.hidden {
+    display: none !important;
+}
+
+#bulkCount {
+    color: #fff;
+    font-weight: bold;
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+#bulkReserveBtn {
+    background: #D4AF37;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#bulkReserveBtn:hover {
+    background: #f1d58a; 
+}
