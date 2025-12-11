@@ -66,7 +66,7 @@ async function loadClaimedBlocks() {
 
       blockCache[idNum] = data;
 
-            // --- NEW: AUTO-RELEASE WITH 2-HOUR LOGIC ---
+      // --- NEW: AUTO-RELEASE WITH 2-HOUR LOGIC ---
       // FIX: Only check timer if it is NOT paid yet
       if (data.reserved === true && data.reservedAt && data.status !== "paid") {
         const now = Date.now();
@@ -105,7 +105,6 @@ async function loadClaimedBlocks() {
       }
       // --- END NEW LOGIC ---
 
-
       if (data.status === "paid") {
         claimed.push(idNum);
       } else if (data.reserved === true) {
@@ -132,6 +131,7 @@ async function loadClaimedBlocks() {
     reservedBlocks = JSON.parse(localStorage.getItem("reservedBlocks") || "[]");
   }
 }
+
 
 
 // ================= FETCH SINGLE BLOCK ===============
