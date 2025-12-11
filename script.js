@@ -68,10 +68,43 @@ async function loadClaimedBlocks() {
       blockCache[idNum] = data;
 
       // Auto-release expired reservations (30 minutes)
+      // --- NEW: AUTO-RELEASE WITH 2-HOUR LOGIC ---
       if (data.reserved === true && data.reservedAt) {
         const now = Date.now();
         const reservedTime = data.reservedAt.toMillis();
-        const thirtyMinutes = 30 * 60 * 1000;
+        
+        // Default: 30 minutes
+        let timeLimit = 30 * 60 * 1000; 
+
+        // If it's a BULK order: 2 Hours (120 minutes)
+        if (data.isBulk === true) {
+            timeLimit = 120 * 60 * 1000; 
+        }
+
+        // Check if time is up
+        if (now - reservedTime > timeLimit) {
+          console.log("Auto-releasing expired reservation:", idNum);
+
+          await setDoc(
+            doc(blocksCollection, String(idNum)),
+            {
+              reserved: false,
+              reservedBy: null,
+              reservedAt: null,
+              isBulk: null,
+              reservedName: null,
+              status: "available"
+            },
+            { merge: true }
+          );
+
+          // Update local data so the grid fixes itself immediately
+          data.reserved = false;
+          data.reservedBy = null;
+          data.reservedAt = null;
+        }
+      }
+      // --- END NEW LOGIC ---
 
         if (now - reservedTime > thirtyMinutes) {
           console.log("Auto-releasing expired reservation:", idNum);
