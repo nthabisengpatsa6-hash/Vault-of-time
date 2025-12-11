@@ -38,11 +38,15 @@ const TOTAL_BLOCKS = 100000;
 const PAGE_SIZE = 500;
 const MAX_MESSAGE_LENGTH = 300;
 const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
+// ADD THESE TWO NEW LINES:
+let isMultiSelect = false;
+let selectedBatch = [];
 
 let currentPage = 1;
 let claimed = [];          // paid blocks
 let reservedBlocks = [];   // reserved but not paid
 let blockCache = {};       // id → firestore data
+
 
 
 // =========== LOAD CLAIMED + RESERVED BLOCKS =========
@@ -695,6 +699,39 @@ if (reservedBlocks.includes(i)) {
       });
     });
 
+// --------- NEW: BULK UI HELPERS ----------
+    const multiSelectToggle = document.getElementById("multiSelectMode");
+    const bulkBar = document.getElementById("bulkActionBar");
+    const bulkCount = document.getElementById("bulkCount");
+
+    // 1. Listen for the toggle switch
+    if (multiSelectToggle) {
+        multiSelectToggle.addEventListener("change", (e) => {
+            isMultiSelect = e.target.checked;
+            selectedBatch = []; // Clear selection when switching
+            
+            // Remove visual selection from all blocks
+            document.querySelectorAll(".block").forEach(b => b.classList.remove("multi-selected"));
+            
+            // Update the bar
+            updateBulkBar();
+        });
+    }
+
+    // 2. Function to show/hide the floating bar
+    function updateBulkBar() {
+        if (!bulkBar || !bulkCount) return;
+
+        if (selectedBatch.length > 0) {
+            bulkBar.classList.remove("hidden");
+            bulkBar.style.display = "flex"; 
+            bulkCount.textContent = `${selectedBatch.length} Blocks Selected`;
+        } else {
+            bulkBar.classList.add("hidden");
+            bulkBar.style.display = "none";
+        }
+    }
+    
     // --------- INIT ----------
     await handlePaypalReturn();
     await loadClaimedBlocks();
