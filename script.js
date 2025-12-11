@@ -42,6 +42,7 @@ const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 let isMultiSelect = false;
 let selectedBatch = [];
 let lastClickedId = null;
+let loggedInUserEmail = null;
 let currentPage = 1;
 let claimed = [];          // paid blocks
 let reservedBlocks = [];   // reserved but not paid
@@ -896,6 +897,108 @@ if (bulkBtn) {
       bulkBtn.disabled = false;
     }
   });
+}
+
+  // ================= OWNER LOGIN SYSTEM =================
+
+const loginModal = document.getElementById("loginModal");
+const menuLoginBtn = document.getElementById("menuLoginBtn");
+const closeLogin = document.querySelector(".close-login");
+
+const loginStep1 = document.getElementById("loginStep1");
+const loginStep2 = document.getElementById("loginStep2");
+const loginEmailInput = document.getElementById("loginEmailInput");
+const loginSendBtn = document.getElementById("loginSendBtn");
+const loginCodeInput = document.getElementById("loginCodeInput");
+const loginConfirmBtn = document.getElementById("loginConfirmBtn");
+
+let loginGeneratedCode = null;
+
+// 1. Open Modal
+if(menuLoginBtn) {
+    menuLoginBtn.addEventListener("click", () => {
+        // If already logged in, show status
+        if(loggedInUserEmail) {
+            alert("You are currently logged in as: " + loggedInUserEmail);
+            return;
+        }
+        
+        // Close menu if open
+        const sideMenu = document.getElementById("sideMenu");
+        const overlay = document.getElementById("overlay");
+        if(sideMenu) sideMenu.classList.remove("open");
+        if(overlay) overlay.classList.remove("show");
+
+        loginModal.classList.remove("hidden");
+        
+        // Reset UI
+        loginStep1.classList.remove("hidden");
+        loginStep2.classList.add("hidden");
+        loginEmailInput.value = "";
+        loginCodeInput.value = "";
+    });
+}
+
+// 2. Close Modal
+if(closeLogin) {
+    closeLogin.onclick = () => loginModal.classList.add("hidden");
+}
+
+// 3. Send Code (Using EmailJS)
+if(loginSendBtn) {
+    loginSendBtn.onclick = async () => {
+        const email = loginEmailInput.value.trim();
+        if(!email) return alert("Enter your email.");
+
+        loginSendBtn.textContent = "Sending...";
+        loginSendBtn.disabled = true;
+
+        try {
+            // Generate Code
+            loginGeneratedCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+            // Send Email
+            const serviceID = "service_pmuwoaa"; 
+            const templateID = "template_ifxwqp6"; 
+
+            await emailjs.send(serviceID, templateID, {
+                email: email,
+                code: loginGeneratedCode
+            });
+
+            alert("Code sent! Check your inbox.");
+            loginStep1.classList.add("hidden");
+            loginStep2.classList.remove("hidden");
+
+        } catch (err) {
+            console.error(err);
+            alert("Error sending code. Please try again.");
+            loginSendBtn.textContent = "Send Login Code";
+            loginSendBtn.disabled = false;
+        }
+    };
+}
+
+// 4. Verify & Login
+if(loginConfirmBtn) {
+    loginConfirmBtn.onclick = () => {
+        const code = loginCodeInput.value.trim();
+        if(code === loginGeneratedCode) {
+            
+            // SUCCESS!
+            loggedInUserEmail = loginEmailInput.value.trim().toLowerCase();
+            alert("✅ Login Successful! \n\nYou can now click on your empty blocks to upload content.");
+            
+            loginModal.classList.add("hidden");
+            
+            // Visual feedback: Change menu button text
+            menuLoginBtn.innerHTML = "👤 " + loggedInUserEmail;
+            menuLoginBtn.style.color = "#4CAF50"; // Green
+
+        } else {
+            alert("❌ Incorrect code.");
+        }
+    };
 }
   hideLoader();
 });
