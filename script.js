@@ -1056,7 +1056,54 @@ if (bulkReserveBtn) { // We use the variable defined near the top
         // --- MODE 1: STANDARD RESERVATION ---
         // If rangeStartId is null, run the original reservation function
         return executeBulkReservation();
+
+      // ================= OWNER LOGIN SYSTEM =================
+
+// Check if menuLoginBtn exists and attach the handler
+if(menuLoginBtn) {
+    menuLoginBtn.addEventListener("click", () => {
+        // If already logged in, show status
+        if(loggedInUserEmail) {
+            alert("You are currently logged in as: " + loggedInUserEmail);
+            return;
+        }
+        
+        // Close menu if open
+        const sideMenu = document.getElementById("sideMenu");
+        const overlay = document.getElementById("overlay");
+        if(sideMenu) sideMenu.classList.remove("open");
+        if(overlay) overlay.classList.remove("show");
+
+        loginModal.classList.remove("hidden");
+        
+        // Reset UI
+        loginStep1.classList.remove("hidden");
+        loginStep2.classList.add("hidden");
+        loginEmailInput.value = "";
+        loginCodeInput.value = "";
     });
+}
+
+// 2. Close Modal
+if(closeLogin) {
+    closeLogin.onclick = () => loginModal.classList.add("hidden");
+}
+
+// 3. Send Code (Using EmailJS)
+if(loginSendBtn) {
+    loginSendBtn.onclick = async () => {
+        // ... (rest of your existing send logic here) ...
+    };
+}
+
+// 4. Verify & Login
+if(loginConfirmBtn) {
+    loginConfirmBtn.onclick = () => {
+        // ... (rest of your existing verify logic here) ...
+    };
+}
+    });
+
 }
   
   hideLoader();
