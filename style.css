@@ -745,22 +745,36 @@ footer {
     z-index: 10; 
 }
 
-/* 3. The Floating Bulk Action Bar */
+/* =========================================
+   BULK ACTION BAR STYLES
+   ========================================= */
+
 #bulkActionBar {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #111; 
-    border: 2px solid #D4AF37; 
-    padding: 15px 30px;
-    border-radius: 50px; 
-    z-index: 9999;
+    /* Use flexbox to align items in a row */
     display: flex;
-    align-items: center;
-    gap: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    transition: all 0.3s ease;
+    justify-content: space-between; /* Space out the button and the count */
+    align-items: center; /* Vertically center everything */
+    
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px;
+    background-color: #161b22; /* Dark background */
+    border-top: 2px solid #30363d;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+
+    /* Ensure it starts hidden until blocks are selected */
+    display: none; 
+}
+
+/* Ensure the count text doesn't take up too much space */
+#bulkCount {
+    white-space: nowrap;
+    margin-right: 15px;
+    font-weight: bold;
+    color: #ffffff;
 }
 
 #bulkActionBar.hidden {
