@@ -870,7 +870,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
 // --------- NEW: BULK UI HELPERS ----------
-    const multiSelectToggle = document.getElementById("multiSelectMode");
+    // CORRECTED ASSIGNMENT:
+const multiSelectToggle = document.getElementById("multiSelectMode");
+bulkBar = document.getElementById("bulkActionBar");
+bulkCount = document.getElementById("bulkCount");
+markStartBtn = document.getElementById("markStartBtn"); // Also ensure this is assigned
+bulkReserveBtn = document.getElementById("bulkReserveBtn"); // Also ensure this is assigned
     
 
     // 1. Listen for the toggle switch
