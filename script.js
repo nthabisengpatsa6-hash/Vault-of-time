@@ -970,14 +970,13 @@ async function executeBulkReservation() {
 }
 
 // ================= ATTACH EVENT LISTENER (RANGE/RESERVE MODE) =================
-const bulkBtn = document.getElementById("bulkReserveBtn");
+// Note: bulkBtn should already be defined in the main DOMContentLoaded section
 
-if (bulkBtn) {
-    bulkBtn.addEventListener("click", async () => {
+if (bulkReserveBtn) { // We use the variable defined near the top
+    bulkReserveBtn.addEventListener("click", async () => {
         // --- MODE 2 & 3: RANGE SELECTION & EXECUTION ---
         if (rangeStartId !== null) {
             
-            // This button confirms the range and executes the selection (Modes 2 & 3)
             const rangeEndId = selectedBatch.length > 0 ? selectedBatch[selectedBatch.length - 1] : rangeStartId;
 
             // Check if user clicked Mark Start but hasn't tapped the End block yet
@@ -990,8 +989,8 @@ if (bulkBtn) {
             const end = Math.max(rangeStartId, rangeEndId);
 
             // 1. EXECUTE SELECTION LOOP
-            bulkBtn.textContent = "Selecting...";
-            bulkBtn.disabled = true;
+            bulkReserveBtn.textContent = "Selecting...";
+            bulkReserveBtn.disabled = true;
             markStartBtn.disabled = true;
 
             for (let k = start; k <= end; k++) {
@@ -1018,8 +1017,8 @@ if (bulkBtn) {
             markStartBtn.textContent = '1. Mark Start';
             markStartBtn.style.borderColor = '#D4AF37';
             markStartBtn.style.color = '#D4AF37';
-            bulkBtn.textContent = 'Reserve All';
-            bulkBtn.disabled = false;
+            bulkReserveBtn.textContent = 'Reserve All';
+            bulkReserveBtn.disabled = false;
             markStartBtn.disabled = false;
             
             // Now, immediately proceed to the reservation prompt
@@ -1029,232 +1028,6 @@ if (bulkBtn) {
         // --- MODE 1: STANDARD RESERVATION ---
         // If rangeStartId is null, run the original reservation function
         return executeBulkReservation();
-    });
-}
-
-  // ================= OWNER LOGIN SYSTEM =================
-
-const loginModal = document.getElementById("loginModal");
-const menuLoginBtn = document.getElementById("menuLoginBtn");
-const closeLogin = document.querySelector(".close-login");
-
-const loginStep1 = document.getElementById("loginStep1");
-const loginStep2 = document.getElementById("loginStep2");
-const loginEmailInput = document.getElementById("loginEmailInput");
-const loginSendBtn = document.getElementById("loginSendBtn");
-const loginCodeInput = document.getElementById("loginCodeInput");
-const loginConfirmBtn = document.getElementById("loginConfirmBtn");
-
-let loginGeneratedCode = null;
-
-// 1. Open Modal
-if(menuLoginBtn) {
-    menuLoginBtn.addEventListener("click", () => {
-        // If already logged in, show status
-        if(loggedInUserEmail) {
-            alert("You are currently logged in as: " + loggedInUserEmail);
-            return;
-        }
-        
-        // Close menu if open
-        const sideMenu = document.getElementById("sideMenu");
-        const overlay = document.getElementById("overlay");
-        if(sideMenu) sideMenu.classList.remove("open");
-        if(overlay) overlay.classList.remove("show");
-
-        loginModal.classList.remove("hidden");
-        
-        // Reset UI
-        loginStep1.classList.remove("hidden");
-        loginStep2.classList.add("hidden");
-        loginEmailInput.value = "";
-        loginCodeInput.value = "";
-    });
-}
-
-// 2. Close Modal
-if(closeLogin) {
-    closeLogin.onclick = () => loginModal.classList.add("hidden");
-}
-
-// 3. Send Code (Using EmailJS)
-if(loginSendBtn) {
-    loginSendBtn.onclick = async () => {
-        const email = loginEmailInput.value.trim();
-        if(!email) return alert("Enter your email.");
-
-        loginSendBtn.textContent = "Sending...";
-        loginSendBtn.disabled = true;
-
-        try {
-            // Generate Code
-            loginGeneratedCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-            // Send Email
-            const serviceID = "service_pmuwoaa"; 
-            const templateID = "template_ifxwqp6"; 
-
-            await emailjs.send(serviceID, templateID, {
-                email: email,
-                code: loginGeneratedCode
-            });
-
-            alert("Code sent! Check your inbox.");
-            loginStep1.classList.add("hidden");
-            loginStep2.classList.remove("hidden");
-
-        } catch (err) {
-            console.error(err);
-            alert("Error sending code. Please try again.");
-            loginSendBtn.textContent = "Send Login Code";
-            loginSendBtn.disabled = false;
-        }
-    };
-}
-
-// 4. Verify & Login
-if(loginConfirmBtn) {
-    loginConfirmBtn.onclick = () => {
-        const code = loginCodeInput.value.trim();
-        if(code === loginGeneratedCode) {
-            
-            // SUCCESS!
-            loggedInUserEmail = loginEmailInput.value.trim().toLowerCase();
-            alert("✅ Login Successful! \n\nYou can now click on your empty blocks to upload content.");
-            
-            loginModal.classList.add("hidden");
-            
-            // Visual feedback: Change menu button text
-            menuLoginBtn.innerHTML = "👤 " + loggedInUserEmail;
-            menuLoginBtn.style.color = "#4CAF50"; // Green
-
-        } else {
-            alert("❌ Incorrect code.");
-        }
-    };
-}
-
-// ================= RANGE SELECTION LOGIC =================
-
-const markStartBtn = document.getElementById("markStartBtn");
-const bulkReserveBtn = document.getElementById("bulkReserveBtn"); // We still need this reference
-
-if (markStartBtn) {
-    markStartBtn.addEventListener("click", () => {
-        if (selectedBatch.length === 0) {
-            alert("Please select the starting block first by tapping it.");
-            return;
-        }
-
-        // The starting block is always the first one they tapped
-        rangeStartId = selectedBatch[0];
-        
-        // Change button text to reflect new state
-        markStartBtn.textContent = `2. Select Range (Start: #${rangeStartId})`;
-        markStartBtn.style.borderColor = '#4CAF50'; // Green border
-        markStartBtn.style.color = '#4CAF50';
-        
-        // Now it's the Reserve button's job to select the range
-        bulkReserveBtn.textContent = '3. Confirm Reservation'; 
-
-        alert(`Starting block marked: #${rangeStartId}. Now tap the final block in your desired range.`);
-    });
-}
-
-// FIX: Update bulkReserveBtn logic to handle range selection now.
-if (bulkReserveBtn) {
-    const originalBulkReserveClickHandler = bulkReserveBtn.onclick; // Save original handler
-
-    bulkReserveBtn.addEventListener("click", async (e) => {
-        // If rangeStartId is set, it means the user has tapped the START block
-        // AND the floating bar is visible.
-        if (rangeStartId !== null && selectedBatch.length > 0) {
-            
-            // The range END is the last block currently selected
-            const rangeEndId = selectedBatch[selectedBatch.length - 1];
-
-            if (rangeStartId === rangeEndId) {
-                alert("Please tap the final block in your range before confirming the reservation.");
-                return;
-            }
-
-            const start = Math.min(rangeStartId, rangeEndId);
-            const end = Math.max(rangeStartId, rangeEndId);
-
-            // Temporarily disable buttons
-            bulkReserveBtn.disabled = true;
-            markStartBtn.disabled = true;
-
-            // Loop through the range to select blocks
-            for (let k = start; k <= end; k++) {
-                // We use the same checks as the Shift+Click logic
-                if (claimed.includes(k)) continue;
-                if (reservedBlocks.includes(k)) {
-                    const d = blockCache[k];
-                    const myEmail = localStorage.getItem("userEmail");
-                    if (!d || d.reservedBy !== myEmail) continue;
-                }
-
-                // Add to selection if not already there
-                if (!selectedBatch.includes(k)) {
-                    selectedBatch.push(k);
-                    const el = document.querySelector(`.block[data-block-id='${k}']`);
-                    if (el) el.classList.add("multi-selected");
-                }
-            }
-
-            updateBulkBar();
-
-            // Reset UI for the next time
-            markStartBtn.textContent = '1. Mark Start';
-            markStartBtn.style.borderColor = '#D4AF37';
-            markStartBtn.style.color = '#D4AF37';
-            bulkReserveBtn.textContent = 'Reserve All';
-            
-            bulkReserveBtn.disabled = false;
-            markStartBtn.disabled = false;
-            rangeStartId = null;
-
-            // Now, run the actual reservation process (using the original logic)
-            // Note: If you look at the original bulk reserve logic, it uses the async function, not an onclick property.
-            // We must call the original function here to proceed with the reservation.
-            
-            // We use the existing logic block's code, but encapsulated:
-            // This is the original logic that was placed inside bulkBtn.addEventListener("click", async () => { ... })
-            // We assume the original bulk reserve logic is in the previous code block (lines 700-740)
-            
-            // To properly call the original large reservation function, we should use a custom dispatch,
-            // but for simplicity, let's just re-enable the button and tell the user to click it again.
-            // However, a much cleaner way is to make the original bulk logic a named function.
-            
-            // Since the original bulk logic is an anonymous function inside the event listener:
-            // The cleanest way is to trigger it programmatically:
-            
-            // We create a custom event that will bubble up and re-trigger the listener:
-            bulkReserveBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-            // STOP the new code block from running the old code block, as it has been dispatched above.
-            return;
-        }
-
-        // If rangeStartId is null, fall through to the normal reservation logic (which is outside this if block)
-        // Since we are replacing the handler, we need to ensure the original logic is called here.
-        // Given your current structure, the cleanest thing is to move the old logic into a named function.
-        
-        // ******************************************************************************
-        // NOTE: Due to the complexity of restructuring the existing anonymous bulk reserve 
-        // function, we will temporarily stick to a simpler model:
-        // ******************************************************************************
-
-        // 4. Run the original bulk reserve logic if the range is NOT being selected
-        if (rangeStartId === null) {
-            // Re-run the original reservation process. Since we are replacing the handler,
-            // we must ensure the original process is called. The cleanest way is to
-            // dispatch the click event as shown above.
-            bulkReserveBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-        }
-
-        e.stopImmediatePropagation(); // Prevent default behavior
     });
 }
   
