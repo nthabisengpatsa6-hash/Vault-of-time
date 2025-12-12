@@ -48,6 +48,10 @@ let currentPage = 1;
 let claimed = [];          // paid blocks
 let reservedBlocks = [];   // reserved but not paid
 let blockCache = {};       // id → firestore data
+let bulkBar = null;
+let bulkCount = null;
+let markStartBtn = null; 
+let bulkReserveBtn = null; // Important for the final logic
  // 2. Function to show/hide the floating bar
     function updateBulkBar() {
         if (!bulkBar || !bulkCount) return;
@@ -867,8 +871,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // --------- NEW: BULK UI HELPERS ----------
     const multiSelectToggle = document.getElementById("multiSelectMode");
-    const bulkBar = document.getElementById("bulkActionBar");
-    const bulkCount = document.getElementById("bulkCount");
+    
 
     // 1. Listen for the toggle switch
     if (multiSelectToggle) {
