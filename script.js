@@ -50,7 +50,6 @@ let reservedBlocks = [];   // reserved but not paid
 let blockCache = {};       // id → firestore data
 // --- UI GLOBALS (Add these here so they are visible everywhere) ---
 let bulkBar = null;
-let bulkCount = null;
 let markStartBtn = null;
 let bulkReserveBtn = null;
 
