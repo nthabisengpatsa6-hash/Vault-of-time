@@ -51,8 +51,6 @@ let blockCache = {};       // id → firestore data
 // --- UI GLOBALS (Add these here so they are visible everywhere) ---
 let bulkBar = null;
 let markStartBtn = null;
-let bulkReserveBtn = null;
-
 let loginModal = null;
 let menuLoginBtn = null;
 let closeLogin = null;
@@ -63,7 +61,6 @@ let loginSendBtn = null;
 let loginCodeInput = null;
 let loginConfirmBtn = null;
 let loginGeneratedCode = null;
-let markStartBtn = null; 
 let bulkReserveBtn = null; // Important for the final logic
 
 // 2. Function to show/hide the floating bar
