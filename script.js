@@ -48,9 +48,28 @@ let currentPage = 1;
 let claimed = [];          // paid blocks
 let reservedBlocks = [];   // reserved but not paid
 let blockCache = {};       // id → firestore data
-// --- UI GLOBALS (Add these here so they are visible everywhere) ---
+// ================= GLOBAL CONFIG ====================
+const TOTAL_BLOCKS = 100000;
+const PAGE_SIZE = 500;
+const MAX_MESSAGE_LENGTH = 300;
+const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
+
+let isMultiSelect = false;
+let selectedBatch = [];
+let lastClickedId = null;
+let loggedInUserEmail = null;
+let rangeStartId = null;
+let currentPage = 1;
+let claimed = [];          
+let reservedBlocks = [];   
+let blockCache = {};       
+
+// --- UI GLOBALS (Paste this list EXACTLY ONCE) ---
 let bulkBar = null;
+let bulkCount = null;      // <-- RESTORED THIS!
 let markStartBtn = null;
+let bulkReserveBtn = null;
+
 let loginModal = null;
 let menuLoginBtn = null;
 let closeLogin = null;
@@ -61,6 +80,7 @@ let loginSendBtn = null;
 let loginCodeInput = null;
 let loginConfirmBtn = null;
 let loginGeneratedCode = null;
+
 let bulkReserveBtn = null; // Important for the final logic
 
 // 2. Function to show/hide the floating bar
