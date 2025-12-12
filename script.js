@@ -870,15 +870,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
 // --------- NEW: BULK UI HELPERS ----------
-    // CORRECTED ASSIGNMENT:
+
+// CORRECTED ASSIGNMENT: (Ensure these are assigned without let/const if declared globally)
 const multiSelectToggle = document.getElementById("multiSelectMode");
 bulkBar = document.getElementById("bulkActionBar");
 bulkCount = document.getElementById("bulkCount");
-markStartBtn = document.getElementById("markStartBtn"); // Also ensure this is assigned
-bulkReserveBtn = document.getElementById("bulkReserveBtn"); // Also ensure this is assigned
+markStartBtn = document.getElementById("markStartBtn"); 
+bulkReserveBtn = document.getElementById("bulkReserveBtn"); 
     
 
-    // 1. Listen for the toggle switch
+// 1. Listen for the toggle switch
 if (multiSelectToggle) {
     multiSelectToggle.addEventListener("change", (e) => {
         isMultiSelect = e.target.checked;
@@ -890,8 +891,10 @@ if (multiSelectToggle) {
         // --- FIX START: FORCE BAR VISIBILITY ---
         if (isMultiSelect) {
             // Show the bar immediately when the toggle is ON
-            bulkBar.style.display = "flex";
-            bulkBar.classList.remove("hidden");
+            if(bulkBar) {
+                bulkBar.style.display = "flex";
+                bulkBar.classList.remove("hidden");
+            }
             
             // Reset the button labels when entering multi-select mode
             if (markStartBtn && bulkReserveBtn) {
@@ -902,105 +905,59 @@ if (multiSelectToggle) {
             }
         } else {
             // Hide it only when multi-select is officially OFF
-            bulkBar.classList.add("hidden");
-            bulkBar.style.display = "none";
+            if(bulkBar) {
+                bulkBar.classList.add("hidden");
+                bulkBar.style.display = "none";
+            }
         }
         // --- FIX END ---
         
-        // Note: The new updateBulkBar() function now only updates the count text.
         updateBulkBar(); 
     });
 }
-
-   
     
-    // --------- INIT ----------
+// --------- INIT ----------
     await handlePaypalReturn();
     await loadClaimedBlocks();
     renderPage(currentPage);
 
-  } catch (err) {
+} catch (err) { // Closes the try block from line ~324
     console.error("FATAL Vault init error:", err);
     alert("An error occurred. Please refresh.");
-  }
-  
-// ================= BULK RESERVATION CORE FUNCTION =================
-async function executeBulkReservation() {
-    if (selectedBatch.length === 0) return;
+} 
+// ======================================================================
+// This is the end of the try/catch block. All code below is executed
+// whether the try block succeeded or failed.
+// ======================================================================
 
-    // 1. Get User Details
-    const name = prompt("Please enter your Name for the quote:");
-    if (!name) return;
-    
-    const email = prompt("Please enter your Email address for the quote:");
-    if (!email) return;
+// ================= MISSING LISTENER: MARK START BUTTON =================
+if (markStartBtn) { 
+    markStartBtn.addEventListener("click", () => {
+        // 1. Check if a starting block has been tapped yet
+        if (selectedBatch.length === 0) {
+            alert("Please select the starting block first by tapping it.");
+            return;
+        }
 
-    // 2. Change Button Text
-    const bulkBtn = document.getElementById("bulkReserveBtn");
-    const originalText = bulkBtn.textContent;
-    bulkBtn.textContent = "Processing...";
-    bulkBtn.disabled = true;
+        // 2. Set the starting block ID
+        rangeStartId = selectedBatch[0];
+        
+        // 3. Change button text and visuals to reflect new state
+        markStartBtn.textContent = `2. Select Range (Start: #${rangeStartId})`;
+        markStartBtn.style.borderColor = '#4CAF50'; 
+        markStartBtn.style.color = '#4CAF50';
+        
+        // 4. Update the Reserve button label
+        bulkReserveBtn.textContent = '3. Confirm Reservation'; 
 
-    // 3. Calculate Costs
-    const pricePerBlock = 6;
-    const totalCost = selectedBatch.length * pricePerBlock;
-    const blockListString = selectedBatch.join(", ");
-
-    try {
-        // 4. Update Firestore
-        const promises = selectedBatch.map(blockId => {
-            return setDoc(
-                doc(blocksCollection, String(blockId)), 
-                {
-                    reserved: true,
-                    reservedBy: email,
-                    reservedName: name, 
-                    reservedAt: serverTimestamp(),
-                    isBulk: true,
-                    status: "pending_quote"
-                }, 
-                { merge: true }
-            );
-        });
-
-        await Promise.all(promises);
-
-        // 5. SEND EMAIL NOTIFICATION
-        const serviceID = "service_pmuwoaa";   
-        const templateID = "template_xraan78"; 
-
-        const emailParams = {
-            name: name,
-            email: email,
-            block_count: selectedBatch.length,
-            total_cost: totalCost,
-            block_list: blockListString
-        };
-
-        await emailjs.send(serviceID, templateID, emailParams);
-        console.log("Email notification sent!");
-
-        // 6. Success Message
-        alert(
-            `SUCCESS! \n\nBlocks have been reserved.` +
-            `\nTotal Estimated Cost: $${totalCost}` +
-            `\n\nWe have received your request. Check your inbox shortly for the official payment link.`
-        );
-
-        location.reload(); 
-
-    } catch (err) {
-        console.error("Bulk reserve error:", err);
-        alert("Something went wrong. Please try again.");
-        bulkBtn.textContent = originalText;
-        bulkBtn.disabled = false;
-    }
+        alert(`Starting block marked: #${rangeStartId}. Now tap the final block in your desired range.`);
+    });
 }
+// ======================================================================
+
 
 // ================= ATTACH EVENT LISTENER (RANGE/RESERVE MODE) =================
-// Note: bulkBtn should already be defined in the main DOMContentLoaded section
-
-if (bulkReserveBtn) { // We use the variable defined near the top
+if (bulkReserveBtn) { 
     bulkReserveBtn.addEventListener("click", async () => {
         // --- MODE 2 & 3: RANGE SELECTION & EXECUTION ---
         if (rangeStartId !== null) {
@@ -1056,10 +1013,13 @@ if (bulkReserveBtn) { // We use the variable defined near the top
         // --- MODE 1: STANDARD RESERVATION ---
         // If rangeStartId is null, run the original reservation function
         return executeBulkReservation();
+    });
+}
+// ======================================================================
 
-      // ================= OWNER LOGIN SYSTEM =================
 
-// Check if menuLoginBtn exists and attach the handler
+// ================= OWNER LOGIN SYSTEM =================
+// CHECK 1: Ensure menuLoginBtn listener is attached
 if(menuLoginBtn) {
     menuLoginBtn.addEventListener("click", () => {
         // If already logged in, show status
@@ -1084,24 +1044,35 @@ if(menuLoginBtn) {
     });
 }
 
-// 2. Close Modal
+// CHECK 2: Close Modal
 if(closeLogin) {
     closeLogin.onclick = () => loginModal.classList.add("hidden");
 }
 
-// 3. Send Code (Using EmailJS)
+// CHECK 3: Send Code (Using EmailJS)
 if(loginSendBtn) {
     loginSendBtn.onclick = async () => {
-        // ... (rest of your existing send logic here) ...
+        // You MUST paste your full loginSendBtn logic here.
+        alert("--- Placeholder: Login Send Logic Missing ---");
+        // Example:
+        // const email = loginEmailInput.value.trim();
+        // if(!email) return alert("Enter your email.");
+        // ... rest of logic
     };
 }
 
-// 4. Verify & Login
+// CHECK 4: Verify & Login
 if(loginConfirmBtn) {
     loginConfirmBtn.onclick = () => {
-        // ... (rest of your existing verify logic here) ...
+        // You MUST paste your full loginConfirmBtn logic here.
+        alert("--- Placeholder: Login Verify Logic Missing ---");
+        // Example:
+        // const code = loginCodeInput.value.trim();
+        // if(code === loginGeneratedCode) { ... }
     };
 }
-  
-  hideLoader();
-});
+// ====================================================
+
+// --- FINAL CLOSING STATEMENTS ---
+  hideLoader();
+}); // <-- This final bracket closes the document.addEventListener("DOMContentLoaded", async () => {
