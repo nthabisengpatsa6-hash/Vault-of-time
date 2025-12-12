@@ -48,7 +48,19 @@ let currentPage = 1;
 let claimed = [];          // paid blocks
 let reservedBlocks = [];   // reserved but not paid
 let blockCache = {};       // id → firestore data
+ // 2. Function to show/hide the floating bar
+    function updateBulkBar() {
+        if (!bulkBar || !bulkCount) return;
 
+        if (selectedBatch.length > 0) {
+            bulkBar.classList.remove("hidden");
+            bulkBar.style.display = "flex"; 
+            bulkCount.textContent = `${selectedBatch.length} Blocks Selected`;
+        } else {
+            bulkBar.classList.add("hidden");
+            bulkBar.style.display = "none";
+        }
+    }
 // =========== LOAD CLAIMED + RESERVED BLOCKS =========
 async function loadClaimedBlocks() {
   try {
@@ -872,19 +884,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // 2. Function to show/hide the floating bar
-    function updateBulkBar() {
-        if (!bulkBar || !bulkCount) return;
-
-        if (selectedBatch.length > 0) {
-            bulkBar.classList.remove("hidden");
-            bulkBar.style.display = "flex"; 
-            bulkCount.textContent = `${selectedBatch.length} Blocks Selected`;
-        } else {
-            bulkBar.classList.add("hidden");
-            bulkBar.style.display = "none";
-        }
-    }
+   
     
     // --------- INIT ----------
     await handlePaypalReturn();
