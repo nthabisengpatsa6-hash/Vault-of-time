@@ -1031,7 +1031,7 @@ if (bulkBtn) {
         return executeBulkReservation();
     });
 }
-}
+
   // ================= OWNER LOGIN SYSTEM =================
 
 const loginModal = document.getElementById("loginModal");
