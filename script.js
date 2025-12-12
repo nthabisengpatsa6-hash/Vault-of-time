@@ -879,18 +879,38 @@ bulkReserveBtn = document.getElementById("bulkReserveBtn"); // Also ensure this 
     
 
     // 1. Listen for the toggle switch
-    if (multiSelectToggle) {
-        multiSelectToggle.addEventListener("change", (e) => {
-            isMultiSelect = e.target.checked;
-            selectedBatch = []; // Clear selection when switching
+if (multiSelectToggle) {
+    multiSelectToggle.addEventListener("change", (e) => {
+        isMultiSelect = e.target.checked;
+        selectedBatch = []; // Clear selection when switching
+        
+        // Remove visual selection from all blocks
+        document.querySelectorAll(".block").forEach(b => b.classList.remove("multi-selected"));
+        
+        // --- FIX START: FORCE BAR VISIBILITY ---
+        if (isMultiSelect) {
+            // Show the bar immediately when the toggle is ON
+            bulkBar.style.display = "flex";
+            bulkBar.classList.remove("hidden");
             
-            // Remove visual selection from all blocks
-            document.querySelectorAll(".block").forEach(b => b.classList.remove("multi-selected"));
-            
-            // Update the bar
-            updateBulkBar();
-        });
-    }
+            // Reset the button labels when entering multi-select mode
+            if (markStartBtn && bulkReserveBtn) {
+                markStartBtn.textContent = '1. Mark Start';
+                markStartBtn.style.borderColor = '#D4AF37';
+                markStartBtn.style.color = '#D4AF37';
+                bulkReserveBtn.textContent = 'Reserve All';
+            }
+        } else {
+            // Hide it only when multi-select is officially OFF
+            bulkBar.classList.add("hidden");
+            bulkBar.style.display = "none";
+        }
+        // --- FIX END ---
+        
+        // Note: The new updateBulkBar() function now only updates the count text.
+        updateBulkBar(); 
+    });
+}
 
    
     
