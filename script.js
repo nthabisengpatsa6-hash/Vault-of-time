@@ -64,7 +64,6 @@ let loginSendBtn = null;
 let loginCodeInput = null;
 let loginConfirmBtn = null;
 let loginGeneratedCode = null;
-let bulkBar = null;
 let bulkCount = null;
 let markStartBtn = null; 
 let bulkReserveBtn = null; // Important for the final logic
