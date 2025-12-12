@@ -558,15 +558,52 @@ document.addEventListener("DOMContentLoaded", async () => {
              } 
              // 4. NORMAL CLICK LOGIC (Single Toggle)
              else {
-                 if (selectedBatch.includes(i)) {
-                     selectedBatch = selectedBatch.filter(id => id !== i);
-                     div.classList.remove("multi-selected");
+                 const isSelected = selectedBatch.includes(i);
+
+                 // --- NEW: RANGE END LOGIC ---
+                 if (rangeStartId !== null) {
+                     // If rangeStartId is set, this block is the intended END block.
+                     // Clear any prior selections and select only the start and end points.
+                     // The actual range selection will happen when they hit "Reserve All."
+                     
+                     // 1. Clear current selection
+                     selectedBatch = []; 
+                     document.querySelectorAll(".block").forEach(b => b.classList.remove("multi-selected"));
+
+                     // 2. Add Start Block back
+                     if (!selectedBatch.includes(rangeStartId)) {
+                         selectedBatch.push(rangeStartId);
+                         const startEl = document.querySelector(`.block[data-block-id='${rangeStartId}']`);
+                         if (startEl) startEl.classList.add("multi-selected");
+                     }
+
+                     // 3. Add the clicked block (END)
+                     if (!selectedBatch.includes(i)) {
+                         selectedBatch.push(i);
+                         div.classList.add("multi-selected");
+                     }
+                     
+                     // Update the button text to show the range is ready
+                     bulkReserveBtn.textContent = `Reserve Range (${Math.abs(rangeStartId - i) + 1} Blocks)`;
+                     
+                     // Reset lastClickedId so next shift-click works normally if range mode is cancelled
+                     lastClickedId = i;
+                     
                  } else {
-                     if (selectedBatch.length >= 500) return alert("Max 500 blocks limit reached.");
-                     selectedBatch.push(i);
-                     div.classList.add("multi-selected");
+                     // STANDARD TOGGLE MODE (No range start marked)
+                     if (isSelected) {
+                         // Deselect
+                         selectedBatch = selectedBatch.filter(id => id !== i);
+                         div.classList.remove("multi-selected");
+                     } else {
+                         // Select
+                         if (selectedBatch.length >= 500) return alert("Max 500 blocks limit reached.");
+                         selectedBatch.push(i);
+                         div.classList.add("multi-selected");
+                     }
+                     // Remember this click for the next Shift-Click
+                     lastClickedId = i;
                  }
-                 lastClickedId = i;
              }
 
              updateBulkBar();
@@ -932,10 +969,68 @@ async function executeBulkReservation() {
     }
 }
 
-// ================= ATTACH EVENT LISTENER =================
+// ================= ATTACH EVENT LISTENER (RANGE/RESERVE MODE) =================
 const bulkBtn = document.getElementById("bulkReserveBtn");
+
 if (bulkBtn) {
-    bulkBtn.addEventListener("click", executeBulkReservation);
+    bulkBtn.addEventListener("click", async () => {
+        // --- MODE 2 & 3: RANGE SELECTION & EXECUTION ---
+        if (rangeStartId !== null) {
+            
+            // This button confirms the range and executes the selection (Modes 2 & 3)
+            const rangeEndId = selectedBatch.length > 0 ? selectedBatch[selectedBatch.length - 1] : rangeStartId;
+
+            // Check if user clicked Mark Start but hasn't tapped the End block yet
+            if (rangeStartId === rangeEndId) {
+                alert("Please tap the final block in your range before confirming the reservation.");
+                return;
+            }
+
+            const start = Math.min(rangeStartId, rangeEndId);
+            const end = Math.max(rangeStartId, rangeEndId);
+
+            // 1. EXECUTE SELECTION LOOP
+            bulkBtn.textContent = "Selecting...";
+            bulkBtn.disabled = true;
+            markStartBtn.disabled = true;
+
+            for (let k = start; k <= end; k++) {
+                // Ensure selection is valid (skips claimed/other's reserved blocks)
+                if (claimed.includes(k)) continue;
+                if (reservedBlocks.includes(k)) {
+                    const d = blockCache[k];
+                    const myEmail = localStorage.getItem("userEmail");
+                    if (!d || d.reservedBy !== myEmail) continue;
+                }
+
+                if (!selectedBatch.includes(k)) {
+                    selectedBatch.push(k);
+                    const el = document.querySelector(`.block[data-block-id='${k}']`);
+                    if (el) el.classList.add("multi-selected");
+                }
+            }
+
+            // 2. CLEAN UP & PROCEED TO RESERVATION
+            updateBulkBar();
+            rangeStartId = null; // Reset range mode
+
+            // Reset UI for next reservation
+            markStartBtn.textContent = '1. Mark Start';
+            markStartBtn.style.borderColor = '#D4AF37';
+            markStartBtn.style.color = '#D4AF37';
+            bulkBtn.textContent = 'Reserve All';
+            bulkBtn.disabled = false;
+            markStartBtn.disabled = false;
+            
+            // Now, immediately proceed to the reservation prompt
+            return executeBulkReservation(); 
+        }
+
+        // --- MODE 1: STANDARD RESERVATION ---
+        // If rangeStartId is null, run the original reservation function
+        return executeBulkReservation();
+    });
+}
 }
   // ================= OWNER LOGIN SYSTEM =================
 
