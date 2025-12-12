@@ -38,21 +38,6 @@ const TOTAL_BLOCKS = 100000;
 const PAGE_SIZE = 500;
 const MAX_MESSAGE_LENGTH = 300;
 const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
-// ADD THESE TWO NEW LINES:
-let isMultiSelect = false;
-let selectedBatch = [];
-let lastClickedId = null;
-let loggedInUserEmail = null;
-let rangeStartId = null;
-let currentPage = 1;
-let claimed = [];          // paid blocks
-let reservedBlocks = [];   // reserved but not paid
-let blockCache = {};       // id → firestore data
-// ================= GLOBAL CONFIG ====================
-const TOTAL_BLOCKS = 100000;
-const PAGE_SIZE = 500;
-const MAX_MESSAGE_LENGTH = 300;
-const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
 let isMultiSelect = false;
 let selectedBatch = [];
@@ -80,8 +65,6 @@ let loginSendBtn = null;
 let loginCodeInput = null;
 let loginConfirmBtn = null;
 let loginGeneratedCode = null;
-
-let bulkReserveBtn = null; // Important for the final logic
 
 // 2. Function to show/hide the floating bar
 function updateBulkBar() {
