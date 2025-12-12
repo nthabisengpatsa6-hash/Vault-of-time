@@ -43,6 +43,7 @@ let isMultiSelect = false;
 let selectedBatch = [];
 let lastClickedId = null;
 let loggedInUserEmail = null;
+let rangeStartId = null;
 let currentPage = 1;
 let claimed = [];          // paid blocks
 let reservedBlocks = [];   // reserved but not paid
@@ -857,87 +858,85 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("FATAL Vault init error:", err);
     alert("An error occurred. Please refresh.");
   }
-// ================= BULK RESERVE BUTTON LOGIC =================
-    // ================= BULK RESERVE BUTTON LOGIC =================
-const bulkBtn = document.getElementById("bulkReserveBtn");
-
-if (bulkBtn) {
-  bulkBtn.addEventListener("click", async () => {
+  
+// ================= BULK RESERVATION CORE FUNCTION =================
+async function executeBulkReservation() {
     if (selectedBatch.length === 0) return;
 
     // 1. Get User Details
     const name = prompt("Please enter your Name for the quote:");
-    if (!name) return; // User cancelled
+    if (!name) return;
     
     const email = prompt("Please enter your Email address for the quote:");
-    if (!email) return; // User cancelled
+    if (!email) return;
 
     // 2. Change Button Text
+    const bulkBtn = document.getElementById("bulkReserveBtn");
     const originalText = bulkBtn.textContent;
     bulkBtn.textContent = "Processing...";
     bulkBtn.disabled = true;
 
     // 3. Calculate Costs
-    const pricePerBlock = 6; // $6 for Chapter 1
+    const pricePerBlock = 6;
     const totalCost = selectedBatch.length * pricePerBlock;
     const blockListString = selectedBatch.join(", ");
 
     try {
-      // 4. Update Firestore
-      // We assume setDoc, doc, serverTimestamp, blocksCollection are imported at the top
-      // (If you get an error here, let me know, but they should be global based on your file)
-      
-      const promises = selectedBatch.map(blockId => {
-        return setDoc(
-            doc(blocksCollection, String(blockId)), 
-            {
-                reserved: true,
-                reservedBy: email,
-                reservedName: name, 
-                reservedAt: serverTimestamp(),
-                isBulk: true,
-                status: "pending_quote"
-            }, 
-            { merge: true }
+        // 4. Update Firestore
+        const promises = selectedBatch.map(blockId => {
+            return setDoc(
+                doc(blocksCollection, String(blockId)), 
+                {
+                    reserved: true,
+                    reservedBy: email,
+                    reservedName: name, 
+                    reservedAt: serverTimestamp(),
+                    isBulk: true,
+                    status: "pending_quote"
+                }, 
+                { merge: true }
+            );
+        });
+
+        await Promise.all(promises);
+
+        // 5. SEND EMAIL NOTIFICATION
+        const serviceID = "service_pmuwoaa";   
+        const templateID = "template_xraan78"; 
+
+        const emailParams = {
+            name: name,
+            email: email,
+            block_count: selectedBatch.length,
+            total_cost: totalCost,
+            block_list: blockListString
+        };
+
+        await emailjs.send(serviceID, templateID, emailParams);
+        console.log("Email notification sent!");
+
+        // 6. Success Message
+        alert(
+            `SUCCESS! \n\nBlocks have been reserved.` +
+            `\nTotal Estimated Cost: $${totalCost}` +
+            `\n\nWe have received your request. Check your inbox shortly for the official payment link.`
         );
-      });
 
-      await Promise.all(promises);
-
-      // 5. SEND EMAIL NOTIFICATION (The New Part!)
-      // PASTE YOUR IDS HERE:
-      const serviceID = "service_pmuwoaa";   
-      const templateID = "template_xraan78"; 
-
-      const emailParams = {
-          name: name,
-          email: email,
-          block_count: selectedBatch.length,
-          total_cost: totalCost,
-          block_list: blockListString
-      };
-
-      await emailjs.send(serviceID, templateID, emailParams);
-      console.log("Email notification sent!");
-
-      // 6. Success Message
-      alert(
-        `SUCCESS! \n\nBlocks have been reserved.` +
-        `\nTotal Estimated Cost: $${totalCost}` +
-        `\n\nWe have received your request. Check your inbox shortly for the official payment link.`
-      );
-
-      location.reload(); 
+        location.reload(); 
 
     } catch (err) {
-      console.error("Bulk reserve error:", err);
-      alert("Something went wrong. Please try again.");
-      bulkBtn.textContent = originalText;
-      bulkBtn.disabled = false;
+        console.error("Bulk reserve error:", err);
+        alert("Something went wrong. Please try again.");
+        bulkBtn.textContent = originalText;
+        bulkBtn.disabled = false;
     }
-  });
 }
 
+// ================= ATTACH EVENT LISTENER =================
+const bulkBtn = document.getElementById("bulkReserveBtn");
+if (bulkBtn) {
+    bulkBtn.addEventListener("click", executeBulkReservation);
+}
   // ================= OWNER LOGIN SYSTEM =================
 
 const loginModal = document.getElementById("loginModal");
@@ -1039,5 +1038,130 @@ if(loginConfirmBtn) {
         }
     };
 }
+
+// ================= RANGE SELECTION LOGIC =================
+
+const markStartBtn = document.getElementById("markStartBtn");
+const bulkReserveBtn = document.getElementById("bulkReserveBtn"); // We still need this reference
+
+if (markStartBtn) {
+    markStartBtn.addEventListener("click", () => {
+        if (selectedBatch.length === 0) {
+            alert("Please select the starting block first by tapping it.");
+            return;
+        }
+
+        // The starting block is always the first one they tapped
+        rangeStartId = selectedBatch[0];
+        
+        // Change button text to reflect new state
+        markStartBtn.textContent = `2. Select Range (Start: #${rangeStartId})`;
+        markStartBtn.style.borderColor = '#4CAF50'; // Green border
+        markStartBtn.style.color = '#4CAF50';
+        
+        // Now it's the Reserve button's job to select the range
+        bulkReserveBtn.textContent = '3. Confirm Reservation'; 
+
+        alert(`Starting block marked: #${rangeStartId}. Now tap the final block in your desired range.`);
+    });
+}
+
+// FIX: Update bulkReserveBtn logic to handle range selection now.
+if (bulkReserveBtn) {
+    const originalBulkReserveClickHandler = bulkReserveBtn.onclick; // Save original handler
+
+    bulkReserveBtn.addEventListener("click", async (e) => {
+        // If rangeStartId is set, it means the user has tapped the START block
+        // AND the floating bar is visible.
+        if (rangeStartId !== null && selectedBatch.length > 0) {
+            
+            // The range END is the last block currently selected
+            const rangeEndId = selectedBatch[selectedBatch.length - 1];
+
+            if (rangeStartId === rangeEndId) {
+                alert("Please tap the final block in your range before confirming the reservation.");
+                return;
+            }
+
+            const start = Math.min(rangeStartId, rangeEndId);
+            const end = Math.max(rangeStartId, rangeEndId);
+
+            // Temporarily disable buttons
+            bulkReserveBtn.disabled = true;
+            markStartBtn.disabled = true;
+
+            // Loop through the range to select blocks
+            for (let k = start; k <= end; k++) {
+                // We use the same checks as the Shift+Click logic
+                if (claimed.includes(k)) continue;
+                if (reservedBlocks.includes(k)) {
+                    const d = blockCache[k];
+                    const myEmail = localStorage.getItem("userEmail");
+                    if (!d || d.reservedBy !== myEmail) continue;
+                }
+
+                // Add to selection if not already there
+                if (!selectedBatch.includes(k)) {
+                    selectedBatch.push(k);
+                    const el = document.querySelector(`.block[data-block-id='${k}']`);
+                    if (el) el.classList.add("multi-selected");
+                }
+            }
+
+            updateBulkBar();
+
+            // Reset UI for the next time
+            markStartBtn.textContent = '1. Mark Start';
+            markStartBtn.style.borderColor = '#D4AF37';
+            markStartBtn.style.color = '#D4AF37';
+            bulkReserveBtn.textContent = 'Reserve All';
+            
+            bulkReserveBtn.disabled = false;
+            markStartBtn.disabled = false;
+            rangeStartId = null;
+
+            // Now, run the actual reservation process (using the original logic)
+            // Note: If you look at the original bulk reserve logic, it uses the async function, not an onclick property.
+            // We must call the original function here to proceed with the reservation.
+            
+            // We use the existing logic block's code, but encapsulated:
+            // This is the original logic that was placed inside bulkBtn.addEventListener("click", async () => { ... })
+            // We assume the original bulk reserve logic is in the previous code block (lines 700-740)
+            
+            // To properly call the original large reservation function, we should use a custom dispatch,
+            // but for simplicity, let's just re-enable the button and tell the user to click it again.
+            // However, a much cleaner way is to make the original bulk logic a named function.
+            
+            // Since the original bulk logic is an anonymous function inside the event listener:
+            // The cleanest way is to trigger it programmatically:
+            
+            // We create a custom event that will bubble up and re-trigger the listener:
+            bulkReserveBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+            // STOP the new code block from running the old code block, as it has been dispatched above.
+            return;
+        }
+
+        // If rangeStartId is null, fall through to the normal reservation logic (which is outside this if block)
+        // Since we are replacing the handler, we need to ensure the original logic is called here.
+        // Given your current structure, the cleanest thing is to move the old logic into a named function.
+        
+        // ******************************************************************************
+        // NOTE: Due to the complexity of restructuring the existing anonymous bulk reserve 
+        // function, we will temporarily stick to a simpler model:
+        // ******************************************************************************
+
+        // 4. Run the original bulk reserve logic if the range is NOT being selected
+        if (rangeStartId === null) {
+            // Re-run the original reservation process. Since we are replacing the handler,
+            // we must ensure the original process is called. The cleanest way is to
+            // dispatch the click event as shown above.
+            bulkReserveBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        }
+
+        e.stopImmediatePropagation(); // Prevent default behavior
+    });
+}
+  
   hideLoader();
 });
