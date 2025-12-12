@@ -270,9 +270,31 @@
 </div>
 
 <div id="bulkActionBar" class="hidden">
-    <span id="bulkCount">0 Blocks Selected</span>
-    <button id="bulkReserveBtn">Reserve All</button>
-</div>
+        <span id="bulkCount">0 Blocks Selected</span>
+        <button id="markStartBtn" style="
+            background: transparent;
+            border: 1px solid #D4AF37;
+            color: #D4AF37;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+        ">
+            1. Mark Start
+        </button>
+        <button id="bulkReserveBtn" class="vault-btn" style="
+            background: #D4AF37;
+            color: #0d1117;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        ">
+            Reserve All
+        </button>
+    </div>
 
 <!-- BLOCK GRID -->
 <div class="grid-container" id="grid"></div>
