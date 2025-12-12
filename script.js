@@ -1102,9 +1102,6 @@ if(loginConfirmBtn) {
         // ... (rest of your existing verify logic here) ...
     };
 }
-    });
-
-}
   
   hideLoader();
 });
