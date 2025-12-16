@@ -50,6 +50,18 @@
     }
     
     li { margin-bottom: 10px; }
+    
+    /* Small helper for the timer table */
+    .timer-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    .timer-table td {
+        padding: 8px;
+        border-bottom: 1px solid #333;
+    }
+    .timer-table strong { color: #fff; }
   </style>
 </head>
 <body>
@@ -64,17 +76,37 @@
     <hr style="border: 0; border-top: 1px solid #333; margin: 30px 0;">
 
     <h2>Part 1: Buying & Reservations</h2>
-    <ol>
-        <li><strong>Select Your Blocks:</strong> Toggle "Multi-Select" (Shift+Click) to choose your blocks.</li>
-        <li><strong>Reserve:</strong> Click "Reserve All" and enter your details.</li>
-        <li><strong>The 2-Hour Window:</strong> The system locks these blocks for <strong>2 hours</strong>. No one else can take them.</li>
-        <li><strong>Payment:</strong> You will receive a quote via email. Once paid, the blocks are permanently yours.</li>
-    </ol>
+    
+    <h3>Step 1: Selecting Blocks</h3>
+    <p>You can select blocks in two ways:</p>
+    <ul>
+        <li><strong>Individual Selection:</strong> Simply click on any empty block to select it.</li>
+        <li><strong>Range Selection (New):</strong> To select a large area at once:
+            <ol>
+                <li>Toggle <strong>"Multi-Select"</strong> ON.</li>
+                <li>Click your starting block.</li>
+                <li>Click the <strong>"1. Mark Start"</strong> button on the floating bar.</li>
+                <li>Click your ending block. All blocks in between will be selected automatically.</li>
+            </ol>
+        </li>
+    </ul>
+
+    <h3>Step 2: Reservation Timers</h3>
+    <p>Once you click "Reserve," your blocks are locked so no one else can take them while you pay. The duration of this lock depends on your order size:</p>
 
     <div class="highlight-box">
-        <h3>⚠️ Reservation Rule</h3>
-        <p><strong>You strictly have 2 hours to complete the payment.</strong><br>
-        If payment is not confirmed within this window, the system automatically releases the blocks back to the public.</p>
+        <h3>⚠️ Payment Windows</h3>
+        <table class="timer-table">
+            <tr>
+                <td><strong>Single Block Orders</strong></td>
+                <td>You have <strong>30 Minutes</strong> to complete payment via PayPal.</td>
+            </tr>
+            <tr>
+                <td><strong>Multi-Block Orders</strong></td>
+                <td>You have <strong>2 Hours</strong> to pay the invoice sent to your email.</td>
+            </tr>
+        </table>
+        <p style="margin-top:15px; font-size:0.9em;"><em>If payment is not confirmed within these windows, the system automatically releases the blocks back to the public.</em></p>
     </div>
 
     <hr style="border: 0; border-top: 1px solid #333; margin: 30px 0;">
