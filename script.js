@@ -389,18 +389,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         await uploadBytes(fileRef, file);
         const mediaUrl = await getDownloadURL(fileRef);
 
-        await setDoc(doc(blocksCollection, blockId), {
-          blockNumber: Number(blockId),
-          name: nameInput.value,
-          email: emailInput.value,
-          message: messageInput.value,
-          mediaUrl,
-          mediaType: isAud ? "audio" : "image",
-          imageUrl: isImg ? mediaUrl : null,
-          audioUrl: isAud ? mediaUrl : null,
-          status: "pending",
-          purchasedAt: null
-        });
+            // 1. PUBLIC SAVE: Only status and message (SAFE)
+    await setDoc(doc(blocksCollection, blockId), {
+      blockNumber: Number(blockId),
+      message: messageInput.value,
+      mediaUrl,
+      mediaType: isAud ? "audio" : "image",
+      imageUrl: isImg ? mediaUrl : null,
+      audioUrl: isAud ? mediaUrl : null,
+      status: "pending",
+      purchasedAt: null
+    });
+
+    // 2. PRIVATE SAVE: Sending name and email to the Vault (NEW)
+    await savePrivateSale(blockId, emailInput.value, nameInput.value);
+
 
         localStorage.setItem("pendingBlockId", blockId);
 
