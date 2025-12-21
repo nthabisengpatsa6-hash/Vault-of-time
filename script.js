@@ -882,6 +882,39 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
     }
 
+// --------- SCAVENGER HUNT SUBMISSION ----------
+    const huntBtn = document.getElementById("huntSubmitBtn");
+    if (huntBtn) {
+      huntBtn.onclick = async () => {
+        const guess = document.getElementById('huntGuessInput').value;
+        const email = document.getElementById('huntEmailInput').value;
+        const handle = document.getElementById('huntTikTokHandle').value;
+
+        if (!guess || !email) {
+          alert("The Vault requires coordinates and an email to proceed.");
+          return;
+        }
+
+        const originalText = huntBtn.textContent;
+        huntBtn.disabled = true;
+        huntBtn.textContent = "TRANSMITTING...";
+
+        try {
+          // This calls the function you pasted at the very bottom yesterday!
+          await submitHuntEntry(guess, email, handle);
+          
+          // Clear the guess field for the next attempt
+          document.getElementById('huntGuessInput').value = '';
+        } catch (err) {
+          console.error("Hunt submission error:", err);
+          alert("Transmission failed. The Vault is offline.");
+        } finally {
+          huntBtn.disabled = false;
+          huntBtn.textContent = originalText;
+        }
+      };
+    }
+    
     // --------- ACCORDION (ABOUT / PRICING / LEGEND) ----------
     document.querySelectorAll(".accordion-header").forEach((header) => {
       if (header.tagName.toLowerCase() === "a") return;
