@@ -890,10 +890,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const email = document.getElementById('huntEmailInput').value;
         const handle = document.getElementById('huntTikTokHandle').value;
 
-        if (!guess || !email) {
-          alert("The Vault requires coordinates and an email to proceed.");
-          return;
-        }
+        if (!guess || !email || !handle) {
+    alert("The Vault requires your Block #, Email, AND TikTok Handle to verify your entry.");
+    return;
+}
 
         const originalText = huntBtn.textContent;
         huntBtn.disabled = true;
