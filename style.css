@@ -802,3 +802,37 @@ footer {
 #bulkReserveBtn:hover {
     background: #f1d58a; 
 }
+
+.hunt-container {
+    background: #1a1a1a;
+    border: 2px solid #D4AF37; /* Gold border */
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 400px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.hunt-container input {
+    background: #000;
+    border: 1px solid #333;
+    color: #D4AF37;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+#huntSubmitBtn {
+    background: #D4AF37;
+    color: #000;
+    font-weight: bold;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#huntSubmitBtn:hover {
+    background: #fff;
+}
