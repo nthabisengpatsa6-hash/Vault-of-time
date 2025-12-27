@@ -882,7 +882,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
     }
 
-//*--------- SCAVENGER HUNT SUBMISSION ----------
+/*--------- SCAVENGER HUNT SUBMISSION ----------
    const huntBtn = document.getElementById("huntSubmitBtn");
     if (huntBtn) {
       huntBtn.onclick = async () => {
