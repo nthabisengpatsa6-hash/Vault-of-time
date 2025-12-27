@@ -1250,3 +1250,4 @@ async function submitHuntEntry(guessCoordinate, userEmail, userHandle) {
         alert("ENTRY RECEIVED. THE VAULT IS WATCHING.");
     } catch (e) { console.error("Hunt submission failed", e); }
 }
+*/
