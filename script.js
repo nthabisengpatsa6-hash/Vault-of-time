@@ -882,8 +882,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
     }
 
-//--------- SCAVENGER HUNT SUBMISSION ----------
-   * const huntBtn = document.getElementById("huntSubmitBtn");
+//*--------- SCAVENGER HUNT SUBMISSION ----------
+   const huntBtn = document.getElementById("huntSubmitBtn");
     if (huntBtn) {
       huntBtn.onclick = async () => {
         const guess = document.getElementById('huntGuessInput').value;
