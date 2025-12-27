@@ -1238,7 +1238,7 @@ async function savePrivateSale(blockID, email, name) {
     } catch (e) { console.error("Vault save failed", e); }
 }
 
-// 3. Use this for the Scavenger Hunt submissions
+/* 3. Use this for the Scavenger Hunt submissions
 async function submitHuntEntry(guessCoordinate, userEmail, userHandle) {
     try {
         await addDoc(collection(db, 'vault_hunt_submissions'), {
