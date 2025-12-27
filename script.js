@@ -913,7 +913,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           huntBtn.textContent = originalText;
         }
       };
-    }*
+    }
+    */
     
     // --------- ACCORDION (ABOUT / PRICING / LEGEND) ----------
     document.querySelectorAll(".accordion-header").forEach((header) => {
