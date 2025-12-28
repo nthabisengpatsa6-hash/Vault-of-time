@@ -836,3 +836,45 @@ footer {
 #huntSubmitBtn:hover {
     background: #fff;
 }
+
+/* Legend Table Styling - High Contrast */
+.legend-section table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #161b22; /* Deep dark background */
+    border: 1px solid #30363d;
+    margin-top: 25px;
+}
+
+.legend-section th {
+    background-color: #0d1117;
+    color: #D4AF37; /* Vault Gold */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 15px;
+    border-bottom: 2px solid #D4AF37;
+    text-align: left;
+}
+
+.legend-section td {
+    padding: 15px;
+    border-bottom: 1px solid #30363d;
+    color: #ffffff; /* Pure white for maximum readability */
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Make District names pop */
+.legend-section td:first-child {
+    font-weight: bold;
+    color: #f1d58a; /* Soft gold */
+    letter-spacing: 0.5px;
+}
+
+/* Mobile Tweak: Ensure it doesn't squish */
+@media (max-width: 600px) {
+    .legend-section td, .legend-section th {
+        padding: 10px 5px;
+        font-size: 12px;
+    }
+}
