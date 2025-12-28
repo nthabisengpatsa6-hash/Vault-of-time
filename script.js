@@ -497,6 +497,34 @@ document.addEventListener("DOMContentLoaded", async () => {
         div.textContent = i;
         div.dataset.blockId = i;
 
+       // Inside your renderPage(pageNum) function:
+
+const chapterNameDisplay = document.getElementById("chapterName");
+const chapterRangeDisplay = document.getElementById("chapterRange");
+
+let districtTitle = "";
+
+if (pageNum <= 50) {
+    districtTitle = "THE ARENA: Sports & GOATs";
+} else if (pageNum <= 80) {
+    districtTitle = "THE BOULEVARD: Iconic Brands";
+} else if (pageNum <= 110) {
+    districtTitle = "THE LOBBY: Gaming & Tech";
+} else if (pageNum <= 160) {
+    districtTitle = "THE STAGE: Culture & Amapiano";
+} else {
+    districtTitle = "THE PLAZA: Personal Legacies";
+}
+
+// This actually updates the text on the screen
+if (chapterNameDisplay) {
+    chapterNameDisplay.textContent = districtTitle;
+}
+
+if (chapterRangeDisplay) {
+    chapterRangeDisplay.textContent = `Blocks ${ (pageNum - 1) * 500 + 1 } – ${ pageNum * 500 }`;
+} 
+        
         // RESERVED appearance
         if (reservedBlocks.includes(i)) {
           const data = blockCache[i];
