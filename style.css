@@ -914,20 +914,31 @@ footer {
 /* 3. THE PERSISTENT CORNER CARD (The Floating Guide) */
 .keeper-card {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 320px;
+    bottom: 20px;
+    right: 20px;
+    width: 320px; /* Give him a set width so he's a card, not a bar */
     background: #161b22;
     border: 1px solid #D4AF37;
     border-radius: 12px;
-    padding: 18px;
+    padding: 15px;
     display: flex;
     align-items: flex-start;
-    gap: 15px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     z-index: 9998;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
+
+/* Ensure he doesn't swallow the whole screen on mobile */
+@media (max-width: 600px) {
+    .keeper-card {
+        width: calc(100% - 40px);
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+    }
+}
+
 
 .keeper-card:hover {
     transform: translateY(-5px); /* Subtle "I'm alive" hover effect */
