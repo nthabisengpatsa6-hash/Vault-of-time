@@ -193,6 +193,21 @@ function hideLoader() {
 
 // ================= MAIN LOGIC =======================
 document.addEventListener("DOMContentLoaded", async () => {
+// --- THE KEEPER'S WELCOME (SHOW ONCE) ---
+const welcomeModal = document.getElementById("keeper-welcome-modal");
+const closeWelcomeBtn = document.getElementById("close-keeper-welcome");
+
+// Check if they've met the Keeper yet
+if (welcomeModal && !localStorage.getItem("vaultKeeperMet")) {
+    welcomeModal.style.display = "flex";
+}
+
+if (closeWelcomeBtn) {
+    closeWelcomeBtn.onclick = () => {
+        welcomeModal.style.display = "none";
+        localStorage.setItem("vaultKeeperMet", "true");
+    };
+}
 
   // --------- MENU TOGGLE ----------
   const menuToggle = document.getElementById("menuToggle");
@@ -524,7 +539,38 @@ if (chapterNameDisplay) {
 if (chapterRangeDisplay) {
     chapterRangeDisplay.textContent = `Blocks ${ (pageNum - 1) * 500 + 1 } – ${ pageNum * 500 }`;
 } 
-        
+
+  // --- THE KEEPER'S ADVICE ENGINE ---
+const keeperText = document.getElementById("keeper-text");
+const keeperTitle = document.getElementById("keeper-title");
+
+const prompts = {
+    arena: "This is THE ARENA. Don't just post a score. Tell me about the first time a match made you scream at the TV. Who is your GOAT?",
+    boulevard: "Welcome to THE BOULEVARD. Brands are just stories we buy. What's the one ad from your childhood you can still recite?",
+    lobby: "You've entered THE LOBBY. The 3 AM gaming sessions, the first console... Record your high scores here, Grootman.",
+    stage: "THE STAGE is vibrating. If this block had a speaker, which Amapiano track would be shaking the Vault right now?",
+    plaza: "THE PLAZA. This is the 'I Was Here' section. Don't be shy—tell the future exactly who you were."
+};
+
+if (keeperText && keeperTitle) {
+    if (pageNum <= 50) {
+        keeperTitle.innerText = "The Keeper: Arena Guide";
+        keeperText.innerText = prompts.arena;
+    } else if (pageNum <= 80) {
+        keeperTitle.innerText = "The Keeper: Boulevard Scout";
+        keeperText.innerText = prompts.boulevard;
+    } else if (pageNum <= 110) {
+        keeperTitle.innerText = "The Keeper: Lobby Admin";
+        keeperText.innerText = prompts.lobby;
+    } else if (pageNum <= 160) {
+        keeperTitle.innerText = "The Keeper: Stage Manager";
+        keeperText.innerText = prompts.stage;
+    } else {
+        keeperTitle.innerText = "The Keeper: Plaza Mayor";
+        keeperText.innerText = prompts.plaza;
+    }
+}
+      
         // RESERVED appearance
         if (reservedBlocks.includes(i)) {
           const data = blockCache[i];
