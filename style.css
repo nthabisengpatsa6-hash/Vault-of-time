@@ -880,118 +880,97 @@ footer {
 }
 
 /* =========================================================
-   THE KEEPER'S VISUALS
+   1. THE WELCOME MODAL (The "Front Door")
    ========================================================= */
-
-/* 1. THE MODAL BACKDROP (The "Shadow" over the Vault) */
 .keeper-modal {
     position: fixed;
-    z-index: 10001; 
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.95); /* Deep black overlay */
-    display: none; /* JS will toggle this to 'flex' */
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(5px); /* Modern frosted glass effect */
+    z-index: 10001;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    display: none; 
+    justify-content: center; align-items: center;
+    backdrop-filter: blur(5px);
 }
 
-/* 2. THE MODAL BOX (The Address Card) */
 .keeper-modal-content {
     background: #161b22;
-    border: 2px solid #D4AF37; /* Vault Gold */
+    border: 2px solid #D4AF37;
     padding: 40px;
     border-radius: 20px;
     max-width: 550px;
     width: 90%;
     text-align: center;
     box-shadow: 0 0 60px rgba(212, 175, 55, 0.15);
-    animation: vaultFadeIn 0.5s ease-out;
 }
 
-.keeper-card {
+.keeper-large-avatar { font-size: 60px; display: block; margin-bottom: 15px; }
+
+/* =========================================================
+   2. THE CHAT BUBBLE & TRIGGER (The "Furniture")
+   ========================================================= */
+#keeper-container {
     position: fixed;
     bottom: 30px;
     right: 30px;
-    width: 300px;
-    background: #161b22;
-    border: 2px solid #D4AF37;
-    border-radius: 20px; /* More rounded for that 'bubble' look */
-    padding: 15px;
+    z-index: 9999;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
-    z-index: 9998;
-    animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* The 'Pop' effect */
+    align-items: flex-end;
 }
 
-/* The Speech Bubble Tail */
-.keeper-card::after {
-    content: '';
+.keeper-speech-bubble {
+    position: relative;
+    background: #161b22;
+    border: 2px solid #D4AF37;
+    border-radius: 15px;
+    padding: 20px;
+    width: 280px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* The Triangle/Tail */
+.bubble-tail {
     position: absolute;
-    bottom: -15px;
-    right: 30px;
-    border-width: 15px 15px 0;
-    border-style: solid;
-    border-color: #D4AF37 transparent transparent;
+    bottom: -12px;
+    right: 25px;
+    width: 0; height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 12px solid #D4AF37;
+}
+
+.keeper-icon-btn {
+    width: 60px; height: 60px;
+    background: #0d1117;
+    border: 2px solid #D4AF37;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center; align-items: center;
+    cursor: pointer;
+    font-size: 30px;
+    transition: transform 0.2s;
+}
+
+.keeper-icon-btn:hover { transform: scale(1.1); }
+
+/* Typography for the Bubble */
+#keeper-title { color: #D4AF37; font-size: 14px; text-transform: uppercase; margin: 0 0 5px 0; }
+#keeper-text { color: #f0f6fc; font-size: 13.5px; line-height: 1.5; margin: 0; }
+
+.bubble-x {
+    position: absolute;
+    top: -10px; left: -10px;
+    background: #000; color: #fff;
+    border: 2px solid #D4AF37;
+    border-radius: 50%;
+    width: 25px; height: 25px;
+    cursor: pointer;
 }
 
 @keyframes bubblePop {
     0% { transform: scale(0.5); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
-}
-
-
-
-.keeper-card:hover {
-    transform: translateY(-5px); /* Subtle "I'm alive" hover effect */
-}
-
-/* 4. TEXT & AVATAR STYLING */
-.keeper-large-avatar {
-    font-size: 60px;
-    display: block;
-    margin-bottom: 15px;
-}
-
-.keeper-avatar {
-    font-size: 30px;
-    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5));
-}
-
-.keeper-bubble h3 {
-    margin: 0 0 6px 0;
-    color: #D4AF37;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-}
-
-.keeper-bubble p {
-    margin: 0;
-    color: #f0f6fc;
-    font-size: 13.5px;
-    line-height: 1.5;
-}
-
-/* 5. ANIMATIONS */
-@keyframes vaultFadeIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
-}
-
-/* MOBILE FIX: Ensure the Keeper doesn't block the grid too much */
-@media (max-width: 600px) {
-    .keeper-card {
-        width: calc(100% - 40px);
-        bottom: 20px;
-        right: 20px;
-        padding: 12px;
-    }
-    
-    .keeper-modal-content {
-        padding: 25px;
-    }
 }
