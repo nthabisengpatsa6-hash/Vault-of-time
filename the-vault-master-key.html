@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The Keeper's Ledger</title>
+    <style>
+        body { background: #0d1117; color: white; font-family: sans-serif; padding: 50px; }
+        .admin-box { background: #161b22; border: 1px solid #D4AF37; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        textarea { width: 100%; height: 150px; background: #0d1117; color: #D4AF37; border: 1px solid #30363d; padding: 10px; }
+        input { background: #0d1117; color: white; border: 1px solid #30363d; padding: 10px; margin-bottom: 10px; width: 250px; }
+        button { background: #D4AF37; color: black; padding: 10px 20px; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; }
+        .warning { color: #ff6b6b; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>The Keeper's Ledger</h1>
+
+    <div class="admin-box" id="login-section">
+        <h3>Identify Yourself</h3>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password"><br>
+        <button id="loginBtn">Login to the Vault</button>
+    </div>
+
+    <div class="admin-box" id="ledger-section" style="display:none;">
+        <p class="warning">Admin Authenticated. Proceed with caution.</p>
+        <label>Paste Block IDs (separated by commas):</label><br>
+        <textarea id="blockIds" placeholder="417, 418, 419..."></textarea><br>
+        <button id="batchUpdateBtn">Mark as PAID</button>
+    </div>
+
+    <script type="module">
+        import { db } from "./firebase-config.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { writeBatch, doc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        const auth = getAuth();
+
+        // --- LOGIN LOGIC ---
+        document.getElementById('loginBtn').onclick = async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('ledger-section').style.display = 'block';
+                alert("Welcome back, Queen.");
+            } catch (error) {
+                alert("Invasion thwarted! (Or you just mistyped your password).");
+            }
+        };
+
+        // --- BATCH UPDATE LOGIC ---
+        document.getElementById('batchUpdateBtn').onclick = async () => {
+            const input = document.getElementById('blockIds').value;
+            const blockArray = input.split(',').map(id => id.trim());
+            
+            if (blockArray.length === 0 || blockArray[0] === "") return alert("No IDs found!");
+
+            const batch = writeBatch(db);
+            blockArray.forEach((id) => {
+                const blockRef = doc(db, "blocks", id); 
+                batch.update(blockRef, { status: "paid", reservedAt: null });
+            });
+
+            try {
+                await batch.commit();
+                alert(`Mogul move successful! ${blockArray.length} blocks updated.`);
+            } catch (error) {
+                console.error(error);
+                alert("Firestore denied you. Check your Security Rules and UID.");
+            }
+        };
+    </script>
+</body>
+</html>
