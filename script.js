@@ -558,22 +558,8 @@ if (chapterRangeDisplay) {
     chapterRangeDisplay.textContent = `Blocks ${ (pageNum - 1) * 500 + 1 } – ${ pageNum * 500 }`;
 } 
 
-  // --- THE KEEPER'S ADVICE ENGINE ---
-const keeperText = document.getElementById("keeper-text");
-const keeperTitle = document.getElementById("keeper-title");
+  updateKeeper(pageNum);
 
-const prompts = {
-    arena: "This is THE ARENA. Don't just post a score. Tell me about the first time a match made you scream at the TV. Who is your GOAT?",
-    boulevard: "Welcome to THE BOULEVARD. Brands are just stories we buy. What's the one ad from your childhood you can still recite?",
-    lobby: "You've entered THE LOBBY. The 3 AM gaming sessions, the first console... Record your high scores here, Grootman.",
-    stage: "THE STAGE is vibrating. If this block had a speaker, which Amapiano track would be shaking the Vault right now?",
-    plaza: "THE PLAZA. This is the 'I Was Here' section. Don't be shy—tell the future exactly who you were."
-};
-
-// Tell the Keeper to update his personality for this page
-updateKeeper(pageNum);
-
-}
       
         // RESERVED appearance
         if (reservedBlocks.includes(i)) {
