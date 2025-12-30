@@ -437,13 +437,21 @@
     </div>
 </div>
 
-<div id="keeper-corner" class="keeper-card">
-    <div class="keeper-avatar">🏺</div>
-    <div class="keeper-bubble">
-        <h3 id="keeper-title">The Keeper</h3>
-        <p id="keeper-text">Welcome, traveler. Explore the districts—I'll be here if you need an idea.</p>
+<div id="keeper-container">
+    <div id="keeper-bubble" class="keeper-speech-bubble">
+        <button id="close-keeper-bubble" class="bubble-x">×</button>
+        <div class="keeper-content">
+            <h3 id="keeper-title">The Keeper</h3>
+            <p id="keeper-text">Welcome, traveler. Explore the districts—I'll be here if you need an idea.</p>
+        </div>
+        <div class="bubble-tail"></div>
+    </div>
+
+    <div id="keeper-trigger" class="keeper-icon-btn">
+        <span>🏺</span>
     </div>
 </div>
+
   
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script type="text/javascript">
