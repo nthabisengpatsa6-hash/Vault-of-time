@@ -111,7 +111,8 @@ async function loadClaimedBlocks() {
 
         // If it's a BULK order: 2 Hours (120 minutes)
         if (data.isBulk === true) {
-            timeLimit = 120 * 60 * 1000; 
+            timeLimit = 1440 * 60 * 1000; // 24 hours for Bulk Orders
+ 
         }
 
         // Check if time is up
