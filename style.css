@@ -911,33 +911,38 @@ footer {
     animation: vaultFadeIn 0.5s ease-out;
 }
 
-/* 3. THE PERSISTENT CORNER CARD (The Floating Guide) */
 .keeper-card {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 320px; /* Give him a set width so he's a card, not a bar */
+    bottom: 30px;
+    right: 30px;
+    width: 300px;
     background: #161b22;
-    border: 1px solid #D4AF37;
-    border-radius: 12px;
+    border: 2px solid #D4AF37;
+    border-radius: 20px; /* More rounded for that 'bubble' look */
     padding: 15px;
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
     z-index: 9998;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* The 'Pop' effect */
 }
 
-/* Ensure he doesn't swallow the whole screen on mobile */
-@media (max-width: 600px) {
-    .keeper-card {
-        width: calc(100% - 40px);
-        bottom: 10px;
-        right: 10px;
-        left: 10px;
-    }
+/* The Speech Bubble Tail */
+.keeper-card::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    right: 30px;
+    border-width: 15px 15px 0;
+    border-style: solid;
+    border-color: #D4AF37 transparent transparent;
 }
+
+@keyframes bubblePop {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
 
 
 .keeper-card:hover {
