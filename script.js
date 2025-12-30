@@ -209,6 +209,24 @@ if (closeWelcomeBtn) {
     };
 }
 
+  // --- KEEPER CHAT SETUP ---
+const keeperBubble = document.getElementById("keeper-bubble");
+const triggerBtn = document.getElementById("keeper-trigger");
+const closeBtn = document.getElementById("close-keeper-bubble");
+
+if (triggerBtn && keeperBubble) {
+    triggerBtn.onclick = () => {
+        keeperBubble.style.display = keeperBubble.style.display === "none" ? "block" : "none";
+    };
+}
+
+if (closeBtn && keeperBubble) {
+    closeBtn.onclick = (e) => {
+        e.stopPropagation(); 
+        keeperBubble.style.display = "none";
+    };
+}
+
   // --------- MENU TOGGLE ----------
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
@@ -552,23 +570,9 @@ const prompts = {
     plaza: "THE PLAZA. This is the 'I Was Here' section. Don't be shy—tell the future exactly who you were."
 };
 
-if (keeperText && keeperTitle) {
-    if (pageNum <= 50) {
-        keeperTitle.innerText = "The Keeper: Arena Guide";
-        keeperText.innerText = prompts.arena;
-    } else if (pageNum <= 80) {
-        keeperTitle.innerText = "The Keeper: Boulevard Scout";
-        keeperText.innerText = prompts.boulevard;
-    } else if (pageNum <= 110) {
-        keeperTitle.innerText = "The Keeper: Lobby Admin";
-        keeperText.innerText = prompts.lobby;
-    } else if (pageNum <= 160) {
-        keeperTitle.innerText = "The Keeper: Stage Manager";
-        keeperText.innerText = prompts.stage;
-    } else {
-        keeperTitle.innerText = "The Keeper: Plaza Mayor";
-        keeperText.innerText = prompts.plaza;
-    }
+// Tell the Keeper to update his personality for this page
+updateKeeper(pageNum);
+
 }
       
         // RESERVED appearance
@@ -1325,3 +1329,35 @@ async function submitHuntEntry(guessCoordinate, userEmail, userHandle) {
     } catch (e) { console.error("Hunt submission failed", e); }
 }
 */
+function updateKeeper(pageNum) {
+    const keeperText = document.getElementById("keeper-text");
+    const keeperTitle = document.getElementById("keeper-title");
+    const keeperBubble = document.getElementById("keeper-bubble");
+
+    const prompts = {
+        arena: "Welcome to THE ARENA. Sports, GOATS, and history. If you're a Messi fan, this is your territory. Claim your coordinate.",
+        boulevard: "Welcome to THE BOULEVARD. This is for the icons. This is where big brands immortalize their legendary moments and sounds. You're in elite company here.",
+        lobby: "You've entered THE LOBBY. Tech, gaming, and 3AM high scores. Own the grid, Grootman.",
+        stage: "THE STAGE is vibrating. If it’s Amapiano, Afrobeats, or pure culture, it belongs here.",
+        plaza: "THE PLAZA. No themes, just you. Tell the future you were here."
+    };
+
+    if (keeperText && keeperTitle) {
+        let content, title;
+        if (pageNum <= 50) { title = "Arena Guide"; content = prompts.arena; }
+        else if (pageNum <= 80) { title = "Boulevard Scout"; content = prompts.boulevard; }
+        else if (pageNum <= 110) { title = "Lobby Admin"; content = prompts.lobby; }
+        else if (pageNum <= 160) { title = "Stage Manager"; content = prompts.stage; }
+        else { title = "Plaza Mayor"; content = prompts.plaza; }
+
+        keeperTitle.innerText = `The Keeper: ${title}`;
+        keeperText.innerText = content;
+
+        // The "Pop" Animation Reset
+        if (keeperBubble && keeperBubble.style.display !== "none") {
+            keeperBubble.style.animation = 'none';
+            keeperBubble.offsetHeight; 
+            keeperBubble.style.animation = null;
+        }
+    }
+}
