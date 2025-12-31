@@ -1256,11 +1256,12 @@ async function executeBulkReservation() {
         console.log("Email notification sent!");
 
         // 7. Success Message
-        alert(
-            `SUCCESS! \n\nBlocks have been reserved.` +
-            `\nTotal Estimated Cost: $${totalCost}` +
-            `\n\nWe have received your request. Check your inbox shortly for the official payment link.`
-        );
+       alert(
+    `SUCCESS! \n\nBlocks have been reserved.` +
+    `\nTotal Estimated Cost: $${totalCost}` +
+    `\n\nWe have received your request. Check your inbox shortly for your quote and payment link.` +
+    `\n\nNote: You have 30 minutes after receiving your quote to complete payment, or the blocks will be released.`
+);
 
         location.reload(); 
 
