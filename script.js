@@ -1376,5 +1376,5 @@ function updateKeeper(pageNum) {
             keeperBubble.offsetHeight; 
             keeperBubble.style.animation = null;
         }
-    }
-}
+})();
+// <--- ABSOLUTELY NOTHING ELSE HERE. NO BRACKETS. NO SPACES.
