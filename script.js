@@ -1064,7 +1064,9 @@ bulkReserveBtn = document.getElementById("bulkReserveBtn");
       };
   }
 
-// Login Verify Code
+// ================================================================
+// 1. LOGIN VERIFY CODE
+// ================================================================
 if (loginConfirmBtn) {
     loginConfirmBtn.onclick = () => {
         const code = loginCodeInput.value.trim();
@@ -1079,15 +1081,16 @@ if (loginConfirmBtn) {
             loginModal.classList.add("hidden");
             menuLoginBtn.innerHTML = "👤 " + loggedInUserEmail;
             menuLoginBtn.style.color = "#4CAF50"; 
-       } else {
+        } else {
             alert("❌ Incorrect code.");
         }
-    }; // Closes the onclick function
-} // Closes the if(loginConfirmBtn) block
+    }; 
+} 
 
 // ================================================================
-// THE ENGINE: STARTUP LOGIC (Must be INSIDE to see renderPage)
+// 2. THE ENGINE: STARTUP LOGIC
 // ================================================================
+// We keep this INSIDE the try block so it can see renderPage
 (async () => {
     try {
         console.log("Vault of Time: Powering up...");
@@ -1101,16 +1104,21 @@ if (loginConfirmBtn) {
     }
 })();
 
-// --- THE CRITICAL CLOSURE ---
-// This finally pays off the 'try' from line 252 and the listener from line 216
+// ================================================================
+// 3. THE CRITICAL CLOSURE
+// ================================================================
+    // This finally closes the 'try' block that started at the top of your script
     } catch (err) {
         console.error("A critical Vault error occurred during setup:", err);
+    } finally {
+        // This ensures the loader disappears whether it worked or failed
+        hideLoader(); 
     }
-    hideLoader(); 
-});
+}); // <--- FINAL CLOSING BRACKET for DOMContentLoaded
+
 
 // ================================================================
-// GLOBAL FUNCTIONS (Living safely outside the listener)
+// 4. GLOBAL FUNCTIONS (Living safely outside the listener)
 // ================================================================
 
 async function executeBulkReservation() {
@@ -1128,10 +1136,6 @@ async function executeBulkReservation() {
         bulkBtn.textContent = "Processing...";
         bulkBtn.disabled = true;
     }
-
-    const pricePerBlock = 6;
-    const totalCost = selectedBatch.length * pricePerBlock;
-    const blockListString = selectedBatch.join(", ");
 
     try {
         const promises = selectedBatch.map(blockId => {
@@ -1158,18 +1162,18 @@ async function executeBulkReservation() {
             name: name,
             email: email,
             block_count: selectedBatch.length,
-            total_cost: totalCost,
-            block_list: blockListString
+            total_cost: selectedBatch.length * 6,
+            block_list: selectedBatch.join(", ")
         };
 
         await emailjs.send(serviceID, templateID, emailParams);
         
-        alert(`SUCCESS! \n\nBlocks reserved. Total: $${totalCost}. Check your email for the quote!`);
+        alert(`SUCCESS! \n\nBlocks reserved. Check your email for the quote!`);
         location.reload(); 
 
     } catch (err) {
         console.error("Bulk reserve error:", err);
-        alert("Something went wrong. Please try again.");
+        alert("Something went wrong.");
         if (bulkBtn) {
             bulkBtn.textContent = originalText;
             bulkBtn.disabled = false;
@@ -1202,7 +1206,6 @@ async function savePrivateSale(blockID, email, name) {
 function updateKeeper(pageNum) {
     const keeperText = document.getElementById("keeper-text");
     const keeperTitle = document.getElementById("keeper-title");
-    const keeperBubble = document.getElementById("keeper-bubble");
 
     const prompts = {
         arena: "Welcome to THE ARENA. Sports, GOATS, and history.",
@@ -1213,14 +1216,13 @@ function updateKeeper(pageNum) {
     };
 
     if (keeperText && keeperTitle) {
-        let content, title;
+        let title = "Plaza Mayor", content = prompts.plaza;
         if (pageNum <= 50) { title = "Arena Guide"; content = prompts.arena; }
         else if (pageNum <= 80) { title = "Boulevard Scout"; content = prompts.boulevard; }
         else if (pageNum <= 110) { title = "Lobby Admin"; content = prompts.lobby; }
         else if (pageNum <= 160) { title = "Stage Manager"; content = prompts.stage; }
-        else { title = "Plaza Mayor"; content = prompts.plaza; }
 
         keeperTitle.innerText = `The Keeper: ${title}`;
         keeperText.innerText = content;
     }
-}  
+}
