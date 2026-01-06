@@ -1061,26 +1061,7 @@ bulkReserveBtn = document.getElementById("bulkReserveBtn");
             updateBulkBar(); 
         });
     }
-    
- // ========= 10. INITIALIZATION (The "Start" Button) =========
-(async () => {
-    try {
-        console.log("Vault of Time: Powering up...");
-        
-        // These 'await' calls are now safe inside this async wrapper
-        await handlePaypalReturn(); 
-        await loadClaimedBlocks();
-        
-        // Finally, render the grid
-        if (typeof renderPage === 'function') {
-            renderPage(currentPage);
-        }
-        
-        console.log("Arena is live. Keeper recognized.");
-    } catch (err) {
-        console.error("CRITICAL: Vault failed to initialize:", err);
-    }
-})(); // <--- These brackets "fire" the function immediately.
+
 
   // ====================================================================
   // EVENT LISTENERS (Outside try/catch, inside DOMContentLoaded)
@@ -1381,3 +1362,18 @@ function updateKeeper(pageNum) {
         }
     }
 }
+// ================================================================
+// THE ENGINE: STARTUP LOGIC (LIVES AT THE ABSOLUTE BOTTOM)
+// ================================================================
+(async () => {
+    try {
+        console.log("Vault of Time: Powering up...");
+        await handlePaypalReturn(); 
+        await loadClaimedBlocks();
+        if (typeof renderPage === 'function') {
+            renderPage(currentPage);
+        }
+    } catch (err) {
+        console.error("Vault failed to initialize:", err);
+    }
+})();
