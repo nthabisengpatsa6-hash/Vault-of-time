@@ -1218,11 +1218,6 @@ if (loginConfirmBtn) {
         }
     })();
 
-    // 1. This closes the big TRY block that started on line 172
-    } catch (err) {
-        console.error("Critical error during Arena load:", err);
-    }
-
     hideLoader(); // Stops the spinner once the Engine finishes
 
 }; // <--- THE ABSOLUTE FINAL CLOSING for DOMContentLoaded
