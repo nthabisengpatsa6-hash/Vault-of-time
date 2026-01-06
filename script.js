@@ -100,7 +100,7 @@ function updateBulkBar() {
     } else {
         // We generally rely on the toggle to hide it, but this updates the count
         bulkCount.textContent = "0 Blocks Selected";
-    }A
+    }
 }
 // =========== LOAD CLAIMED + RESERVED BLOCKS =========
 async function loadClaimedBlocks() {
