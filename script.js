@@ -1227,7 +1227,7 @@ if (loginConfirmBtn) {
 
     hideLoader(); // Stops the spinner once the Engine finishes
 
-}); // <--- THE ABSOLUTE FINAL CLOSING for DOMContentLoaded
+}; // <--- THE ABSOLUTE FINAL CLOSING for DOMContentLoaded
 
 // ================================================================
 // THE BULK RESERVATION FUNCTION (MUST BE AT THE VERY BOTTOM)
