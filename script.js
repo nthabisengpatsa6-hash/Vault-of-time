@@ -1081,16 +1081,15 @@ if (loginConfirmBtn) {
             loginModal.classList.add("hidden");
             menuLoginBtn.innerHTML = "👤 " + loggedInUserEmail;
             menuLoginBtn.style.color = "#4CAF50"; 
-        } else {
+       } else {
             alert("❌ Incorrect code.");
         }
-    }; 
-} 
+    }; // Closes the onclick function
+} // Closes the if(loginConfirmBtn) block
 
 // ================================================================
-// 2. THE ENGINE: STARTUP LOGIC
+// THE ENGINE: STARTUP LOGIC (Kept inside the 'House' to see renderPage)
 // ================================================================
-// We keep this INSIDE the try block so it can see renderPage
 (async () => {
     try {
         console.log("Vault of Time: Powering up...");
@@ -1104,18 +1103,14 @@ if (loginConfirmBtn) {
     }
 })();
 
-// ================================================================
-// 3. THE CRITICAL CLOSURE
-// ================================================================
-    // This finally closes the 'try' block that started at the top of your script
+// --- THE FINAL BALANCING ACT ---
+// We are closing the big 'try' and the listener once and for all.
     } catch (err) {
         console.error("A critical Vault error occurred during setup:", err);
     } finally {
-        // This ensures the loader disappears whether it worked or failed
-        hideLoader(); 
+        hideLoader(); // Kill the spinner no matter what
     }
-}); // <--- FINAL CLOSING BRACKET for DOMContentLoaded
-
+}); // <--- THE ABSOLUTE FINAL CLOSING for DOMContentLoaded
 
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
