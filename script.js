@@ -819,11 +819,11 @@ if (reserveBtn) {
     reserveBtn.style.display = "none"; 
 }
 
- // Find and hide that pesky information icon
-const infoIcon = document.querySelector(".info-icon") || document.getElementById("reserveInfo");
+// TARGET THE CORRECT CLASS NAME
+const infoIcon = document.querySelector(".reserve-info-icon");
 if (infoIcon) {
     infoIcon.classList.add("hidden");
-    infoIcon.style.display = "none";
+    infoIcon.style.display = "none"; // Hard hide just to be sure
 }           
             
 // Focus only on the content
