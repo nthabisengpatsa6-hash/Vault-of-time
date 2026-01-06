@@ -277,7 +277,6 @@ if (closeBtn && keeperBubble) {
     });
   }
 
-  try {
    // --------- DOM REFERENCES ----------
     const grid = document.getElementById("grid");
     const pagination = document.getElementById("pagination");
@@ -1104,15 +1103,12 @@ if (loginConfirmBtn) {
 })();
 
 // ================================================================
-// THE CRITICAL CLOSURE: Closing the 'try' from Line 172/252
+// THE FINAL CLOSURE (No more orphan catch blocks!)
 // ================================================================
-    } catch (err) {
-        console.error("A critical Vault error occurred during setup:", err); //
-    } finally {
-        hideLoader(); // Stops the spinner
-    }
 
-}); // <--- FINAL CLOSING BRACKET for DOMContentLoaded
+hideLoader(); // This now sits safely at the end of the listener
+
+}); // <--- THIS is the final closure for your DOMContentLoaded listener.
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
 // ================================================================
