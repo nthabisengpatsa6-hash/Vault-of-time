@@ -1220,7 +1220,7 @@ bulkReserveBtn = document.getElementById("bulkReserveBtn");
              alert("❌ Incorrect code.");
          }
      };
- }
+ 
   hideLoader();
 
 }); // <--- FINAL CLOSING BRACKET for DOMContentLoaded
