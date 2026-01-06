@@ -839,42 +839,21 @@ if (uploadBtn) {
     uploadBtn.onclick = () => handleKeeperUpdate(i); 
 }
 
-modal.classList.remove("hidden");
-return;
+const ownerEmail = data?.reservedBy || data?.email;
+// We check if the email in the Vault matches the person currently logged in
+const isActuallyTheOwner = loggedInUserEmail && ownerEmail && (loggedInUserEmail.toLowerCase() === ownerEmail.toLowerCase());
 
-            // Standard View for non-owners
-            const titleEl = document.getElementById("viewBlockTitle");
-            const msgEl = document.getElementById("viewBlockMessage");
-            const mediaEl = document.getElementById("viewBlockMedia");
-            const ownerEditBtn = document.getElementById("ownerEditBtn");
-
-            if (titleEl) titleEl.textContent = `Block #${i}`;
-            if (msgEl) msgEl.textContent = data?.message || "";
-
-            if (ownerEditBtn) {
-                 if (loggedInUserEmail) {
-                     ownerEditBtn.classList.add("hidden"); 
-                 } else {
-                     ownerEditBtn.classList.remove("hidden");
-                 }
-            }
-
-            if (mediaEl) {
-              const mediaUrl = data?.mediaUrl || data?.imageUrl;
-              const mediaType = data?.mediaType;
-
-              if (mediaUrl && mediaType === "image") {
-                mediaEl.innerHTML = `<img src="${mediaUrl}" style="max-width:100%;border-radius:8px;" />`;
-              } else if (mediaUrl && mediaType === "audio") {
-                mediaEl.innerHTML = `<audio controls style="width:100%;margin-top:10px;"><source src="${mediaUrl}" /></audio>`;
-              } else {
-                mediaEl.innerHTML = "<p style='opacity:0.6; font-style:italic;'>This block has been secured, but the owner has not uploaded content yet.</p>";
-              }
-            }
-
-            viewModal.classList.remove("hidden");
-            return;
-          }
+if (ownerEditBtn) {
+    if (isActuallyTheOwner) {
+        // ONLY the owner gets to see the edit button
+        ownerEditBtn.classList.remove("hidden"); 
+        ownerEditBtn.style.display = "block";
+    } else {
+        // Everyone else (logged in or not) gets NOTHING
+        ownerEditBtn.classList.add("hidden");
+        ownerEditBtn.style.display = "none";
+    }
+}
 
           // UNCLAIMED / AVAILABLE → Select for upload
           document.querySelectorAll(".block").forEach((b) =>
