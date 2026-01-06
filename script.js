@@ -1198,12 +1198,36 @@ if (loginConfirmBtn) {
         } else {
             alert("❌ Incorrect code.");
         }
-    }; // This closes the onclick function
-} // <--- ADD THIS BRACKET! It closes the 'if(loginConfirmBtn)' block
+} else {
+                alert("❌ Incorrect code.");
+            }
+        }; // Closes loginConfirmBtn.onclick
+    } // Closes if (loginConfirmBtn)
 
-hideLoader();
+    // ================================================================
+    // THE ENGINE: STARTUP LOGIC (Inside the house so it can see your tools)
+    // ================================================================
+    (async () => {
+        try {
+            console.log("Vault of Time: Powering up...");
+            await handlePaypalReturn(); 
+            await loadClaimedBlocks();
+            if (typeof renderPage === 'function') {
+                renderPage(currentPage);
+            }
+        } catch (err) {
+            console.error("Vault failed to initialize:", err);
+        }
+    })();
 
-}); // <--- This now correctly closes the DOMContentLoaded listener
+    // 1. This closes the big TRY block that started on line 172
+    } catch (err) {
+        console.error("Critical error during Arena load:", err);
+    }
+
+    hideLoader(); // Stops the spinner once the Engine finishes
+
+}); // <--- THE ABSOLUTE FINAL CLOSING for DOMContentLoaded
 
 // ================================================================
 // THE BULK RESERVATION FUNCTION (MUST BE AT THE VERY BOTTOM)
@@ -1337,7 +1361,7 @@ function updateKeeper(pageNum) {
     const prompts = {
         arena: "Welcome to THE ARENA. Sports, GOATS, and history. If you're a Messi fan, this is your territory. Claim your coordinate.",
         boulevard: "Welcome to THE BOULEVARD. This is for the icons. This is where big brands immortalize their legendary moments and sounds. You're in elite company here.",
-        lobby: "You've entered THE LOBBY. Tech, gaming, and 3AM high scores. Own the grid, Grootman.",
+        lobby: "You've entered THE LOBBY. Tech, gaming, and 3AM high scores. Own the grid.",
         stage: "THE STAGE is vibrating. If it’s Amapiano, Afrobeats, or pure culture, it belongs here.",
         plaza: "THE PLAZA. No themes, just you. Tell the future you were here."
     };
@@ -1361,18 +1385,3 @@ function updateKeeper(pageNum) {
         }
     }
 }
-// ================================================================
-// THE ENGINE: STARTUP LOGIC (LIVES AT THE ABSOLUTE BOTTOM)
-// ================================================================
-(async () => {
-    try {
-        console.log("Vault of Time: Powering up...");
-        await handlePaypalReturn(); 
-        await loadClaimedBlocks();
-        if (typeof renderPage === 'function') {
-            renderPage(currentPage);
-        }
-    } catch (err) {
-        console.error("Vault failed to initialize:", err);
-    }
-})();
