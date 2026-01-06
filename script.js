@@ -812,7 +812,13 @@ if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
 // Hide Name and Email inputs since we already know who you are
 nameInput.classList.add("hidden"); 
 emailInput.classList.add("hidden");
-
+            
+// EVICT THE RESERVE BUTTON 🚫
+if (reserveBtn) {
+    reserveBtn.classList.add("hidden");
+    reserveBtn.style.display = "none"; 
+}
+            
 // Focus only on the content
 messageInput.value = data.message || "";
 messageInput.placeholder = "Write your legacy message here...";
