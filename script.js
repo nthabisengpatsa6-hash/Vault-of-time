@@ -1062,15 +1062,18 @@ bulkReserveBtn = document.getElementById("bulkReserveBtn");
         });
     }
     
-    // --------- INIT ----------
-    await handlePaypalReturn();
-    await loadClaimedBlocks();
-    renderPage(currentPage);
-
-  } catch (err) { // This closes the 'try' block
-    console.error("FATAL Vault init error:", err);
-    alert("An error occurred. Please refresh.");
-  } 
+ // --------- INIT ---------
+(async () => {
+    try {
+        // Now 'await' is legal because it's inside an async wrapper!
+        await handlePaypalReturn(); 
+        await loadClaimedBlocks();
+        renderPage(currentPage);
+    } catch (err) { 
+        console.error("FATAL Vault init error:", err);
+        // This catch block matches your line 1070
+    }
+})();
 
   // ====================================================================
   // EVENT LISTENERS (Outside try/catch, inside DOMContentLoaded)
