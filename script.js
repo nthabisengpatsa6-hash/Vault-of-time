@@ -1181,30 +1181,29 @@ bulkReserveBtn = document.getElementById("bulkReserveBtn");
   }
 
 // Login Verify Code
- if(loginConfirmBtn) {
-     loginConfirmBtn.onclick = () => {
-         const code = loginCodeInput.value.trim();
-         if(code === loginGeneratedCode) {
-             loggedInUserEmail = loginEmailInput.value.trim().toLowerCase();
-             
-             // --- START OF NEW SESSION LOGIC ---
-             const expiry = Date.now() + (6 * 60 * 60 * 1000); // 6 hours from now
-             const session = { email: loggedInUserEmail, expiresAt: expiry };
-             localStorage.setItem('vault_session', JSON.stringify(session));
-             // --- END OF NEW SESSION LOGIC ---
+if (loginConfirmBtn) {
+    loginConfirmBtn.onclick = () => {
+        const code = loginCodeInput.value.trim();
+        if (code === loginGeneratedCode) {
+            loggedInUserEmail = loginEmailInput.value.trim().toLowerCase();
+            
+            const expiry = Date.now() + (6 * 60 * 60 * 1000); 
+            const session = { email: loggedInUserEmail, expiresAt: expiry };
+            localStorage.setItem('vault_session', JSON.stringify(session));
 
-             alert("✅ Login Successful! Your session is fixed for 6 hours.");
-             loginModal.classList.add("hidden");
-             menuLoginBtn.innerHTML = "👤 " + loggedInUserEmail;
-             menuLoginBtn.style.color = "#4CAF50"; 
-         } else {
-             alert("❌ Incorrect code.");
-         }
-     };
- 
-  hideLoader();
+            alert("✅ Login Successful!");
+            loginModal.classList.add("hidden");
+            menuLoginBtn.innerHTML = "👤 " + loggedInUserEmail;
+            menuLoginBtn.style.color = "#4CAF50"; 
+        } else {
+            alert("❌ Incorrect code.");
+        }
+    }; // This closes the onclick function
+} // <--- ADD THIS BRACKET! It closes the 'if(loginConfirmBtn)' block
 
-}); // <--- FINAL CLOSING BRACKET for DOMContentLoaded
+hideLoader();
+
+}); // <--- This now correctly closes the DOMContentLoaded listener
 
 // ================================================================
 // THE BULK RESERVATION FUNCTION (MUST BE AT THE VERY BOTTOM)
