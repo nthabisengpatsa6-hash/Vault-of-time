@@ -1346,35 +1346,40 @@ async function submitHuntEntry(guessCoordinate, userEmail, userHandle) {
     } catch (e) { console.error("Hunt submission failed", e); }
 }
 */
-function updateKeeper(pageNum) {
-    const keeperText = document.getElementById("keeper-text");
-    const keeperTitle = document.getElementById("keeper-title");
-    const keeperBubble = document.getElementById("keeper-bubble");
+// ... (rest of your code above updateKeeper)
 
-    const prompts = {
-        arena: "Welcome to THE ARENA. Sports, GOATS, and history. If you're a Messi fan, this is your territory. Claim your coordinate.",
-        boulevard: "Welcome to THE BOULEVARD. This is for the icons. This is where big brands immortalize their legendary moments and sounds. You're in elite company here.",
-        lobby: "You've entered THE LOBBY. Tech, gaming, and 3AM high scores. Own the grid.",
-        stage: "THE STAGE is vibrating. If it’s Amapiano, Afrobeats, or pure culture, it belongs here.",
-        plaza: "THE PLAZA. No themes, just you. Tell the future you were here."
-    };
+    function updateKeeper(pageNum) {
+        const keeperText = document.getElementById("keeper-text");
+        const keeperTitle = document.getElementById("keeper-title");
+        const keeperBubble = document.getElementById("keeper-bubble");
 
-    if (keeperText && keeperTitle) {
-        let content, title;
-        if (pageNum <= 50) { title = "Arena Guide"; content = prompts.arena; }
-        else if (pageNum <= 80) { title = "Boulevard Scout"; content = prompts.boulevard; }
-        else if (pageNum <= 110) { title = "Lobby Admin"; content = prompts.lobby; }
-        else if (pageNum <= 160) { title = "Stage Manager"; content = prompts.stage; }
-        else { title = "Plaza Mayor"; content = prompts.plaza; }
+        const prompts = {
+            arena: "Welcome to THE ARENA. Sports, GOATS, and history. If you're a Messi fan, this is your territory. Claim your coordinate.",
+            boulevard: "Welcome to THE BOULEVARD. This is for the icons. This is where big brands immortalize their legendary moments and sounds. You're in elite company here.",
+            lobby: "You've entered THE LOBBY. Tech, gaming, and 3AM high scores. Own the grid.",
+            stage: "THE STAGE is vibrating. If it’s Amapiano, Afrobeats, or pure culture, it belongs here.",
+            plaza: "THE PLAZA. No themes, just you. Tell the future you were here."
+        };
 
-        keeperTitle.innerText = `The Keeper: ${title}`;
-        keeperText.innerText = content;
+        if (keeperText && keeperTitle) {
+            let content, title;
+            if (pageNum <= 50) { title = "Arena Guide"; content = prompts.arena; }
+            else if (pageNum <= 80) { title = "Boulevard Scout"; content = prompts.boulevard; }
+            else if (pageNum <= 110) { title = "Lobby Admin"; content = prompts.lobby; }
+            else if (pageNum <= 160) { title = "Stage Manager"; content = prompts.stage; }
+            else { title = "Plaza Mayor"; content = prompts.plaza; }
 
-        // The "Pop" Animation Reset
-        if (keeperBubble && keeperBubble.style.display !== "none") {
-            keeperBubble.style.animation = 'none';
-            keeperBubble.offsetHeight; 
-            keeperBubble.style.animation = null;
+            keeperTitle.innerText = `The Keeper: ${title}`;
+            keeperText.innerText = content;
+
+            // The "Pop" Animation Reset
+            if (keeperBubble && keeperBubble.style.display !== "none") {
+                keeperBubble.style.animation = 'none';
+                keeperBubble.offsetHeight; 
+                keeperBubble.style.animation = null;
+            }
         }
-})();
-// <--- ABSOLUTELY NOTHING ELSE HERE. NO BRACKETS. NO SPACES.
+    } // <--- This was missing!
+
+    // Finally, close the DOMContentLoaded listener properly
+});
