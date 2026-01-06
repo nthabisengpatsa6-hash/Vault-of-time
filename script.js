@@ -1081,14 +1081,14 @@ if (loginConfirmBtn) {
             loginModal.classList.add("hidden");
             menuLoginBtn.innerHTML = "👤 " + loggedInUserEmail;
             menuLoginBtn.style.color = "#4CAF50"; 
-       } else {
+     } else {
             alert("❌ Incorrect code.");
         }
-    }; // Closes the onclick function
-} // Closes the if(loginConfirmBtn) block
+    }; // Closes the login onclick function
+} // Closes the if (loginConfirmBtn) block
 
 // ================================================================
-// THE ENGINE: STARTUP LOGIC (Kept inside the 'House' to see renderPage)
+// THE ENGINE: STARTUP LOGIC
 // ================================================================
 (async () => {
     try {
@@ -1103,15 +1103,16 @@ if (loginConfirmBtn) {
     }
 })();
 
-// --- THE FINAL BALANCING ACT ---
-// We are closing the big 'try' and the listener once and for all.
+// ================================================================
+// THE CRITICAL CLOSURE: Closing the 'try' from Line 172/252
+// ================================================================
     } catch (err) {
-        console.error("A critical Vault error occurred during setup:", err);
+        console.error("A critical Vault error occurred during setup:", err); //
     } finally {
-        hideLoader(); // Kill the spinner no matter what
+        hideLoader(); // Stops the spinner
     }
-}); // <--- THE ABSOLUTE FINAL CLOSING for DOMContentLoaded
 
+}); // <--- FINAL CLOSING BRACKET for DOMContentLoaded
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
 // ================================================================
