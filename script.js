@@ -1202,8 +1202,8 @@ if (loginConfirmBtn) {
         }; // Closes loginConfirmBtn.onclick
     } // Closes if (loginConfirmBtn)
 
-    // ================================================================
-    // THE ENGINE: STARTUP LOGIC (Inside the house so it can see your tools)
+ // ================================================================
+    // THE ENGINE: STARTUP LOGIC
     // ================================================================
     (async () => {
         try {
@@ -1218,26 +1218,29 @@ if (loginConfirmBtn) {
         }
     })();
 
-    hideLoader(); // Stops the spinner once the Engine finishes
+    hideLoader(); 
 
-}; // <--- THE ABSOLUTE FINAL CLOSING for DOMContentLoaded
+    // --- THE CRITICAL CLOSURE ---
+    // This closes the 'try' block that started way up at line 252
+    } catch (err) {
+        console.error("A critical Vault error occurred during setup:", err);
+    } 
+}); // This FINALLY closes the DOMContentLoaded listener.
+
 
 // ================================================================
-// THE BULK RESERVATION FUNCTION (MUST BE AT THE VERY BOTTOM)
+// GLOBAL FUNCTIONS (Living safely outside the listener)
 // ================================================================
 
 async function executeBulkReservation() {
-    // 1. Safety Check
     if (!selectedBatch || selectedBatch.length === 0) return;
 
-    // 2. Get User Details
     const name = prompt("Please enter your Name for the quote:");
-    if (!name) return; // User cancelled
+    if (!name) return;
     
     const email = prompt("Please enter your Email address for the quote:");
-    if (!email) return; // User cancelled
+    if (!email) return;
 
-    // 3. Change Button Text
     const bulkBtn = document.getElementById("bulkReserveBtn");
     const originalText = bulkBtn ? bulkBtn.textContent : "Reserve All";
     if (bulkBtn) {
@@ -1245,13 +1248,11 @@ async function executeBulkReservation() {
         bulkBtn.disabled = true;
     }
 
-    // 4. Calculate Costs
     const pricePerBlock = 6;
     const totalCost = selectedBatch.length * pricePerBlock;
     const blockListString = selectedBatch.join(", ");
 
     try {
-        // 5. Update Firestore
         const promises = selectedBatch.map(blockId => {
             return setDoc(
                 doc(blocksCollection, String(blockId)), 
@@ -1269,7 +1270,6 @@ async function executeBulkReservation() {
 
         await Promise.all(promises);
 
-        // 6. SEND EMAIL NOTIFICATION
         const serviceID = "service_pmuwoaa";   
         const templateID = "template_xraan78"; 
 
@@ -1282,16 +1282,8 @@ async function executeBulkReservation() {
         };
 
         await emailjs.send(serviceID, templateID, emailParams);
-        console.log("Email notification sent!");
-
-        // 7. Success Message
-       alert(
-    `SUCCESS! \n\nBlocks have been reserved.` +
-    `\nTotal Estimated Cost: $${totalCost}` +
-    `\n\nWe have received your request. Check your inbox shortly for your quote and payment link.` +
-    `\n\nNote: You have 30 minutes after receiving your quote to complete payment, or the blocks will be released.`
-);
-
+        
+        alert(`SUCCESS! \n\nBlocks reserved. Total: $${totalCost}. Check your email for the quote!`);
         location.reload(); 
 
     } catch (err) {
@@ -1302,12 +1294,8 @@ async function executeBulkReservation() {
             bulkBtn.disabled = false;
         }
     }
-  }
-// ================================================================
-// THE VAULT: SECURE DATA FUNCTIONS
-// ================================================================
+}
 
-// 1. Use this to update the grid image without saving personal info
 async function updatePublicGrid(blockID, imageUrl) {
     try {
         const docRef = doc(db, 'blocks', String(blockID));
@@ -1316,11 +1304,9 @@ async function updatePublicGrid(blockID, imageUrl) {
             status: "paid",
             reserved: true
         });
-        console.log("Public grid updated.");
     } catch (e) { console.error("Grid update failed", e); }
 }
 
-// 2. Use this to save the customer's email/name to the private vault
 async function savePrivateSale(blockID, email, name) {
     try {
         await addDoc(collection(db, 'sales_records'), {
@@ -1329,57 +1315,31 @@ async function savePrivateSale(blockID, email, name) {
             customerName: name,
             purchasedAt: serverTimestamp()
         });
-        console.log("Private record secured.");
     } catch (e) { console.error("Vault save failed", e); }
 }
 
-/* 3. Use this for the Scavenger Hunt submissions
-async function submitHuntEntry(guessCoordinate, userEmail, userHandle) {
-    try {
-        await addDoc(collection(db, 'vault_hunt_submissions'), {
-            coordinate: Number(guessCoordinate),
-            email: userEmail,
-            handle: userHandle,
-            timestamp: serverTimestamp()
-        });
-        alert("ENTRY RECEIVED. THE VAULT IS WATCHING.");
-    } catch (e) { console.error("Hunt submission failed", e); }
-}
-*/
-// ... (rest of your code above updateKeeper)
+function updateKeeper(pageNum) {
+    const keeperText = document.getElementById("keeper-text");
+    const keeperTitle = document.getElementById("keeper-title");
+    const keeperBubble = document.getElementById("keeper-bubble");
 
-    function updateKeeper(pageNum) {
-        const keeperText = document.getElementById("keeper-text");
-        const keeperTitle = document.getElementById("keeper-title");
-        const keeperBubble = document.getElementById("keeper-bubble");
+    const prompts = {
+        arena: "Welcome to THE ARENA. Sports, GOATS, and history.",
+        boulevard: "Welcome to THE BOULEVARD. Iconic brands live here.",
+        lobby: "You've entered THE LOBBY. Tech and gaming.",
+        stage: "THE STAGE is vibrating. Pure culture.",
+        plaza: "THE PLAZA. Tell the future you were here."
+    };
 
-        const prompts = {
-            arena: "Welcome to THE ARENA. Sports, GOATS, and history. If you're a Messi fan, this is your territory. Claim your coordinate.",
-            boulevard: "Welcome to THE BOULEVARD. This is for the icons. This is where big brands immortalize their legendary moments and sounds. You're in elite company here.",
-            lobby: "You've entered THE LOBBY. Tech, gaming, and 3AM high scores. Own the grid.",
-            stage: "THE STAGE is vibrating. If it’s Amapiano, Afrobeats, or pure culture, it belongs here.",
-            plaza: "THE PLAZA. No themes, just you. Tell the future you were here."
-        };
+    if (keeperText && keeperTitle) {
+        let content, title;
+        if (pageNum <= 50) { title = "Arena Guide"; content = prompts.arena; }
+        else if (pageNum <= 80) { title = "Boulevard Scout"; content = prompts.boulevard; }
+        else if (pageNum <= 110) { title = "Lobby Admin"; content = prompts.lobby; }
+        else if (pageNum <= 160) { title = "Stage Manager"; content = prompts.stage; }
+        else { title = "Plaza Mayor"; content = prompts.plaza; }
 
-        if (keeperText && keeperTitle) {
-            let content, title;
-            if (pageNum <= 50) { title = "Arena Guide"; content = prompts.arena; }
-            else if (pageNum <= 80) { title = "Boulevard Scout"; content = prompts.boulevard; }
-            else if (pageNum <= 110) { title = "Lobby Admin"; content = prompts.lobby; }
-            else if (pageNum <= 160) { title = "Stage Manager"; content = prompts.stage; }
-            else { title = "Plaza Mayor"; content = prompts.plaza; }
-
-            keeperTitle.innerText = `The Keeper: ${title}`;
-            keeperText.innerText = content;
-
-            // The "Pop" Animation Reset
-            if (keeperBubble && keeperBubble.style.display !== "none") {
-                keeperBubble.style.animation = 'none';
-                keeperBubble.offsetHeight; 
-                keeperBubble.style.animation = null;
-            }
-        }
-    } // <--- This was missing!
-
-    // Finally, close the DOMContentLoaded listener properly
-});
+        keeperTitle.innerText = `The Keeper: ${title}`;
+        keeperText.innerText = content;
+    }
+}  
