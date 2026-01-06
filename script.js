@@ -1198,9 +1198,7 @@ if (loginConfirmBtn) {
         } else {
             alert("❌ Incorrect code.");
         }
-} else {
-                alert("❌ Incorrect code.");
-            }
+
         }; // Closes loginConfirmBtn.onclick
     } // Closes if (loginConfirmBtn)
 
