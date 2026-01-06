@@ -1198,34 +1198,34 @@ if (loginConfirmBtn) {
         } else {
             alert("❌ Incorrect code.");
         }
+    }; // Closes loginConfirmBtn.onclick
+} // Closes if (loginConfirmBtn)
 
-        }; // Closes loginConfirmBtn.onclick
-    } // Closes if (loginConfirmBtn)
-
- // ================================================================
-    // THE ENGINE: STARTUP LOGIC
-    // ================================================================
-    (async () => {
-        try {
-            console.log("Vault of Time: Powering up...");
-            await handlePaypalReturn(); 
-            await loadClaimedBlocks();
-            if (typeof renderPage === 'function') {
-                renderPage(currentPage);
-            }
-        } catch (err) {
-            console.error("Vault failed to initialize:", err);
+// ================================================================
+// THE ENGINE: STARTUP LOGIC (Must stay inside the house to see renderPage)
+// ================================================================
+(async () => {
+    try {
+        console.log("Vault of Time: Powering up...");
+        await handlePaypalReturn(); 
+        await loadClaimedBlocks();
+        if (typeof renderPage === 'function') {
+            renderPage(currentPage);
         }
-    })();
-
-    hideLoader(); 
-
-    // --- THE CRITICAL CLOSURE ---
-    // This closes the 'try' block that started way up at line 252
     } catch (err) {
-        console.error("A critical Vault error occurred during setup:", err);
-    } 
-}); // This FINALLY closes the DOMContentLoaded listener.
+        console.error("Vault failed to initialize:", err);
+    }
+})(); 
+
+// --- THE CRITICAL CLOSURE ---
+// This closes the 'try' block that started way up at the top
+} catch (err) {
+    console.error("A critical Vault error occurred during setup:", err);
+} 
+
+hideLoader(); // Stops the spinner
+
+}); // <--- THE FINAL CLOSING BRACKET for DOMContentLoaded
 
 
 // ================================================================
