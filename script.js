@@ -801,29 +801,33 @@ if (chapterRangeDisplay) {
           if (claimed.includes(i)) {
             const data = await fetchBlock(i);
 
-            // Check if logged-in owner
-            const ownerEmail = data?.reservedBy || data?.email; 
-            if (loggedInUserEmail && ownerEmail && loggedInUserEmail.toLowerCase() === ownerEmail.toLowerCase()) {
-                // IT MATCHES! Open the Edit Form
-                document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
-                div.classList.add("selected");
+            // IT MATCHES! Open the Edit Form
+document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
+div.classList.add("selected");
 
-                hiddenBlockNumber.value = i;
-                if (selectedText) selectedText.textContent = `Editing Block: #${i}`;
-                
-                nameInput.value = data.name || "";
-                emailInput.value = data.email || ""; 
-                messageInput.value = data.message || "";
-                
-                if (uploadBtn) {
-                    uploadBtn.disabled = false;
-                    uploadBtn.style.opacity = "1";
-                    uploadBtn.textContent = "Update Content"; 
-                }
+hiddenBlockNumber.value = i;
+if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
 
-                modal.classList.remove("hidden");
-                return; 
-            }
+// --- THE CLEAN UP ---
+// Hide Name and Email inputs since we already know who you are
+nameInput.classList.add("hidden"); 
+emailInput.classList.add("hidden");
+
+// Focus only on the content
+messageInput.value = data.message || "";
+messageInput.placeholder = "Write your legacy message here...";
+
+if (uploadBtn) {
+    uploadBtn.disabled = false;
+    uploadBtn.style.opacity = "1";
+    uploadBtn.textContent = "🚀 Update Grid Image"; // Make it punchy!
+    
+    // Ensure the button triggers the OVERWRITE logic, not the CLAIM logic
+    uploadBtn.onclick = () => handleKeeperUpdate(i); 
+}
+
+modal.classList.remove("hidden");
+return;
 
             // Standard View for non-owners
             const titleEl = document.getElementById("viewBlockTitle");
