@@ -818,6 +818,13 @@ if (reserveBtn) {
     reserveBtn.classList.add("hidden");
     reserveBtn.style.display = "none"; 
 }
+
+ // Find and hide that pesky information icon
+const infoIcon = document.querySelector(".info-icon") || document.getElementById("reserveInfo");
+if (infoIcon) {
+    infoIcon.classList.add("hidden");
+    infoIcon.style.display = "none";
+}           
             
 // Focus only on the content
 messageInput.value = data.message || "";
