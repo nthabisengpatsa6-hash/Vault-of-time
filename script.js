@@ -1062,18 +1062,25 @@ bulkReserveBtn = document.getElementById("bulkReserveBtn");
         });
     }
     
- // --------- INIT ---------
+ // ========= 10. INITIALIZATION (The "Start" Button) =========
 (async () => {
     try {
-        // Now 'await' is legal because it's inside an async wrapper!
+        console.log("Vault of Time: Powering up...");
+        
+        // These 'await' calls are now safe inside this async wrapper
         await handlePaypalReturn(); 
         await loadClaimedBlocks();
-        renderPage(currentPage);
-    } catch (err) { 
-        console.error("FATAL Vault init error:", err);
-        // This catch block matches your line 1070
+        
+        // Finally, render the grid
+        if (typeof renderPage === 'function') {
+            renderPage(currentPage);
+        }
+        
+        console.log("Arena is live. Keeper recognized.");
+    } catch (err) {
+        console.error("CRITICAL: Vault failed to initialize:", err);
     }
-})();
+})(); // <--- These brackets "fire" the function immediately.
 
   // ====================================================================
   // EVENT LISTENERS (Outside try/catch, inside DOMContentLoaded)
