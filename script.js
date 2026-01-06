@@ -67,6 +67,26 @@ let loginSendBtn = null;
 let loginCodeInput = null;
 let loginConfirmBtn = null;
 let loginGeneratedCode = null;
+// --- KEEPER'S MEMORY: 6-HOUR SESSION CHECK ---
+const sessionData = localStorage.getItem('vault_session');
+if (sessionData) {
+    const session = JSON.parse(sessionData);
+    if (Date.now() < session.expiresAt) {
+        loggedInUserEmail = session.email; 
+        
+        // Use a timeout so the HTML has time to load before we change the button
+        setTimeout(() => {
+            const loginBtn = document.getElementById('menuLoginBtn'); 
+            if (loginBtn) {
+                loginBtn.innerHTML = "👤 " + session.email;
+                loginBtn.style.color = "#4CAF50"; 
+            }
+        }, 200);
+        console.log("Vault Session Restored for:", session.email);
+    } else {
+        localStorage.removeItem('vault_session');
+    }
+}
 
 // 2. Function to show/hide the floating bar
 function updateBulkBar() {
@@ -80,7 +100,7 @@ function updateBulkBar() {
     } else {
         // We generally rely on the toggle to hide it, but this updates the count
         bulkCount.textContent = "0 Blocks Selected";
-    }
+    }A
 }
 // =========== LOAD CLAIMED + RESERVED BLOCKS =========
 async function loadClaimedBlocks() {
@@ -1173,22 +1193,28 @@ bulkReserveBtn = document.getElementById("bulkReserveBtn");
       };
   }
 
-  // Login Verify Code
-  if(loginConfirmBtn) {
-      loginConfirmBtn.onclick = () => {
-          const code = loginCodeInput.value.trim();
-          if(code === loginGeneratedCode) {
-              loggedInUserEmail = loginEmailInput.value.trim().toLowerCase();
-              alert("✅ Login Successful!");
-              loginModal.classList.add("hidden");
-              menuLoginBtn.innerHTML = "👤 " + loggedInUserEmail;
-              menuLoginBtn.style.color = "#4CAF50"; 
-          } else {
-              alert("❌ Incorrect code.");
-          }
-      };
-  }
+// Login Verify Code
+ if(loginConfirmBtn) {
+     loginConfirmBtn.onclick = () => {
+         const code = loginCodeInput.value.trim();
+         if(code === loginGeneratedCode) {
+             loggedInUserEmail = loginEmailInput.value.trim().toLowerCase();
+             
+             // --- START OF NEW SESSION LOGIC ---
+             const expiry = Date.now() + (6 * 60 * 60 * 1000); // 6 hours from now
+             const session = { email: loggedInUserEmail, expiresAt: expiry };
+             localStorage.setItem('vault_session', JSON.stringify(session));
+             // --- END OF NEW SESSION LOGIC ---
 
+             alert("✅ Login Successful! Your session is fixed for 6 hours.");
+             loginModal.classList.add("hidden");
+             menuLoginBtn.innerHTML = "👤 " + loggedInUserEmail;
+             menuLoginBtn.style.color = "#4CAF50"; 
+         } else {
+             alert("❌ Incorrect code.");
+         }
+     };
+ }
   hideLoader();
 
 }); // <--- FINAL CLOSING BRACKET for DOMContentLoaded
