@@ -1091,21 +1091,27 @@ if (loginConfirmBtn) {
 // ================================================================
 // THE ENGINE: STARTUP LOGIC
 // ================================================================
-(async () => {
-    try {
-        console.log("Vault of Time: Powering up...");
-        await handlePaypalReturn(); 
-        await loadClaimedBlocks();
-        if (typeof renderPage === 'function') {
-            renderPage(currentPage);
-        }
+    // We don't need the (async () => { wrapper here because 
+    // the parent DOMContentLoaded is already async.
+    
+    console.log("Vault of Time: Powering up...");
+    await handlePaypalReturn(); 
+    await loadClaimedBlocks();
+    
+    if (typeof renderPage === 'function') {
+        renderPage(currentPage);
+    }
+
+    if (typeof hideLoader === 'function') {
+        hideLoader();
+    }
+
+  // --- THIS IS THE COMPANION FOR THE TRY ON LINE 217 ---
   } catch (err) {
-        console.error("Setup error:", err);
-    } finally {
-        if (typeof hideLoader === 'function') hideLoader();
-    } // <--- Closes finally
-} // <--- YOU MIGHT BE MISSING THIS ONE (Closes the try block)
-}); // <--- Closes the listener
+      console.error("Vault of Time: Critical Error during initialization:", err);
+      if (typeof hideLoader === 'function') hideLoader();
+  }
+}); // <--- THIS CLOSES THE DOMContentLoaded LISTENER
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
 // ================================================================
