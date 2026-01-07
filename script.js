@@ -1090,13 +1090,13 @@ if (loginConfirmBtn) {
 // ================================================================
 // THE ENGINE: STARTUP LOGIC
 // ================================================================
-(async () => {
     try {
         console.log("Vault of Time: Powering up...");
         
-        // Ensure these functions exist before calling them
-        if (typeof handlePaypalReturn === 'function') await handlePaypalReturn(); 
-        if (typeof loadClaimedBlocks === 'function') await loadClaimedBlocks();
+        // These will now work because they are still inside 
+        // the async DOMContentLoaded listener
+        await handlePaypalReturn(); 
+        await loadClaimedBlocks();
         
         if (typeof renderPage === 'function') {
             renderPage(currentPage);
@@ -1106,10 +1106,12 @@ if (loginConfirmBtn) {
     } finally {
         if (typeof hideLoader === 'function') hideLoader();
     }
-})(); 
 
-// This closes the massive DOMContentLoaded listener from line 216
-});
+  // This catch block belongs to the 'try' on line 217
+  } catch (outerError) {
+      console.error("Critical Failure:", outerError);
+  }
+}); // This line (1112) now correctly closes the listener started on line 216
 
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
