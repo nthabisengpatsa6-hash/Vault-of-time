@@ -1109,9 +1109,12 @@ if (loginConfirmBtn) {
     }
 })(); // This executes the startup logic immediately
 
-// This is a safety bracket to close whatever might still be open above
-try { } catch(e) {} 
-});      
+  // Close the 'try' block that started way back on line 217
+  } catch (err) {
+    console.error("CRITICAL ERROR in Main Logic:", err);
+  }
+
+}); // <--- This closes the document.addEventListener 
 
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
