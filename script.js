@@ -213,8 +213,12 @@ function hideLoader() {
 
 
 // ================= MAIN LOGIC =======================
-document.addEventListener("DOMContentLoaded", async () => {
-        console.log("Vault of Time: Initializing...");
+document.addEventListener("DOMContentLoaded", () => {
+    startTheVault(); 
+}); // <--- Listener CLOSED. It cannot hurt us anymore.
+
+async function startTheVault() {
+    console.log("Vault of Time: Initializing...");
 // --- THE KEEPER'S WELCOME (SHOW ONCE) ---
 const welcomeModal = document.getElementById("keeper-welcome-modal");
 const welcomeCloseBtn = document.getElementById("close-keeper-welcome");
@@ -1092,25 +1096,33 @@ if (loginConfirmBtn) {
 } 
 
 // ================================================================
-// THE ENGINE: STARTUP LOGIC (CLEAN & FLAT)
+// THE ENGINE: STARTUP LOGIC
 // ================================================================
-console.log("Vault of Time: Powering up...");
+async function startTheVault() {
+    console.log("Vault of Time: Powering up...");
 
-// These are safe because they are inside the async DOMContentLoaded listener
-await handlePaypalReturn(); 
-await loadClaimedBlocks();
+    // Safe inside an async function
+    if (typeof handlePaypalReturn === 'function') {
+        await handlePaypalReturn();
+    }
+    
+    if (typeof loadClaimedBlocks === 'function') {
+        await loadClaimedBlocks();
+    }
 
-if (typeof renderPage === 'function') {
-    renderPage(currentPage);
-}
+    if (typeof renderPage === 'function') {
+        renderPage(currentPage);
+    }
 
-if (typeof hideLoader === 'function') {
-    hideLoader();
-}
+    if (typeof hideLoader === 'function') {
+        hideLoader();
+    }
+} // <--- THIS BRACKET CLOSES THE startTheVault FUNCTION
 
-}); // THIS IS THE ONLY BRACKET. It closes the listener from Line 216.
+// NO MORE LISTENER BRACKETS HERE. THE LISTENER CLOSED AT THE TOP.
+
 // ================================================================
-// 4. GLOBAL FUNCTIONS (Living safely outside the listener)
+// 4. GLOBAL FUNCTIONS (Living safely outside)
 // ================================================================
 
 async function executeBulkReservation() {
@@ -1199,22 +1211,20 @@ function updateKeeper(pageNum) {
     const keeperText = document.getElementById("keeper-text");
     const keeperTitle = document.getElementById("keeper-title");
 
-    const prompts = {
-        arena: "Welcome to THE ARENA. Sports, GOATS, and history.",
-        boulevard: "Welcome to THE BOULEVARD. Iconic brands live here.",
-        lobby: "You've entered THE LOBBY. Tech and gaming.",
-        stage: "THE STAGE is vibrating. Pure culture.",
-        plaza: "THE PLAZA. Tell the future you were here."
-    };
-
     if (keeperText && keeperTitle) {
-        let title = "Plaza Mayor", content = prompts.plaza;
-        if (pageNum <= 50) { title = "Arena Guide"; content = prompts.arena; }
-        else if (pageNum <= 80) { title = "Boulevard Scout"; content = prompts.boulevard; }
-        else if (pageNum <= 110) { title = "Lobby Admin"; content = prompts.lobby; }
-        else if (pageNum <= 160) { title = "Stage Manager"; content = prompts.stage; }
+        let title = "Plaza Mayor"; 
+        let content = "THE PLAZA. Tell the future you were here.";
+        
+        if (pageNum <= 50) { title = "Arena Guide"; content = "Welcome to THE ARENA."; }
+        else if (pageNum <= 80) { title = "Boulevard Scout"; content = "Welcome to THE BOULEVARD."; }
+        else if (pageNum <= 110) { title = "Lobby Admin"; content = "You've entered THE LOBBY."; }
+        else if (pageNum <= 160) { title = "Stage Manager"; content = "THE STAGE is vibrating."; }
 
         keeperTitle.innerText = `The Keeper: ${title}`;
         keeperText.innerText = content;
     }
+} 
+    }
 }
+// THE END. NO MORE BRACKETS BELOW THIS LINE.
+
