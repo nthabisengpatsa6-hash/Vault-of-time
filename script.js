@@ -766,7 +766,7 @@ div.onclick = async () => {
 
     // --------- CLOSE MODALS ----------
   // --- DEFINE BUTTONS ---
-viewClose = document.querySelector(".view-close-button");
+const viewClose = document.querySelector(".view-close-button");
   closeBtn = document.querySelector(".close-button");
  viewModal = document.getElementById("viewModal");
  modal = document.getElementById("modal");
