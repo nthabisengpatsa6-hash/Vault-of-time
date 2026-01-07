@@ -759,10 +759,10 @@ div.onclick = async () => {
     modal.classList.remove("hidden");
 };
 
-grid.appendChild(div);
-
-      renderPagination();
-    };
+    grid.appendChild(div);
+      }
+    renderPagination();
+    };    
 
     // --------- CLOSE MODALS ----------
     if (viewClose) {
@@ -1222,7 +1222,7 @@ function updateKeeper(pageNum) {
         keeperText.innerText = content;
     }
 } 
-    }
+         
 }
 // THE END. NO MORE BRACKETS BELOW THIS LINE.
 
