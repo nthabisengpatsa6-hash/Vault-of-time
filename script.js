@@ -1099,12 +1099,13 @@ if (loginConfirmBtn) {
         if (typeof renderPage === 'function') {
             renderPage(currentPage);
         }
-   } catch (err) {
-        console.error("The Vault encountered a setup error:", err);
+  } catch (err) {
+        console.error("Setup error:", err);
     } finally {
         if (typeof hideLoader === 'function') hideLoader();
-    }
-}); // Closes the listener
+    } // <--- Closes finally
+} // <--- YOU MIGHT BE MISSING THIS ONE (Closes the try block)
+}); // <--- Closes the listener
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
 // ================================================================
