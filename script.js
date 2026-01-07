@@ -766,10 +766,10 @@ div.onclick = async () => {
 
     // --------- CLOSE MODALS ----------
   // --- DEFINE BUTTONS ---
-const viewClose = document.querySelector(".view-close-button");
-const closeBtn = document.querySelector(".close-button");
-const viewModal = document.getElementById("viewModal");
-const modal = document.getElementById("modal");
+viewClose = document.querySelector(".view-close-button");
+  closeBtn = document.querySelector(".close-button");
+ viewModal = document.getElementById("viewModal");
+ modal = document.getElementById("modal");
     if (viewClose) {
       viewClose.onclick = () => viewModal.classList.add("hidden");
     }
