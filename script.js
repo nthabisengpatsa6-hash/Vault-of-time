@@ -214,7 +214,6 @@ function hideLoader() {
 
 // ================= MAIN LOGIC =======================
 document.addEventListener("DOMContentLoaded", async () => {
-  try { // <--- PASTE IT HERE (Right after line 216)
         console.log("Vault of Time: Initializing...");
 // --- THE KEEPER'S WELCOME (SHOW ONCE) ---
 const welcomeModal = document.getElementById("keeper-welcome-modal");
@@ -1093,34 +1092,23 @@ if (loginConfirmBtn) {
 } 
 
 // ================================================================
-// THE ENGINE: STARTUP LOGIC
+// THE ENGINE: STARTUP LOGIC (CLEAN & FLAT)
 // ================================================================
-const startVault = async () => {
-    try {
-        console.log("Vault of Time: Powering up...");
-        
-        // This is inside an async arrow function, so await is 100% legal
-        if (typeof handlePaypalReturn === 'function') await handlePaypalReturn(); 
-        if (typeof loadClaimedBlocks === 'function') await loadClaimedBlocks();
-        
-        if (typeof renderPage === 'function') {
-            renderPage(currentPage);
-        }
-    } catch (err) {
-        console.error("Setup error:", err);
-    } finally {
-        if (typeof hideLoader === 'function') hideLoader();
-    }
-};
+console.log("Vault of Time: Powering up...");
 
-// Fire the engine
-startVault();
+// These are safe because they are inside the async DOMContentLoaded listener
+await handlePaypalReturn(); 
+await loadClaimedBlocks();
 
-// THE FINAL BRACKETS:
-// These close the document.addEventListener and the very first try {
-    } catch (e) { console.error("Initialization failed", e); }
-});
+if (typeof renderPage === 'function') {
+    renderPage(currentPage);
+}
 
+if (typeof hideLoader === 'function') {
+    hideLoader();
+}
+
+}); // THIS IS THE ONLY BRACKET. It closes the listener from Line 216.
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
 // ================================================================
