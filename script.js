@@ -1093,16 +1093,14 @@ if (loginConfirmBtn) {
 } 
 
 // ================================================================
-// THE ENGINE: STARTUP LOGIC
 // ================================================================
-(async () => {
+// THE ENGINE: STARTUP LOGIC (SAFE BUBBLE)
+// ================================================================
+(async function startVault() {
     try {
         console.log("Vault of Time: Powering up...");
-        
-        // Use window function checks to prevent crashes if functions are missing
-        if (typeof handlePaypalReturn === 'function') await handlePaypalReturn(); 
-        if (typeof loadClaimedBlocks === 'function') await loadClaimedBlocks();
-        
+        await handlePaypalReturn(); 
+        await loadClaimedBlocks();
         if (typeof renderPage === 'function') {
             renderPage(currentPage);
         }
@@ -1111,19 +1109,9 @@ if (loginConfirmBtn) {
     } finally {
         if (typeof hideLoader === 'function') hideLoader();
     }
-})(); // <--- Closes the Startup Logic
+})();
 
-// ================================================================
-// FINAL CLOSING BRACKETS
-// ================================================================
-
-// 1. Close the massive 'try {' block started at Line 217
-} catch (err) {
-    console.error("CRITICAL ERROR in Main Logic:", err);
-}
-
-// 2. Close the 'document.addEventListener' started at Line 216
-});
+// NO MORE BRACKETS HERE. DO NOT PUT }); HERE.
 
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
