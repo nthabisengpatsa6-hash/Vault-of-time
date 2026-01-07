@@ -1087,14 +1087,17 @@ if (loginConfirmBtn) {
         }
     }; // Closes the login onclick function
 } // Closes the if (loginConfirmBtn) block
-
 // ================================================================
 // THE ENGINE: STARTUP LOGIC
 // ================================================================
+(async () => {
     try {
         console.log("Vault of Time: Powering up...");
-        await handlePaypalReturn(); 
-        await loadClaimedBlocks();
+        
+        // Ensure these functions exist before calling them
+        if (typeof handlePaypalReturn === 'function') await handlePaypalReturn(); 
+        if (typeof loadClaimedBlocks === 'function') await loadClaimedBlocks();
+        
         if (typeof renderPage === 'function') {
             renderPage(currentPage);
         }
@@ -1102,12 +1105,12 @@ if (loginConfirmBtn) {
         console.error("Setup error:", err);
     } finally {
         if (typeof hideLoader === 'function') hideLoader();
-    } 
+    }
+})(); 
 
-  } catch (outerError) {
-      console.error("Vault of Time: Critical Initialization Failure", outerError);
-  }
-}); // <--- THIS is the companion that closes the very first try AND the listener.
+// This closes the massive DOMContentLoaded listener from line 216
+});
+
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
 // ================================================================
