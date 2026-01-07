@@ -214,17 +214,19 @@ function hideLoader() {
 
 // ================= MAIN LOGIC =======================
 document.addEventListener("DOMContentLoaded", async () => {
+  try { // <--- PASTE IT HERE (Right after line 216)
+        console.log("Vault of Time: Initializing...");
 // --- THE KEEPER'S WELCOME (SHOW ONCE) ---
 const welcomeModal = document.getElementById("keeper-welcome-modal");
-const closeWelcomeBtn = document.getElementById("close-keeper-welcome");
+const welcomeCloseBtn = document.getElementById("close-keeper-welcome");
 
 // Check if they've met the Keeper yet
 if (welcomeModal && !localStorage.getItem("vaultKeeperMet")) {
     welcomeModal.style.display = "flex";
 }
 
-if (closeWelcomeBtn) {
-    closeWelcomeBtn.onclick = () => {
+if (welcomeCloseBtn) {
+    welcomeCloseBtn.onclick = () => {
         welcomeModal.style.display = "none";
         localStorage.setItem("vaultKeeperMet", "true");
     };
@@ -233,7 +235,7 @@ if (closeWelcomeBtn) {
   // --- KEEPER CHAT SETUP ---
 const keeperBubble = document.getElementById("keeper-bubble");
 const triggerBtn = document.getElementById("keeper-trigger");
-const closeBtn = document.getElementById("close-keeper-bubble");
+const keeperCloseBtn = document.getElementById("close-keeper-bubble");
 
 if (triggerBtn && keeperBubble) {
     triggerBtn.onclick = () => {
@@ -241,8 +243,8 @@ if (triggerBtn && keeperBubble) {
     };
 }
 
-if (closeBtn && keeperBubble) {
-    closeBtn.onclick = (e) => {
+if (keeperCloseBtn && keeperBubble) {
+    keeperCloseBtn.onclick = (e) => {
         e.stopPropagation(); 
         keeperBubble.style.display = "none";
     };
@@ -290,8 +292,8 @@ if (closeBtn && keeperBubble) {
     const messageCounter = document.getElementById("messageCounter");
     const fileInput = document.getElementById("fileUpload");
 
-    const closeBtn = document.querySelector(".close-button");
-    const viewClose = document.querySelector(".close-view");
+    const modalCloseBtn = document.querySelector(".close-button");
+    const viewCloseBtn = document.querySelector(".close-view");
     const readyMsg = document.getElementById("ready-message");
     const paymentButtons = document.getElementById("paymentButtons");
     const banner = document.getElementById("rules-banner");
@@ -1097,18 +1099,12 @@ if (loginConfirmBtn) {
         if (typeof renderPage === 'function') {
             renderPage(currentPage);
         }
-    } catch (err) {
-        console.error("Vault failed to initialize:", err);
+   } catch (err) {
+        console.error("The Vault encountered a setup error:", err);
+    } finally {
+        if (typeof hideLoader === 'function') hideLoader();
     }
-})();
-
-// ================================================================
-// THE FINAL CLOSURE (No more orphan catch blocks!)
-// ================================================================
-
-hideLoader(); // This now sits safely at the end of the listener
-
-}); // <--- THIS is the final closure for your DOMContentLoaded listener.
+}); // Closes the listener
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
 // ================================================================
