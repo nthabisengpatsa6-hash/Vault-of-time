@@ -1071,22 +1071,26 @@ bulkReserveBtn = document.getElementById("bulkReserveBtn");
 if (loginConfirmBtn) {
     loginConfirmBtn.onclick = () => {
         const code = loginCodeInput.value.trim();
+        // Compare string to string
         if (code === loginGeneratedCode) {
             loggedInUserEmail = loginEmailInput.value.trim().toLowerCase();
             
-            const expiry = Date.now() + (6 * 60 * 60 * 1000); 
+            const expiry = Date.now() + (6 * 60 * 60 * 1000); // 6 hours
             const session = { email: loggedInUserEmail, expiresAt: expiry };
             localStorage.setItem('vault_session', JSON.stringify(session));
 
             alert("✅ Login Successful!");
             loginModal.classList.add("hidden");
-            menuLoginBtn.innerHTML = "👤 " + loggedInUserEmail;
-            menuLoginBtn.style.color = "#4CAF50"; 
-     } else {
+            
+            if (menuLoginBtn) {
+                menuLoginBtn.innerHTML = "👤 " + loggedInUserEmail;
+                menuLoginBtn.style.color = "#4CAF50"; 
+            }
+        } else {
             alert("❌ Incorrect code.");
         }
-    }; // Closes the login onclick function
-} // Closes the if (loginConfirmBtn) block
+    }; 
+} 
 
 // ================================================================
 // THE ENGINE: STARTUP LOGIC
@@ -1095,7 +1099,7 @@ if (loginConfirmBtn) {
     try {
         console.log("Vault of Time: Powering up...");
         
-        // This 'await' is now safe inside this self-invoked async function
+        // Use window function checks to prevent crashes if functions are missing
         if (typeof handlePaypalReturn === 'function') await handlePaypalReturn(); 
         if (typeof loadClaimedBlocks === 'function') await loadClaimedBlocks();
         
@@ -1107,14 +1111,19 @@ if (loginConfirmBtn) {
     } finally {
         if (typeof hideLoader === 'function') hideLoader();
     }
-})(); // This executes the startup logic immediately
+})(); // <--- Closes the Startup Logic
 
-  // Close the 'try' block that started way back on line 217
-  } catch (err) {
+// ================================================================
+// FINAL CLOSING BRACKETS
+// ================================================================
+
+// 1. Close the massive 'try {' block started at Line 217
+} catch (err) {
     console.error("CRITICAL ERROR in Main Logic:", err);
-  }
+}
 
-}); // <--- This closes the document.addEventListener 
+// 2. Close the 'document.addEventListener' started at Line 216
+});
 
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
