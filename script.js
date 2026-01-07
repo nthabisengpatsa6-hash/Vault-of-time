@@ -1093,14 +1093,16 @@ if (loginConfirmBtn) {
 } 
 
 // ================================================================
+// THE ENGINE: STARTUP LOGIC
 // ================================================================
-// THE ENGINE: STARTUP LOGIC (SAFE BUBBLE)
-// ================================================================
-(async function startVault() {
+const startVault = async () => {
     try {
         console.log("Vault of Time: Powering up...");
-        await handlePaypalReturn(); 
-        await loadClaimedBlocks();
+        
+        // This is inside an async arrow function, so await is 100% legal
+        if (typeof handlePaypalReturn === 'function') await handlePaypalReturn(); 
+        if (typeof loadClaimedBlocks === 'function') await loadClaimedBlocks();
+        
         if (typeof renderPage === 'function') {
             renderPage(currentPage);
         }
@@ -1109,9 +1111,15 @@ if (loginConfirmBtn) {
     } finally {
         if (typeof hideLoader === 'function') hideLoader();
     }
-})();
+};
 
-// NO MORE BRACKETS HERE. DO NOT PUT }); HERE.
+// Fire the engine
+startVault();
+
+// THE FINAL BRACKETS:
+// These close the document.addEventListener and the very first try {
+    } catch (e) { console.error("Initialization failed", e); }
+});
 
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside the listener)
