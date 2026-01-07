@@ -765,14 +765,12 @@ div.onclick = async () => {
     };    
 
     // --------- CLOSE MODALS ----------
-  // --- DEFINE BUTTONS ---
-const viewClose = document.querySelector(".view-close-button");
-  closeBtn = document.querySelector(".close-button");
- viewModal = document.getElementById("viewModal");
- modal = document.getElementById("modal");
-    if (viewClose) {
-      viewClose.onclick = () => viewModal.classList.add("hidden");
-    }
+/ --- THE "PEACE TREATY" DEFINITIONS ---
+// This checks if they exist first, so no more errors.
+if (typeof viewClose === 'undefined') { var viewClose = document.querySelector(".view-close-button"); }
+if (typeof closeBtn === 'undefined') { var closeBtn = document.querySelector(".close-button"); }
+if (typeof viewModal === 'undefined') { var viewModal = document.getElementById("viewModal"); }
+if (typeof modal === 'undefined') { var modal = document.getElementById("modal"); }
     if (closeBtn) {
       closeBtn.onclick = () => modal.classList.add("hidden");
     }
