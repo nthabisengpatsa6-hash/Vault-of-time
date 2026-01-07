@@ -765,7 +765,7 @@ div.onclick = async () => {
     };    
 
     // --------- CLOSE MODALS ----------
-/ --- THE "PEACE TREATY" DEFINITIONS ---
+// --- THE "PEACE TREATY" DEFINITIONS ---
 // This checks if they exist first, so no more errors.
 if (typeof viewClose === 'undefined') { var viewClose = document.querySelector(".view-close-button"); }
 if (typeof closeBtn === 'undefined') { var closeBtn = document.querySelector(".close-button"); }
