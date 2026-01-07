@@ -1096,30 +1096,28 @@ if (loginConfirmBtn) {
 } 
 
 // ================================================================
-// THE ENGINE: STARTUP LOGIC
+// THE ENGINE: STARTUP LOGIC (THE "JUST WORK" VERSION)
 // ================================================================
-async function startTheVault() {
-    console.log("Vault of Time: Powering up...");
+console.log("Vault of Time: Powering up...");
 
-    // Safe inside an async function
-    if (typeof handlePaypalReturn === 'function') {
-        await handlePaypalReturn();
-    }
-    
-    if (typeof loadClaimedBlocks === 'function') {
-        await loadClaimedBlocks();
-    }
+// We are calling these directly now. 
+// If they are defined anywhere in the file, this will find them.
+if (typeof loadClaimedBlocks === 'function') {
+    loadClaimedBlocks().then(() => {
+        console.log("Blocks loaded. Rendering page...");
+        if (typeof renderPage === 'function') {
+            renderPage(currentPage || 1);
+        }
+    }).catch(err => console.error("Loading failed:", err));
+}
 
-    if (typeof renderPage === 'function') {
-        renderPage(currentPage);
-    }
+if (typeof handlePaypalReturn === 'function') {
+    handlePaypalReturn();
+}
 
-    if (typeof hideLoader === 'function') {
-        hideLoader();
-    }
-} // <--- THIS BRACKET CLOSES THE startTheVault FUNCTION
-
-// NO MORE LISTENER BRACKETS HERE. THE LISTENER CLOSED AT THE TOP.
+if (typeof hideLoader === 'function') {
+    hideLoader();
+}
 
 // ================================================================
 // 4. GLOBAL FUNCTIONS (Living safely outside)
