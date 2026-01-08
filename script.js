@@ -49,8 +49,7 @@ let claimed = [];
 let reservedBlocks = [];
 let blockCache = {};
 
-// ================= UI GLOBALS (Defined here, Assigned in Init) =================
-// We declare these here so ALL functions can see them.
+// ================= UI GLOBALS =================
 let grid, pagination, modal, viewModal;
 let nameInput, emailInput, messageInput, messageCounter, fileInput;
 let modalCloseBtn, viewCloseBtn, readyMsg, paymentButtons;
@@ -82,7 +81,6 @@ if (sessionData) {
 
 // ================= CORE FUNCTIONS =================
 
-// 1. Show/Hide Bulk Bar
 function updateBulkBar() {
   if (!bulkBar || !bulkCount) return;
   if (selectedBatch.length > 0) {
@@ -94,7 +92,6 @@ function updateBulkBar() {
   }
 }
 
-// 2. Load Data
 async function loadClaimedBlocks() {
   try {
     const snap = await getDocs(blocksCollection);
@@ -110,12 +107,11 @@ async function loadClaimedBlocks() {
 
       blockCache[idNum] = data;
 
-      // Auto-release logic
       if (data.reserved === true && data.reservedAt && data.status !== "paid") {
         const now = Date.now();
         const reservedTime = data.reservedAt.toMillis();
-        let timeLimit = 30 * 60 * 1000; // 30 mins
-        if (data.isBulk === true) timeLimit = 1440 * 60 * 1000; // 24 hours
+        let timeLimit = 30 * 60 * 1000;
+        if (data.isBulk === true) timeLimit = 1440 * 60 * 1000;
 
         if (now - reservedTime > timeLimit) {
           console.log("Auto-releasing:", idNum);
@@ -160,7 +156,6 @@ function hideLoader() {
   }, 1600);
 }
 
-// 3. Validation
 const valid = () => {
   if (!hiddenBlockNumber.value) return false;
   if (!nameInput.value.trim()) return false;
@@ -180,7 +175,6 @@ const valid = () => {
   return true;
 };
 
-// 4. Save & Upload
 const handleSave = async () => {
   if (!valid()) return;
   const blockId = hiddenBlockNumber.value;
@@ -219,7 +213,6 @@ const handleSave = async () => {
   }
 };
 
-// 5. Reservation Logic
 const reserveBlock = async (blockId, userEmail) => {
   try {
     const blockRef = doc(blocksCollection, String(blockId));
@@ -311,7 +304,6 @@ const renderPage = (pageNum) => {
   const start = (pageNum - 1) * PAGE_SIZE + 1;
   const end = Math.min(start + PAGE_SIZE - 1, TOTAL_BLOCKS);
 
-  // Update Chapter Text
   const chapterNameDisplay = document.getElementById("chapterName");
   const chapterRangeDisplay = document.getElementById("chapterRange");
   let districtTitle = "";
@@ -331,7 +323,6 @@ const renderPage = (pageNum) => {
     div.textContent = i;
     div.dataset.blockId = i;
 
-    // Appearance Logic
     if (reservedBlocks.includes(i)) {
       const data = blockCache[i];
       const reservedBy = data?.reservedBy || null;
@@ -366,9 +357,8 @@ const renderPage = (pageNum) => {
       }
     }
 
-    // Click Handler
     div.onclick = async () => {
-      // Reset UI
+      // 1. Reset UI defaults
       const form = document.getElementById("blockForm");
       const lockedMsg = document.getElementById("lockedMsg");
       const warning = document.getElementById("reservedWarning");
@@ -381,7 +371,7 @@ const renderPage = (pageNum) => {
         saveBtn.disabled = false; saveBtn.style.opacity = "1"; saveBtn.style.display = "block"; saveBtn.textContent = "Save Details";
       }
 
-      // Multi-Select
+      // 2. Multi-Select Logic
       if (isMultiSelect) {
         if (claimed.includes(i)) return alert("This block is already purchased.");
         if (reservedBlocks.includes(i)) {
@@ -427,8 +417,8 @@ const renderPage = (pageNum) => {
         return;
       }
 
-    // 3. CASE A: THE BLOCK IS CLAIMED/PAID
-    if (claimed.includes(i)) {
+      // 3. CASE: CLAIMED BLOCK
+      if (claimed.includes(i)) {
         const data = await fetchBlock(i);
         document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
         div.classList.add("selected");
@@ -436,10 +426,9 @@ const renderPage = (pageNum) => {
         
         if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
 
-        // --- HIDE RESERVATION UI (The Fix) ---
-        // We strictly hide the reserve button and the info icon for paid blocks
+        // HIDE RESERVE UI
         if (reserveBtn) reserveBtn.classList.add("hidden");
-        const infoIconWrapper = document.querySelector(".reserve-wrapper"); // Assuming the icon is inside this
+        const infoIconWrapper = document.querySelector(".reserve-wrapper");
         if (infoIconWrapper) infoIconWrapper.style.display = 'none';
         const justIcon = document.querySelector(".reserve-info-icon");
         if (justIcon) justIcon.style.display = 'none';
@@ -449,59 +438,40 @@ const renderPage = (pageNum) => {
         const isOwner = loggedInUserEmail && ownerEmail && (loggedInUserEmail.toLowerCase() === ownerEmail.toLowerCase());
 
         if (saveBtn) {
-            if (isOwner) {
-                // --- OWNER EDIT MODE ---
-                
-                // 1. Show the Save Button
-                saveBtn.style.display = "block";
-                saveBtn.textContent = "🚀 Update Legacy"; // Changed text to reflect message + image update
-                saveBtn.disabled = false;
-                
-                // 2. Pre-fill the existing message so they can edit it
-                if (messageInput) {
-                    messageInput.classList.remove("hidden");
-                    messageInput.value = data.message || ""; // Load existing message
-                    // Update the character counter manually since we changed the value programmatically
-                    if (messageCounter) messageCounter.textContent = `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
-                }
+          if (isOwner) {
+            // OWNER MODE
+            saveBtn.style.display = "block";
+            saveBtn.textContent = "🚀 Update Legacy";
+            saveBtn.disabled = false;
+            saveBtn.onclick = () => handleKeeperUpdate(i);
 
-                // 3. Ensure other inputs are visible if needed (optional, depending on your design)
-                if (fileInput) fileInput.classList.remove("hidden");
-
-                // 4. Set the button to trigger the update function
-                saveBtn.onclick = () => handleKeeperUpdate(i);
-                
-                // 5. Hide the "Locked" message since they are allowed to edit
-                if (lockedMsg) lockedMsg.classList.add("hidden");
-
-            } else {
-                // --- STRANGER VIEW MODE ---
-                saveBtn.style.display = "none"; 
-                
-                // Hide inputs for strangers so they can't type
-                if (messageInput) messageInput.classList.add("hidden");
-                if (fileInput) fileInput.classList.add("hidden");
-                if (nameInput) nameInput.classList.add("hidden");
-                if (emailInput) emailInput.classList.add("hidden");
-
-                if (lockedMsg) {
-                    lockedMsg.textContent = "This legacy is anchored. View Only mode.";
-                    lockedMsg.classList.remove("hidden");
-                }
+            // Pre-fill existing message for editing
+            if (messageInput) {
+              messageInput.classList.remove("hidden");
+              messageInput.value = data.message || ""; 
+              if (messageCounter) messageCounter.textContent = `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
             }
+            if (fileInput) fileInput.classList.remove("hidden");
+            if (lockedMsg) lockedMsg.classList.add("hidden");
+          } else {
+            // STRANGER MODE
+            saveBtn.style.display = "none";
+            if (messageInput) messageInput.classList.add("hidden");
+            if (fileInput) fileInput.classList.add("hidden");
+            if (nameInput) nameInput.classList.add("hidden");
+            if (emailInput) emailInput.classList.add("hidden");
+
+            if (lockedMsg) {
+              lockedMsg.textContent = "This legacy is anchored. View Only mode.";
+              lockedMsg.classList.remove("hidden");
+            }
+          }
         }
         modal.classList.remove("hidden");
         return; 
-    }
-
-        // 3. Show the View Modal
-        if (viewModal) {
-          viewModal.classList.remove("hidden");
-        }
-        
-        return; // The "Golden Rule": Exit before the purchase logic starts
       }
 
+      // 4. CASE: RESERVED BLOCK
       if (reservedBlocks.includes(i)) {
         const data = blockCache[i];
         const reservedBy = data?.reservedBy || null;
@@ -516,15 +486,38 @@ const renderPage = (pageNum) => {
         }
       }
 
-      // Available
+      // 5. CASE: AVAILABLE BLOCK
       document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
       div.classList.add("selected");
       hiddenBlockNumber.value = i;
+      if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
+
+      // RESET UI elements that might have been hidden by "Paid" blocks
+      const infoIconWrapper = document.querySelector(".reserve-wrapper");
+      if (infoIconWrapper) infoIconWrapper.style.display = ''; // Reset to default
+      const justIcon = document.querySelector(".reserve-info-icon");
+      if (justIcon) justIcon.style.display = '';
+
       if (nameInput) nameInput.classList.remove("hidden");
       if (emailInput) emailInput.classList.remove("hidden");
+      
+      // Ensure file and message inputs are visible for a new purchase
+      if (fileInput) {
+          fileInput.classList.remove("hidden");
+          fileInput.value = ""; // Clear any previous file selection
+      }
+      if (messageInput) {
+          messageInput.classList.remove("hidden");
+          messageInput.value = ""; // Clear previous message
+          if (messageCounter) messageCounter.textContent = `0/${MAX_MESSAGE_LENGTH}`;
+      }
+
       if (reserveBtn) reserveBtn.classList.remove("hidden");
-      if (saveBtn) saveBtn.style.display = "block";
-      if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
+      if (saveBtn) {
+          saveBtn.style.display = "block";
+          saveBtn.onclick = handleSave; // Ensure it points back to the standard save
+      }
+      
       modal.classList.remove("hidden");
     };
     grid.appendChild(div);
@@ -555,68 +548,64 @@ const renderPagination = () => {
   pagination.appendChild(next);
 };
 
-// 7. Aux Functions
 async function handleKeeperUpdate(blockId) {
-    const fileInput = document.getElementById("fileUpload");
-    const messageInput = document.getElementById("message"); // <--- Get the message input
-    const saveBtn = document.getElementById("uploadBtn");
+  const fileInput = document.getElementById("fileUpload");
+  const messageInput = document.getElementById("message"); 
+  const saveBtn = document.getElementById("uploadBtn");
 
-    // 1. Validation (Relaxed: Allow update if EITHER file OR message is present)
-    const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
-    const hasMessage = messageInput && messageInput.value.trim().length > 0;
+  const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+  const hasMessage = messageInput && messageInput.value.trim().length > 0;
 
-    if (!hasFile && !hasMessage) {
-        alert("⚠️ Please enter a message or select an image to update.");
-        return;
+  if (!hasFile && !hasMessage) {
+    alert("⚠️ Please enter a message or select an image to update.");
+    return;
+  }
+
+  const originalText = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Updating...";
+
+  try {
+    const updateData = {
+      status: "paid",
+      updatedAt: serverTimestamp()
+    };
+
+    if (messageInput) {
+      updateData.message = messageInput.value;
     }
 
-    const originalText = saveBtn.textContent;
-    saveBtn.disabled = true;
-    saveBtn.textContent = "Updating...";
-
-    try {
-        const updateData = {
-            status: "paid",
-            updatedAt: serverTimestamp()
-        };
-
-        // 2. Update Message if changed
-        if (messageInput) {
-            updateData.message = messageInput.value;
-        }
-
-        // 3. Upload File only if a new one was selected
-        if (hasFile) {
-            const file = fileInput.files[0];
-            if (!file.type.startsWith("image/")) {
-                alert("❌ Only image files can be displayed on the grid.");
-                saveBtn.disabled = false;
-                saveBtn.textContent = originalText;
-                return;
-            }
-            const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
-            await uploadBytes(fileRef, file);
-            const mediaUrl = await getDownloadURL(fileRef);
-            
-            updateData.imageUrl = mediaUrl;
-            updateData.mediaUrl = mediaUrl;
-            updateData.mediaType = "image";
-        }
-
-        // 4. Update Firestore
-        const blockRef = doc(db, "blocks", String(blockId));
-        await updateDoc(blockRef, updateData);
-
-        alert("✅ Legacy Updated!");
-        location.reload();
-
-    } catch (err) {
-        console.error("Update failed:", err);
-        alert("❌ Update failed: " + err.message);
+    if (hasFile) {
+      const file = fileInput.files[0];
+      if (!file.type.startsWith("image/")) {
+        alert("❌ Only image files can be displayed on the grid.");
         saveBtn.disabled = false;
         saveBtn.textContent = originalText;
+        return;
+      }
+      const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
+      await uploadBytes(fileRef, file);
+      const mediaUrl = await getDownloadURL(fileRef);
+      
+      updateData.imageUrl = mediaUrl;
+      updateData.mediaUrl = mediaUrl;
+      updateData.mediaType = "image";
     }
+
+    const blockRef = doc(db, "blocks", String(blockId));
+    await updateDoc(blockRef, updateData);
+
+    alert("✅ Legacy Updated!");
+    location.reload();
+
+  } catch (err) {
+    console.error("Update failed:", err);
+    alert("❌ Update failed: " + err.message);
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
+  }
 }
+
 async function savePrivateSale(blockID, email, name) {
   try {
     await addDoc(collection(db, 'sales_records'), { blockID, customerEmail: email, customerName: name, purchasedAt: serverTimestamp() });
@@ -658,11 +647,10 @@ const handlePaypalReturn = async () => {
   }
 };
 
-// ================= INITIALIZATION (The Main Event) =================
+// ================= INITIALIZATION =================
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("Vault of Time: Initializing...");
 
-  // 1. Assign DOM Elements
   grid = document.getElementById("grid");
   pagination = document.getElementById("pagination");
   modal = document.getElementById("modal");
@@ -699,7 +687,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   reserveBtn = document.getElementById("reserveBtn");
   payBtn = document.getElementById("paypalBtn");
 
-  // 2. Attach Event Listeners
   if (menuLoginBtn) {
     menuLoginBtn.addEventListener("click", () => {
       if (loggedInUserEmail) return alert("Already logged in as: " + loggedInUserEmail);
@@ -845,7 +832,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (modalCloseBtn) modalCloseBtn.onclick = () => modal.classList.add("hidden");
   if (viewCloseBtn && viewModal) viewCloseBtn.onclick = () => viewModal.classList.add("hidden");
 
-  // Keeper Welcome & Chat
   const welcomeModal = document.getElementById("keeper-welcome-modal");
   if (welcomeModal && !localStorage.getItem("vaultKeeperMet")) welcomeModal.style.display = "flex";
   const welcomeCloseBtn = document.getElementById("close-keeper-welcome");
@@ -857,7 +843,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const keeperClose = document.getElementById("close-keeper-bubble");
   if (keeperClose) keeperClose.onclick = (e) => { e.stopPropagation(); keeperBubble.style.display = "none"; };
 
-  // Menu
   const menuToggle = document.getElementById("menuToggle");
   const sideMenu = document.getElementById("sideMenu");
   const overlay = document.getElementById("overlay");
@@ -867,11 +852,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (closeMenu) closeMenu.addEventListener("click", closeMenuFn);
   if (overlay) overlay.addEventListener("click", closeMenuFn);
 
-  // Home Header
   const headerTitle = document.querySelector(".vault-title");
   if (headerTitle) { headerTitle.style.cursor = "pointer"; headerTitle.addEventListener("click", () => window.location.href = "index.html"); }
 
-  // Accordion
   document.querySelectorAll(".accordion-header").forEach((header) => {
     if (header.tagName.toLowerCase() === "a") return;
     header.addEventListener("click", () => {
@@ -891,10 +874,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.addEventListener("click", (e) => { if (!e.target.closest(".reserve-wrapper")) tooltip.classList.remove("show"); });
   }
 
-  // 3. Execution (Start the app)
   await handlePaypalReturn();
   await loadClaimedBlocks();
   renderPage(currentPage);
   hideLoader();
-
 });
