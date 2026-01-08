@@ -420,55 +420,92 @@ const renderPage = (pageNum) => {
       // 3. CASE: CLAIMED BLOCK
       if (claimed.includes(i)) {
         const data = await fetchBlock(i);
+        
+        // Visual Selection on Grid
         document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
         div.classList.add("selected");
         hiddenBlockNumber.value = i;
         
-        if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
-
-        // HIDE RESERVE UI
-        if (reserveBtn) reserveBtn.classList.add("hidden");
-        const infoIconWrapper = document.querySelector(".reserve-wrapper");
-        if (infoIconWrapper) infoIconWrapper.style.display = 'none';
-        const justIcon = document.querySelector(".reserve-info-icon");
-        if (justIcon) justIcon.style.display = 'none';
-
         // Check Ownership
         const ownerEmail = data?.reservedBy || data?.email;
         const isOwner = loggedInUserEmail && ownerEmail && (loggedInUserEmail.toLowerCase() === ownerEmail.toLowerCase());
 
-        if (saveBtn) {
-          if (isOwner) {
-            // OWNER MODE
-            saveBtn.style.display = "block";
-            saveBtn.textContent = "🚀 Update Legacy";
-            saveBtn.disabled = false;
-            saveBtn.onclick = () => handleKeeperUpdate(i);
+        // --- PATH A: OWNER (EDIT MODE) ---
+        if (isOwner) {
+            // Setup Main Modal for Editing
+            if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
+            
+            // Show Edit Controls
+            if (saveBtn) {
+                saveBtn.style.display = "block";
+                saveBtn.textContent = "🚀 Update Legacy";
+                saveBtn.disabled = false;
+                saveBtn.onclick = () => handleKeeperUpdate(i);
+            }
 
-            // Pre-fill existing message for editing
+            // Pre-fill inputs
             if (messageInput) {
-              messageInput.classList.remove("hidden");
-              messageInput.value = data.message || ""; 
-              if (messageCounter) messageCounter.textContent = `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
+                messageInput.classList.remove("hidden");
+                messageInput.value = data.message || ""; 
+                if (messageCounter) messageCounter.textContent = `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
             }
             if (fileInput) fileInput.classList.remove("hidden");
+            
+            // Hide "Locked" warning
             if (lockedMsg) lockedMsg.classList.add("hidden");
-          } else {
-            // STRANGER MODE
-            saveBtn.style.display = "none";
-            if (messageInput) messageInput.classList.add("hidden");
-            if (fileInput) fileInput.classList.add("hidden");
-            if (nameInput) nameInput.classList.add("hidden");
-            if (emailInput) emailInput.classList.add("hidden");
+            
+            // Open the MAIN Modal (the form)
+            modal.classList.remove("hidden");
+        
+        // --- PATH B: STRANGER (VIEW MODE) ---
+        } else {
+            // Target the VIEW Modal elements from your HTML screenshot
+            const viewModal = document.getElementById("viewModal");
+            const viewTitle = document.getElementById("viewBlockTitle");
+            const viewBadge = document.getElementById("viewBlockBadge"); // Optional
+            const viewMedia = document.getElementById("viewBlockMedia");
+            const viewMessage = document.getElementById("viewBlockMessage");
 
-            if (lockedMsg) {
-              lockedMsg.textContent = "This legacy is anchored. View Only mode.";
-              lockedMsg.classList.remove("hidden");
+            // 1. Set Title
+            if (viewTitle) viewTitle.textContent = `Legacy Block #${i}`;
+
+            // 2. Set Message
+            if (viewMessage) {
+                viewMessage.textContent = data.message ? `“${data.message}”` : "No message left for eternity.";
+                viewMessage.style.fontStyle = "italic";
             }
-          }
+
+            // 3. Set Media (Image or Audio)
+            if (viewMedia) {
+                viewMedia.innerHTML = ""; // Clear previous content
+                
+                const mediaUrl = data.mediaUrl || data.imageUrl;
+                const mediaType = data.mediaType || (data.imageUrl ? "image" : "audio");
+
+                if (mediaUrl) {
+                    if (mediaType === "image") {
+                        const img = document.createElement("img");
+                        img.src = mediaUrl;
+                        img.style.maxWidth = "100%";
+                        img.style.borderRadius = "8px";
+                        img.style.marginTop = "10px";
+                        viewMedia.appendChild(img);
+                    } else if (mediaType === "audio") {
+                        const audio = document.createElement("audio");
+                        audio.controls = true;
+                        audio.src = mediaUrl;
+                        audio.style.width = "100%";
+                        audio.style.marginTop = "10px";
+                        viewMedia.appendChild(audio);
+                    }
+                }
+            }
+
+            // 4. Open the VIEW Modal (Not the buy modal)
+            if (viewModal) viewModal.classList.remove("hidden");
         }
-        modal.classList.remove("hidden");
-        return; 
+        
+        return; // Stop here.
       }
 
       // 4. CASE: RESERVED BLOCK
