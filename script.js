@@ -687,9 +687,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   reserveBtn = document.getElementById("reserveBtn");
   payBtn = document.getElementById("paypalBtn");
 
-  if (menuLoginBtn) {
+ if (menuLoginBtn) {
     menuLoginBtn.addEventListener("click", () => {
-      if (loggedInUserEmail) return alert("Already logged in as: " + loggedInUserEmail);
+      // --- NEW LOGOUT LOGIC ---
+      if (loggedInUserEmail) {
+        const doLogout = confirm(`You are currently logged in as:\n${loggedInUserEmail}\n\nDo you want to log out?`);
+        if (doLogout) {
+          // 1. Destroy the session
+          localStorage.removeItem('vault_session');
+          loggedInUserEmail = null;
+          
+          // 2. Reset the button immediately
+          menuLoginBtn.innerHTML = "Login / Sign Up";
+          menuLoginBtn.style.color = ""; 
+
+          // 3. Reload the page to reset the grid/ownership view
+          alert("✅ You have been logged out.");
+          location.reload(); 
+        }
+        return; // Stop here, don't open the login modal
+      }
+      // ------------------------
+
       const sideMenu = document.getElementById("sideMenu");
       if (sideMenu) sideMenu.classList.remove("open");
       if (loginModal) loginModal.classList.remove("hidden");
