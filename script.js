@@ -427,39 +427,72 @@ const renderPage = (pageNum) => {
         return;
       }
 
-      // Single Block Logic
-     if (claimed.includes(i)) {
-        const data = blockCache[i] || await fetchBlock(i);
-        
-        // 1. UI Cleanup
+    // 3. CASE A: THE BLOCK IS CLAIMED/PAID
+    if (claimed.includes(i)) {
+        const data = await fetchBlock(i);
         document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
         div.classList.add("selected");
         hiddenBlockNumber.value = i;
-
-        // 2. Data Population: Using YOUR specific HTML IDs
-        const vTitle = document.getElementById("viewBlockTitle");
-        const vMsg = document.getElementById("viewBlockMessage");
-        const vMedia = document.getElementById("viewBlockMedia");
-
-        if (vTitle) vTitle.textContent = `Legacy of Block #${i}`;
-        if (vMsg) vMsg.textContent = data.message || "This legacy is anchored in silence.";
         
-        if (vMedia) {
-          vMedia.innerHTML = ""; // Evict the previous resident
-          const mediaUrl = data.mediaUrl || data.imageUrl;
-          
-          if (data.mediaType === "image" || data.imageUrl) {
-            const img = document.createElement("img");
-            img.src = mediaUrl;
-            img.className = "vault-view-image";
-            vMedia.appendChild(img);
-          } else if (data.mediaType === "audio") {
-            const aud = document.createElement("audio");
-            aud.src = mediaUrl;
-            aud.controls = true;
-            vMedia.appendChild(aud);
-          }
+        if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
+
+        // --- HIDE RESERVATION UI (The Fix) ---
+        // We strictly hide the reserve button and the info icon for paid blocks
+        if (reserveBtn) reserveBtn.classList.add("hidden");
+        const infoIconWrapper = document.querySelector(".reserve-wrapper"); // Assuming the icon is inside this
+        if (infoIconWrapper) infoIconWrapper.style.display = 'none';
+        const justIcon = document.querySelector(".reserve-info-icon");
+        if (justIcon) justIcon.style.display = 'none';
+
+        // Check Ownership
+        const ownerEmail = data?.reservedBy || data?.email;
+        const isOwner = loggedInUserEmail && ownerEmail && (loggedInUserEmail.toLowerCase() === ownerEmail.toLowerCase());
+
+        if (saveBtn) {
+            if (isOwner) {
+                // --- OWNER EDIT MODE ---
+                
+                // 1. Show the Save Button
+                saveBtn.style.display = "block";
+                saveBtn.textContent = "🚀 Update Legacy"; // Changed text to reflect message + image update
+                saveBtn.disabled = false;
+                
+                // 2. Pre-fill the existing message so they can edit it
+                if (messageInput) {
+                    messageInput.classList.remove("hidden");
+                    messageInput.value = data.message || ""; // Load existing message
+                    // Update the character counter manually since we changed the value programmatically
+                    if (messageCounter) messageCounter.textContent = `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
+                }
+
+                // 3. Ensure other inputs are visible if needed (optional, depending on your design)
+                if (fileInput) fileInput.classList.remove("hidden");
+
+                // 4. Set the button to trigger the update function
+                saveBtn.onclick = () => handleKeeperUpdate(i);
+                
+                // 5. Hide the "Locked" message since they are allowed to edit
+                if (lockedMsg) lockedMsg.classList.add("hidden");
+
+            } else {
+                // --- STRANGER VIEW MODE ---
+                saveBtn.style.display = "none"; 
+                
+                // Hide inputs for strangers so they can't type
+                if (messageInput) messageInput.classList.add("hidden");
+                if (fileInput) fileInput.classList.add("hidden");
+                if (nameInput) nameInput.classList.add("hidden");
+                if (emailInput) emailInput.classList.add("hidden");
+
+                if (lockedMsg) {
+                    lockedMsg.textContent = "This legacy is anchored. View Only mode.";
+                    lockedMsg.classList.remove("hidden");
+                }
+            }
         }
+        modal.classList.remove("hidden");
+        return; 
+    }
 
         // 3. Show the View Modal
         if (viewModal) {
@@ -524,30 +557,66 @@ const renderPagination = () => {
 
 // 7. Aux Functions
 async function handleKeeperUpdate(blockId) {
-  const fileInput = document.getElementById("fileUpload");
-  const saveBtn = document.getElementById("uploadBtn");
-  if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-    alert("⚠️ Please select a new image file first."); return;
-  }
-  const file = fileInput.files[0];
-  if (!file.type.startsWith("image/")) {
-    alert("❌ Only image files can be displayed on the grid."); return;
-  }
-  const originalText = saveBtn.textContent;
-  saveBtn.disabled = true; saveBtn.textContent = "Uploading...";
-  try {
-    const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
-    await uploadBytes(fileRef, file);
-    const mediaUrl = await getDownloadURL(fileRef);
-    const blockRef = doc(db, "blocks", String(blockId));
-    await updateDoc(blockRef, { imageUrl: mediaUrl, mediaUrl: mediaUrl, mediaType: "image", status: "paid", updatedAt: serverTimestamp() });
-    alert("✅ Legacy Updated!"); location.reload();
-  } catch (err) {
-    console.error("Update failed:", err); alert("❌ Update failed: " + err.message);
-    saveBtn.disabled = false; saveBtn.textContent = originalText;
-  }
-}
+    const fileInput = document.getElementById("fileUpload");
+    const messageInput = document.getElementById("message"); // <--- Get the message input
+    const saveBtn = document.getElementById("uploadBtn");
 
+    // 1. Validation (Relaxed: Allow update if EITHER file OR message is present)
+    const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+    const hasMessage = messageInput && messageInput.value.trim().length > 0;
+
+    if (!hasFile && !hasMessage) {
+        alert("⚠️ Please enter a message or select an image to update.");
+        return;
+    }
+
+    const originalText = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Updating...";
+
+    try {
+        const updateData = {
+            status: "paid",
+            updatedAt: serverTimestamp()
+        };
+
+        // 2. Update Message if changed
+        if (messageInput) {
+            updateData.message = messageInput.value;
+        }
+
+        // 3. Upload File only if a new one was selected
+        if (hasFile) {
+            const file = fileInput.files[0];
+            if (!file.type.startsWith("image/")) {
+                alert("❌ Only image files can be displayed on the grid.");
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+                return;
+            }
+            const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
+            await uploadBytes(fileRef, file);
+            const mediaUrl = await getDownloadURL(fileRef);
+            
+            updateData.imageUrl = mediaUrl;
+            updateData.mediaUrl = mediaUrl;
+            updateData.mediaType = "image";
+        }
+
+        // 4. Update Firestore
+        const blockRef = doc(db, "blocks", String(blockId));
+        await updateDoc(blockRef, updateData);
+
+        alert("✅ Legacy Updated!");
+        location.reload();
+
+    } catch (err) {
+        console.error("Update failed:", err);
+        alert("❌ Update failed: " + err.message);
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
+    }
+}
 async function savePrivateSale(blockID, email, name) {
   try {
     await addDoc(collection(db, 'sales_records'), { blockID, customerEmail: email, customerName: name, purchasedAt: serverTimestamp() });
