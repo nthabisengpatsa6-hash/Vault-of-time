@@ -369,7 +369,6 @@ const renderPage = (pageNum) => {
       if (form) form.classList.remove("locked-form");
       if (lockedMsg) lockedMsg.classList.add("hidden");
       if (warning) warning.classList.add("hidden");
-      if (viewContainer) viewContainer.classList.add("hidden"); 
       
       // 2. Multi-Select Logic
       if (isMultiSelect) {
@@ -459,23 +458,21 @@ const renderPage = (pageNum) => {
 
             if (viewTitle) viewTitle.textContent = `Legacy Block #${i}`;
 
-            // Check if there is media
             const mediaUrl = data.mediaUrl || data.imageUrl;
             
-            // --- TEXT LOGIC UPDATE ---
+            // Text Logic
             if (viewMessage) {
                 if (data.message) {
-                    // Scenario 1: They have a message
                     viewMessage.textContent = `“${data.message}”`;
                     viewMessage.style.fontStyle = "italic";
-                    viewMessage.style.color = "#fff"; // Default color
+                    viewMessage.style.color = "#fff"; 
                 } else if (!mediaUrl) {
-                    // Scenario 2: Paid, but NO message AND NO image (Truly Empty)
+                    // Truly Empty
                     viewMessage.textContent = "This block has been reserved. No content uploaded yet."; 
                     viewMessage.style.fontStyle = "normal";
-                    viewMessage.style.color = "#aaa"; // Greyed out text
+                    viewMessage.style.color = "#aaa"; 
                 } else {
-                    // Scenario 3: Has Image but NO message (Don't show the 'No content' warning)
+                    // Has Image but NO message
                      viewMessage.textContent = ""; 
                 }
             }
@@ -547,7 +544,6 @@ const renderPage = (pageNum) => {
   }
   renderPagination();
 };
-
 const changePage = (page) => {
   currentPage = page;
   renderPage(page);
