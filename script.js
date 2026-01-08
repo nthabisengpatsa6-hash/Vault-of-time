@@ -428,30 +428,45 @@ const renderPage = (pageNum) => {
       }
 
       // Single Block Logic
-      if (claimed.includes(i)) {
-        const data = await fetchBlock(i);
+     if (claimed.includes(i)) {
+        const data = blockCache[i] || await fetchBlock(i);
+        
+        // 1. UI Cleanup
         document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
         div.classList.add("selected");
         hiddenBlockNumber.value = i;
-        if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
 
-        const ownerEmail = data?.reservedBy || data?.email;
-        const isOwner = loggedInUserEmail && ownerEmail && (loggedInUserEmail.toLowerCase() === ownerEmail.toLowerCase());
+        // 2. Data Population: Using YOUR specific HTML IDs
+        const vTitle = document.getElementById("viewBlockTitle");
+        const vMsg = document.getElementById("viewBlockMessage");
+        const vMedia = document.getElementById("viewBlockMedia");
 
-        if (saveBtn) {
-          if (isOwner) {
-            saveBtn.textContent = "🚀 Update Grid Image";
-            saveBtn.onclick = () => handleKeeperUpdate(i);
-          } else {
-            saveBtn.style.display = "none";
-            if (lockedMsg) {
-              lockedMsg.textContent = "This legacy is anchored. View Only mode.";
-              lockedMsg.classList.remove("hidden");
-            }
+        if (vTitle) vTitle.textContent = `Legacy of Block #${i}`;
+        if (vMsg) vMsg.textContent = data.message || "This legacy is anchored in silence.";
+        
+        if (vMedia) {
+          vMedia.innerHTML = ""; // Evict the previous resident
+          const mediaUrl = data.mediaUrl || data.imageUrl;
+          
+          if (data.mediaType === "image" || data.imageUrl) {
+            const img = document.createElement("img");
+            img.src = mediaUrl;
+            img.className = "vault-view-image";
+            vMedia.appendChild(img);
+          } else if (data.mediaType === "audio") {
+            const aud = document.createElement("audio");
+            aud.src = mediaUrl;
+            aud.controls = true;
+            vMedia.appendChild(aud);
           }
         }
-        modal.classList.remove("hidden");
-        return;
+
+        // 3. Show the View Modal
+        if (viewModal) {
+          viewModal.classList.remove("hidden");
+        }
+        
+        return; // The "Golden Rule": Exit before the purchase logic starts
       }
 
       if (reservedBlocks.includes(i)) {
