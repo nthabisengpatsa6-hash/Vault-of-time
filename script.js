@@ -323,6 +323,7 @@ const renderPage = (pageNum) => {
     div.textContent = i;
     div.dataset.blockId = i;
 
+    // --- VISUAL STYLING ---
     if (reservedBlocks.includes(i)) {
       const data = blockCache[i];
       const reservedBy = data?.reservedBy || null;
@@ -357,8 +358,9 @@ const renderPage = (pageNum) => {
       }
     }
 
+    // --- CLICK HANDLER ---
     div.onclick = async () => {
-      // 1. Reset UI defaults
+      // 1. Reset UI
       const form = document.getElementById("blockForm");
       const lockedMsg = document.getElementById("lockedMsg");
       const warning = document.getElementById("reservedWarning");
@@ -367,10 +369,8 @@ const renderPage = (pageNum) => {
       if (form) form.classList.remove("locked-form");
       if (lockedMsg) lockedMsg.classList.add("hidden");
       if (warning) warning.classList.add("hidden");
-      if (saveBtn) {
-        saveBtn.disabled = false; saveBtn.style.opacity = "1"; saveBtn.style.display = "block"; saveBtn.textContent = "Save Details";
-      }
-
+      if (viewContainer) viewContainer.classList.add("hidden"); 
+      
       // 2. Multi-Select Logic
       if (isMultiSelect) {
         if (claimed.includes(i)) return alert("This block is already purchased.");
@@ -379,7 +379,6 @@ const renderPage = (pageNum) => {
           const savedEmail = localStorage.getItem("userEmail");
           if (!data || data.reservedBy !== savedEmail) return alert("Reserved by another user.");
         }
-
         if (window.event.shiftKey && lastClickedId !== null) {
           const s = Math.min(lastClickedId, i);
           const e = Math.max(lastClickedId, i);
@@ -417,69 +416,72 @@ const renderPage = (pageNum) => {
         return;
       }
 
-      // 3. CASE: CLAIMED BLOCK
+      // 3. CASE: CLAIMED / PAID BLOCK
       if (claimed.includes(i)) {
         const data = await fetchBlock(i);
-        
-        // Visual Selection on Grid
         document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
         div.classList.add("selected");
         hiddenBlockNumber.value = i;
         
-        // Check Ownership
+        // Hide Reservation UI
+        if (reserveBtn) reserveBtn.classList.add("hidden");
+        const infoIconWrapper = document.querySelector(".reserve-wrapper");
+        if (infoIconWrapper) infoIconWrapper.style.display = 'none';
+        const justIcon = document.querySelector(".reserve-info-icon");
+        if (justIcon) justIcon.style.display = 'none';
+
         const ownerEmail = data?.reservedBy || data?.email;
         const isOwner = loggedInUserEmail && ownerEmail && (loggedInUserEmail.toLowerCase() === ownerEmail.toLowerCase());
 
-        // --- PATH A: OWNER (EDIT MODE) ---
+        // --- OWNER (EDIT MODE) ---
         if (isOwner) {
-            // Setup Main Modal for Editing
             if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
-            
-            // Show Edit Controls
-            if (saveBtn) {
-                saveBtn.style.display = "block";
-                saveBtn.textContent = "🚀 Update Legacy";
-                saveBtn.disabled = false;
-                saveBtn.onclick = () => handleKeeperUpdate(i);
-            }
+            saveBtn.style.display = "block";
+            saveBtn.textContent = "🚀 Update Legacy";
+            saveBtn.disabled = false;
+            saveBtn.onclick = () => handleKeeperUpdate(i);
 
-            // Pre-fill inputs
             if (messageInput) {
                 messageInput.classList.remove("hidden");
                 messageInput.value = data.message || ""; 
                 if (messageCounter) messageCounter.textContent = `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
             }
             if (fileInput) fileInput.classList.remove("hidden");
-            
-            // Hide "Locked" warning
             if (lockedMsg) lockedMsg.classList.add("hidden");
-            
-            // Open the MAIN Modal (the form)
-            modal.classList.remove("hidden");
+            modal.classList.remove("hidden"); 
         
-        // --- PATH B: STRANGER (VIEW MODE) ---
+        // --- STRANGER (VIEW MODE) ---
         } else {
-            // Target the VIEW Modal elements from your HTML screenshot
             const viewModal = document.getElementById("viewModal");
             const viewTitle = document.getElementById("viewBlockTitle");
-            const viewBadge = document.getElementById("viewBlockBadge"); // Optional
             const viewMedia = document.getElementById("viewBlockMedia");
             const viewMessage = document.getElementById("viewBlockMessage");
 
-            // 1. Set Title
             if (viewTitle) viewTitle.textContent = `Legacy Block #${i}`;
 
-            // 2. Set Message
+            // Check if there is media
+            const mediaUrl = data.mediaUrl || data.imageUrl;
+            
+            // --- TEXT LOGIC UPDATE ---
             if (viewMessage) {
-                viewMessage.textContent = data.message ? `“${data.message}”` : "No message left for eternity.";
-                viewMessage.style.fontStyle = "italic";
+                if (data.message) {
+                    // Scenario 1: They have a message
+                    viewMessage.textContent = `“${data.message}”`;
+                    viewMessage.style.fontStyle = "italic";
+                    viewMessage.style.color = "#fff"; // Default color
+                } else if (!mediaUrl) {
+                    // Scenario 2: Paid, but NO message AND NO image (Truly Empty)
+                    viewMessage.textContent = "This block has been reserved. No content uploaded yet."; 
+                    viewMessage.style.fontStyle = "normal";
+                    viewMessage.style.color = "#aaa"; // Greyed out text
+                } else {
+                    // Scenario 3: Has Image but NO message (Don't show the 'No content' warning)
+                     viewMessage.textContent = ""; 
+                }
             }
 
-            // 3. Set Media (Image or Audio)
             if (viewMedia) {
-                viewMedia.innerHTML = ""; // Clear previous content
-                
-                const mediaUrl = data.mediaUrl || data.imageUrl;
+                viewMedia.innerHTML = ""; 
                 const mediaType = data.mediaType || (data.imageUrl ? "image" : "audio");
 
                 if (mediaUrl) {
@@ -488,27 +490,22 @@ const renderPage = (pageNum) => {
                         img.src = mediaUrl;
                         img.style.maxWidth = "100%";
                         img.style.borderRadius = "8px";
-                        img.style.marginTop = "10px";
                         viewMedia.appendChild(img);
                     } else if (mediaType === "audio") {
                         const audio = document.createElement("audio");
                         audio.controls = true;
                         audio.src = mediaUrl;
                         audio.style.width = "100%";
-                        audio.style.marginTop = "10px";
                         viewMedia.appendChild(audio);
                     }
                 }
             }
-
-            // 4. Open the VIEW Modal (Not the buy modal)
-            if (viewModal) viewModal.classList.remove("hidden");
+            if (viewModal) viewModal.classList.remove("hidden"); 
         }
-        
-        return; // Stop here.
+        return; 
       }
 
-      // 4. CASE: RESERVED BLOCK
+      // 4. CASE: RESERVED (UNPAID) BLOCK
       if (reservedBlocks.includes(i)) {
         const data = blockCache[i];
         const reservedBy = data?.reservedBy || null;
@@ -516,9 +513,12 @@ const renderPage = (pageNum) => {
 
         if (!userEmail || !reservedBy || userEmail.toLowerCase() !== reservedBy.toLowerCase()) {
           if (selectedText) selectedText.textContent = `Block #${i} (Reserved)`;
-          if (lockedMsg) lockedMsg.classList.remove("hidden");
+          if (lockedMsg) {
+             lockedMsg.textContent = "This block is currently reserved."; 
+             lockedMsg.classList.remove("hidden");
+          }
           if (saveBtn) saveBtn.style.display = "none";
-          modal.classList.remove("hidden");
+          modal.classList.remove("hidden"); 
           return;
         }
       }
@@ -529,31 +529,17 @@ const renderPage = (pageNum) => {
       hiddenBlockNumber.value = i;
       if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
 
-      // RESET UI elements that might have been hidden by "Paid" blocks
       const infoIconWrapper = document.querySelector(".reserve-wrapper");
-      if (infoIconWrapper) infoIconWrapper.style.display = ''; // Reset to default
+      if (infoIconWrapper) infoIconWrapper.style.display = ''; 
       const justIcon = document.querySelector(".reserve-info-icon");
       if (justIcon) justIcon.style.display = '';
 
       if (nameInput) nameInput.classList.remove("hidden");
       if (emailInput) emailInput.classList.remove("hidden");
-      
-      // Ensure file and message inputs are visible for a new purchase
-      if (fileInput) {
-          fileInput.classList.remove("hidden");
-          fileInput.value = ""; // Clear any previous file selection
-      }
-      if (messageInput) {
-          messageInput.classList.remove("hidden");
-          messageInput.value = ""; // Clear previous message
-          if (messageCounter) messageCounter.textContent = `0/${MAX_MESSAGE_LENGTH}`;
-      }
-
+      if (fileInput) { fileInput.classList.remove("hidden"); fileInput.value = ""; }
+      if (messageInput) { messageInput.classList.remove("hidden"); messageInput.value = ""; }
       if (reserveBtn) reserveBtn.classList.remove("hidden");
-      if (saveBtn) {
-          saveBtn.style.display = "block";
-          saveBtn.onclick = handleSave; // Ensure it points back to the standard save
-      }
+      if (saveBtn) { saveBtn.style.display = "block"; saveBtn.onclick = handleSave; }
       
       modal.classList.remove("hidden");
     };
