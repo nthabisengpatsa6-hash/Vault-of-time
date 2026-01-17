@@ -307,12 +307,11 @@ const renderPage = (pageNum) => {
   const chapterNameDisplay = document.getElementById("chapterName");
   const chapterRangeDisplay = document.getElementById("chapterRange");
   let districtTitle = "";
-  if (pageNum <= 50) districtTitle = "THE ARENA: Sports & GOATs";
+  if (pageNum <= 50) districtTitle = "THE PLAZA: Personal Legacies"; // Was Arena
   else if (pageNum <= 80) districtTitle = "THE BOULEVARD: Iconic Brands";
-  else if (pageNum <= 110) districtTitle = "THE LOBBY: Gaming & Tech";
+  else if (pageNum <= 110) districtTitle = "THE GARDEN: Memorials & Prayers"; // Renamed from Lobby
   else if (pageNum <= 160) districtTitle = "THE STAGE: Culture & Amapiano";
-  else districtTitle = "THE PLAZA: Personal Legacies";
-
+  else districtTitle = "THE ARENA: Sports & GOATs"; // Moved Arena to the end
   if (chapterNameDisplay) chapterNameDisplay.textContent = districtTitle;
   if (chapterRangeDisplay) chapterRangeDisplay.textContent = `Blocks ${start} – ${end}`;
   updateKeeper(pageNum);
@@ -635,17 +634,31 @@ function updateKeeper(pageNum) {
   const keeperText = document.getElementById("keeper-text");
   const keeperTitle = document.getElementById("keeper-title");
   if (keeperText && keeperTitle) {
-    let title = "Plaza Mayor";
-    let content = "THE PLAZA. Tell the future you were here.";
-    if (pageNum <= 50) { title = "Arena Guide"; content = "Welcome to THE ARENA."; }
-    else if (pageNum <= 80) { title = "Boulevard Scout"; content = "Welcome to THE BOULEVARD."; }
-    else if (pageNum <= 110) { title = "Lobby Admin"; content = "You've entered THE LOBBY."; }
-    else if (pageNum <= 160) { title = "Stage Manager"; content = "THE STAGE is vibrating."; }
+    let title = "Arena Guide"; 
+    let content = "Welcome to THE ARENA. High stakes, high glory.";
+
+    // Logic for Page 1-50 (The Front Page)
+    if (pageNum <= 50) { 
+        title = "Plaza Mayor"; 
+        content = "You are in THE PLAZA. This is where history starts—with ordinary people."; 
+    }
+    else if (pageNum <= 80) { 
+        title = "Boulevard Scout"; 
+        content = "Welcome to THE BOULEVARD. The intersection of art and identity."; 
+    }
+    else if (pageNum <= 110) { 
+        title = "Garden Guardian"; 
+        content = "You've entered THE GARDEN. A quiet place for those we remember."; 
+    }
+    else if (pageNum <= 160) { 
+        title = "Stage Manager"; 
+        content = "THE STAGE is vibrating. Leave your mark on the culture."; 
+    }
+
     keeperTitle.innerText = `The Keeper: ${title}`;
     keeperText.innerText = content;
   }
 }
-
 const handlePaypalReturn = async () => {
   const params = new URLSearchParams(window.location.search);
   if (params.get("paid") !== "true") return;
