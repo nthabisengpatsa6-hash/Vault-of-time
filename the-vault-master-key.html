@@ -26,6 +26,9 @@
         <label>Paste Block IDs (separated by commas):</label><br>
         <textarea id="blockIds" placeholder="417, 418, 419..."></textarea><br>
         <button id="batchUpdateBtn">Mark as PAID</button>
+        <button id="wfcUpdateBtn" style="background: #6a0dad; color: white; margin-top: 10px;">
+    Purple Rain: Mark as WFC Available
+</button>
     </div>
 
     <script type="module">
@@ -86,6 +89,33 @@
                 alert("Firestore Error: Check your Security Rules and UID.");
             }
         };
+        document.getElementById('wfcUpdateBtn').onclick = async () => {
+    const input = document.getElementById('blockIds').value;
+    const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
+    if (blockArray.length === 0) return alert("No IDs to process!");
+
+    const batch = writeBatch(db);
+    blockArray.forEach((id) => {
+        const blockRef = doc(db, "blocks", id); 
+        // This 'set' with merge:true cleans out old data and adds the WFC tag
+        batch.set(blockRef, { 
+            status: "available", 
+            partnership: "WFC",
+            reserved: false,
+            reservedBy: null,
+            mediaUrl: null, // Clear out any old test images
+            imageUrl: null,
+            message: null
+        }, { merge: true });
+    });
+
+    try {
+        await batch.commit();
+        alert(`Done! ${blockArray.length} blocks are now Solidarity Purple.`);
+    } catch (error) {
+        alert("Firestore Error: " + error.message);
+    }
+};
     </script>
 </body>
 </html>
