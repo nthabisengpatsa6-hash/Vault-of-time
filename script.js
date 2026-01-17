@@ -532,14 +532,21 @@ if (data?.partnership === "WFC" && data?.status === "available") {
       hiddenBlockNumber.value = i;
       if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
      // --- WFC CLICK MESSAGE ---
+// --- THE WFC CLICK LOGIC ---
 if (data?.partnership === "WFC") {
     if (selectedText) selectedText.textContent = `Sponsor a Memorial: Block #${i}`;
     if (readyMsg) {
         readyMsg.innerHTML = "💜 <strong>Solidarity Block:</strong> $1 from this purchase goes directly to Women For Change.";
-        readyMsg.classList.remove("hidden");
+        readyMsg.classList.remove("hidden"); // Show the message
     }
-} 
-
+} else {
+    // THIS IS THE FIX: If it's NOT a WFC block, reset the text and hide the message
+    if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
+    if (readyMsg) {
+        readyMsg.innerHTML = ""; // Clear the WFC text
+        readyMsg.classList.add("hidden"); // Hide the element entirely
+    }
+}
       const infoIconWrapper = document.querySelector(".reserve-wrapper");
       if (infoIconWrapper) infoIconWrapper.style.display = ''; 
       const justIcon = document.querySelector(".reserve-info-icon");
