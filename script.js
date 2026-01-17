@@ -321,6 +321,13 @@ const renderPage = (pageNum) => {
     div.className = "block";
     div.textContent = i;
     div.dataset.blockId = i;
+    // --- WFC PARTNERSHIP VISUALS ---
+const data = blockCache[i]; // This pulls the block's data from memory
+
+if (data?.partnership === "WFC" && data?.status === "available") {
+    div.classList.add("wfc-solidarity"); // This links to the CSS we'll add
+    div.textContent = "💜"; // This replaces the number with a heart
+}
 
     // --- VISUAL STYLING ---
     if (reservedBlocks.includes(i)) {
@@ -524,6 +531,14 @@ const renderPage = (pageNum) => {
       div.classList.add("selected");
       hiddenBlockNumber.value = i;
       if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
+     // --- WFC CLICK MESSAGE ---
+if (data?.partnership === "WFC") {
+    if (selectedText) selectedText.textContent = `Sponsor a Memorial: Block #${i}`;
+    if (readyMsg) {
+        readyMsg.innerHTML = "💜 <strong>Solidarity Block:</strong> $1 from this purchase goes directly to Women For Change.";
+        readyMsg.classList.remove("hidden");
+    }
+} 
 
       const infoIconWrapper = document.querySelector(".reserve-wrapper");
       if (infoIconWrapper) infoIconWrapper.style.display = ''; 
