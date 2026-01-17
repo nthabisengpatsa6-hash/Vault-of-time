@@ -29,6 +29,9 @@
         <button id="wfcUpdateBtn" style="background: #6a0dad; color: white; margin-top: 10px;">
     Purple Rain: Mark as WFC Available
 </button>
+        <button id="availableBtn" style="background: #ff4d4d; color: white; margin-top: 10px;">
+    🚮 Scrub & Release (Mark as Available)
+</button>
     </div>
 
     <script type="module">
@@ -112,6 +115,38 @@
     try {
         await batch.commit();
         alert(`Done! ${blockArray.length} blocks are now Solidarity Purple.`);
+    } catch (error) {
+        alert("Firestore Error: " + error.message);
+    }
+};
+        document.getElementById('availableBtn').onclick = async () => {
+    const input = document.getElementById('blockIds').value;
+    const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
+    if (blockArray.length === 0) return alert("No IDs to process!");
+
+    const batch = writeBatch(db);
+    blockArray.forEach((id) => {
+        const blockRef = doc(db, "blocks", id); 
+        // We use batch.set with merge:false here because we want to WIP out everything
+        // and reset it to a factory-default "Available" state.
+        batch.set(blockRef, { 
+            status: "available",
+            blockNumber: Number(id),
+            partnership: null,
+            reserved: false,
+            reservedBy: null,
+            reservedAt: null,
+            reservedName: null,
+            mediaUrl: null,
+            imageUrl: null,
+            message: null,
+            isBulk: null
+        });
+    });
+
+    try {
+        await batch.commit();
+        alert(`🧹 Cleaned & Released ${blockArray.length} blocks. They are now officially blank.`);
     } catch (error) {
         alert("Firestore Error: " + error.message);
     }
