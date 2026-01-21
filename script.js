@@ -597,7 +597,7 @@ async function handleKeeperUpdate(blockId) {
   const hasMessage = messageInput && messageInput.value.trim().length > 0;
 
   if (!hasFile && !hasMessage) {
-    alert("⚠️ Please enter a message or select an image to update.");
+    alert("⚠️ Please enter a message or select a file to update.");
     return;
   }
 
@@ -617,19 +617,25 @@ async function handleKeeperUpdate(blockId) {
 
     if (hasFile) {
       const file = fileInput.files[0];
-      if (!file.type.startsWith("image/")) {
-        alert("❌ Only image files can be displayed on the grid.");
+      const isImg = file.type.startsWith("image/");
+      const isAud = file.type.startsWith("audio/");
+
+      if (!isImg && !isAud) {
+        alert("❌ Only image or audio files can be uploaded.");
         saveBtn.disabled = false;
         saveBtn.textContent = originalText;
         return;
       }
+
       const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
       await uploadBytes(fileRef, file);
       const mediaUrl = await getDownloadURL(fileRef);
       
-      updateData.imageUrl = mediaUrl;
+      // Keep your data clean and consistent with handleSave
       updateData.mediaUrl = mediaUrl;
-      updateData.mediaType = "image";
+      updateData.mediaType = isAud ? "audio" : "image";
+      updateData.imageUrl = isImg ? mediaUrl : null;
+      updateData.audioUrl = isAud ? mediaUrl : null;
     }
 
     const blockRef = doc(db, "blocks", String(blockId));
