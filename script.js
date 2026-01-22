@@ -9,7 +9,10 @@ import {
   setDoc,
   updateDoc,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  query,      // <--- ADD THIS
+  orderBy,    // <--- ADD THIS
+  limit       // <--- ADD THIS
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import {
   getStorage,
@@ -30,12 +33,35 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// THE BRIDGE: Allowing the game to talk to your database
 window.db = db;
-
 window.FirebaseFirestore = { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp };
-const storage = getStorage(app);
-const blocksCollection = collection(db, "blocks");
 
+// THE ARCADE FUNCTIONS: Making the buttons work
+window.openArcade = () => {
+    const gameIframe = document.getElementById('gameIframe');
+    const arcadeOverlay = document.getElementById('arcadeOverlay');
+    
+    if (gameIframe && arcadeOverlay) {
+        gameIframe.src = 'game.html'; // Load the game only when opened
+        arcadeOverlay.classList.remove('hidden');
+        document.body.style.overflow = "hidden"; // Stop the grid from scrolling
+    }
+};
+
+window.closeArcade = () => {
+    const arcadeOverlay = document.getElementById('arcadeOverlay');
+    const gameIframe = document.getElementById('gameIframe');
+
+    if (arcadeOverlay) {
+        arcadeOverlay.classList.add('hidden');
+        if (gameIframe) gameIframe.src = ''; // Kill the game so the music stops
+        document.body.style.overflow = "auto";
+    }
+};
+
+const blocksCollection = collection(db, "blocks");
 // ================= GLOBAL CONFIG & STATE ====================
 const TOTAL_BLOCKS = 100000;
 const PAGE_SIZE = 500;
