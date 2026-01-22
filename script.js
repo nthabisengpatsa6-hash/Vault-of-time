@@ -29,6 +29,7 @@ import {
   onAuthStateChanged, // Add this too, it's very helpful
   signOut
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app-check.js";
 // ================= FIREBASE CONFIG ==================
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
@@ -43,6 +44,11 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app); // <--- ADD THIS LINE
+// ✨ APP CHECK INIT
+const appCheck = initializeAppCheck(app, {
+provider: new ReCaptchaV3Provider('6LfcVFMsAAAAACJlRkwVbkHEKgc3gQklwRZcRXfl'),
+  isTokenAutoRefreshEnabled: true
+});
 // THE BRIDGE: Allowing the game to talk to your database
 window.db = db;
 window.FirebaseFirestore = { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp };
