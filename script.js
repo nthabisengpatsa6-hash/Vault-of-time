@@ -263,7 +263,7 @@ const handleSave = async () => {
   if (!valid()) return;
   
   const blockId = hiddenBlockNumber.value;
-  const user = auth.currentUser; // Identifying the authenticated Keeper
+  
 // Just grab the current user (which might be a Guest now)
 const user = auth.currentUser;
 
