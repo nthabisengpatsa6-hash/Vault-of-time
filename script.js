@@ -30,6 +30,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+window.db = db;
+
+window.FirebaseFirestore = { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp };
 const storage = getStorage(app);
 const blocksCollection = collection(db, "blocks");
 
