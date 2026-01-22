@@ -23,6 +23,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
 import { 
   getAuth, 
+  signInAnonymously,
   sendSignInLinkToEmail, 
   isSignInWithEmailLink, 
   signInWithEmailLink,
@@ -106,42 +107,54 @@ let loginStep1, loginStep2, loginEmailInput, loginSendBtn, loginCodeInput, login
 let loginGeneratedCode = null;
 
 // --- THE AUTH WATCHER ---
-// This replaces your manual localStorage checks and handles the "Handshake"
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    // 1. Recognize the Keeper
-    console.log("Vault Session Restored for:", user.email);
-    loggedInUserEmail = user.email;
+    // === SCENARIO A: User is Logged In (Guest OR Owner) ===
     
-    if (menuLoginBtn) {
-      menuLoginBtn.innerHTML = "👤 " + user.email;
-      menuLoginBtn.style.color = "#4CAF50"; // Brand success green
-    }
+    if (user.isAnonymous) {
+      // It's a Guest! Let them save/buy, but don't change the UI name yet.
+      console.log("Guest mode active:", user.uid);
+    } else {
+      // It's a Real Owner! Update the UI.
+      console.log("Vault Session Restored for:", user.email);
+      loggedInUserEmail = user.email;
+      
+      if (menuLoginBtn) {
+        menuLoginBtn.innerHTML = "👤 " + user.email;
+        menuLoginBtn.style.color = "#4CAF50"; 
+      }
 
-    // 2. THE HANDSHAKE: Link any guest purchases to this UID
-    try {
-      // Look for paid blocks that have this email but no ownerId yet
-      const q = query(
-        blocksCollection, 
-        where("email", "==", user.email), 
-        where("ownerId", "==", null),
-        where("status", "==", "paid")
-      );
-      
-      const querySnapshot = await getDocs(q);
-      
-      querySnapshot.forEach(async (blockDoc) => {
-        await updateDoc(doc(db, "blocks", blockDoc.id), {
-          ownerId: user.uid // Permanently link the purchase to this secure ID
+      // Run the Handshake (Link past purchases)
+      try {
+        const q = query(
+          blocksCollection, 
+          where("email", "==", user.email), 
+          where("status", "==", "paid")
+        );
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach(async (blockDoc) => {
+           // If the block has no owner (or was owned by a guest), claim it now
+           if (!blockDoc.data().ownerId || blockDoc.data().ownerId !== user.uid) {
+             await updateDoc(doc(db, "blocks", blockDoc.id), {
+               ownerId: user.uid 
+             });
+             console.log(`Legacy for Block #${blockDoc.id} secured to UID: ${user.uid}`);
+           }
         });
-        console.log(`Legacy for Block #${blockDoc.id} secured to UID: ${user.uid}`);
-      });
-    } catch (err) {
-      console.error("Handshake failed:", err);
+      } catch (err) {
+        console.error("Handshake failed:", err);
+      }
     }
 
   } else {
-    // 3. User is signed out or session expired
+    // === SCENARIO B: No User at all ===
+    // Sign them in as a Guest immediately so they can pass Security Rules
+    console.log("No user found. Signing in as Guest...");
+    signInAnonymously(auth).catch((error) => {
+      console.error("Guest login failed:", error);
+    });
+
+    // Reset UI
     loggedInUserEmail = null;
     if (menuLoginBtn) {
       menuLoginBtn.innerHTML = "🔑 Owner Login";
@@ -251,12 +264,14 @@ const handleSave = async () => {
   
   const blockId = hiddenBlockNumber.value;
   const user = auth.currentUser; // Identifying the authenticated Keeper
+// Just grab the current user (which might be a Guest now)
+const user = auth.currentUser;
 
-  // 1. Check if the user is actually logged in before they try to save
-  if (!user) {
-    alert("Please login first so we know who owns this legacy!");
-    return;
-  }
+if (!user) {
+  alert("System initializing... please wait 2 seconds and try again.");
+  return;
+}
+
 
   const originalText = saveBtn.textContent;
   saveBtn.disabled = true; 
@@ -862,6 +877,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   loginConfirmBtn = document.getElementById("loginConfirmBtn");
   reserveBtn = document.getElementById("reserveBtn");
   payBtn = document.getElementById("paypalBtn");
+  
 // --- THE MAGIC LINK CATCHER ---
 if (isSignInWithEmailLink(auth, window.location.href)) {
     // 1. Get the email from storage (saved when they clicked 'Send')
