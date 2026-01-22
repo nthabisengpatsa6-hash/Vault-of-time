@@ -19,15 +19,15 @@ import {
   getStorage,
   ref,
   uploadBytes,
-  getDownloadURL
+  getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
 import { 
   getAuth, 
   sendSignInLinkToEmail, 
   isSignInWithEmailLink, 
   signInWithEmailLink,
-  onAuthStateChanged // Add this too, it's very helpful
-  signOut
+  onAuthStateChanged, // Add this too, it's very helpful
+  signOut,
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 // ================= FIREBASE CONFIG ==================
 const firebaseConfig = {
