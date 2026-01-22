@@ -45,6 +45,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app); // <--- ADD THIS LINE
 // ✨ APP CHECK INIT
+self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
 const appCheck = initializeAppCheck(app, {
 provider: new ReCaptchaV3Provider('6LfcVFMsAAAAACJlRkwVbkHEKgc3gQklwRZcRXfl'),
   isTokenAutoRefreshEnabled: true
