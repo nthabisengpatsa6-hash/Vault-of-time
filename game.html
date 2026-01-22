@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hopocalypse: Run from Oblivion</title>
+    <style>
+        body {
+            margin: 0; padding: 0; overflow: hidden;
+            background-color: #87CEEB; /* Sky Blue */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none;
+        }
+
+        #gameCanvas { display: block; width: 100%; height: 100%; }
+
+        /* UI Overlays */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+
+        .screen {
+            background: rgba(10, 10, 10, 0.95); /* Darker, premium feel */
+            padding: 2rem; border-radius: 1.5rem; text-align: center;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+            pointer-events: auto; max-width: 85%;
+            border: 3px solid #D4AF37; color: #fff;
+        }
+
+        h1 { margin: 0 0 10px 0; color: #D4AF37; font-size: 2rem; font-weight: 900; text-transform: uppercase; }
+        p { color: #ccc; margin-bottom: 20px; font-size: 0.9rem; }
+        
+        .score-display { font-size: 3rem; font-weight: bold; color: #fff; margin: 10px 0; }
+
+        /* Leaderboard Style */
+        #leaderboard {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px; padding: 15px; margin: 15px 0;
+            text-align: left; font-size: 0.85rem; border: 1px solid #444;
+        }
+        .lb-entry { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
+
+        button {
+            background: #D4AF37; color: #000; border: none;
+            padding: 12px 25px; font-size: 1rem; border-radius: 50px;
+            cursor: pointer; margin: 5px; font-weight: 900;
+            transition: transform 0.1s; box-shadow: 0 4px 0 #997d29;
+            width: 100%;
+        }
+        button:active { transform: translateY(4px); box-shadow: none; }
+        
+        #claimLegacyBtn { background: #6a0dad; color: white; box-shadow: 0 4px 0 #4b0082; margin-top: 10px; }
+
+        #hud {
+            position: absolute; top: 20px; left: 20px;
+            font-size: 1.2rem; font-weight: 900; color: white;
+            text-shadow: 2px 2px 0 #000; pointer-events: none;
+        }
+
+        #muteBtn {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0, 0, 0, 0.5); color: white;
+            border: none; border-radius: 50%; width: 45px; height: 45px;
+            cursor: pointer; z-index: 100;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+    <button id="muteBtn">🔊</button>
+
+    <div id="hud">
+        <div style="font-size: 0.8rem; opacity: 0.8;">HI: <span id="highScoreHud">0</span></div>
+        <div>SCORE: <span id="scoreHud">0</span></div>
+    </div>
+
+    <div id="ui-layer">
+        <div id="startScreen" class="screen">
+            <h1>🥕 HOPOCALYPSE 🥕</h1>
+            <p>Run from the chaos. Or be forgotten forever.</p>
+            <button id="startBtn">START RUNNING</button>
+        </div>
+
+        <div id="gameOverScreen" class="screen hidden">
+            <h1 id="deathMessage">FORGOTTEN</h1>
+            <div class="score-display"><span id="finalScore">0</span></div>
+            
+            <div id="leaderboard">
+                <div style="text-align: center; font-weight: 900; margin-bottom: 10px; color: #D4AF37;">🏆 TOP KEEPERS</div>
+                <div id="scoreList">Loading legends...</div>
+            </div>
+
+            <button id="restartBtn">TRY AGAIN</button>
+            <button id="claimLegacyBtn">Claim a block & be remembered.</button>
+        </div>
+    </div>
+
+<script type="module">
+    // --- CONNECTING TO VAULT DB ---
+    const parentDb = window.parent.db;
+    const { collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
+        = window.parent.FirebaseFirestore || {};
+
+    // --- CONFIG ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const GRAVITY = 0.8, JUMP_FORCE = -14, SPEED_INITIAL = 7;
+    let gameSpeed = SPEED_INITIAL, isPlaying = false, score = 0;
+    let highScore = localStorage.getItem('hopocalypseHighScore') || 0;
+    let isMuted = localStorage.getItem('hopocalypseMuted') === 'true';
+
+    document.getElementById('highScoreHud').innerText = Math.floor(highScore);
+    document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
+
+    // --- AUDIO ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+    function playSound(type) {
+        if (isMuted) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+        if (type === 'jump') {
+            osc.frequency.setValueAtTime(300, now); osc.frequency.linearRampToValueAtTime(600, now + 0.1);
+            gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'crash') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
+            gain.gain.setValueAtTime(0.5, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now); osc.stop(now + 0.3);
+        }
+    }
+
+    // --- GAME OBJECTS ---
+    const bunny = {
+        x: 80, y: 0, width: 40, height: 40, dy: 0, jumpCount: 0, maxJumps: 2,
+        draw() {
+            const centerX = this.x + 20, bottomY = this.y + 40;
+            ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(centerX, bottomY, 15, 4, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#FFF'; ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(centerX, this.y + 22, 18, 0, Math.PI*2); ctx.fill(); ctx.stroke(); // Body
+            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(centerX-5, this.y+16, 2, 0, Math.PI*2); ctx.fill(); // Eyes
+            ctx.beginPath(); ctx.arc(centerX+5, this.y+16, 2, 0, Math.PI*2); ctx.fill();
+        },
+        update() { this.dy += GRAVITY; this.y += this.dy; if (this.y > canvas.height) gameOver("THE VOID"); }
+    };
+
+    let platforms = [], obstacles = [];
+    function init() {
+        platforms = [{ x: 0, y: canvas.height - 150, width: canvas.width, height: 150 }];
+        obstacles = []; score = 0; gameSpeed = SPEED_INITIAL;
+    }
+
+    function spawnObstacle(p) {
+        if (score > 20 && Math.random() < 0.5) {
+            obstacles.push({ x: p.x + p.width/2, y: p.y - 30, width: 30, height: 30 });
+        }
+    }
+
+    // --- LEADERBOARD LOGIC ---
+    async function updateLeaderboard() {
+        if (!parentDb) return;
+        const scoreList = document.getElementById('scoreList');
+        try {
+            const q = query(collection(parentDb, "hopocalypse_scores"), orderBy("score", "desc"), limit(5));
+            const snap = await getDocs(q);
+            scoreList.innerHTML = "";
+            snap.forEach(doc => {
+                const d = doc.data();
+                const name = d.email ? d.email.split('@')[0] : "Anon";
+                scoreList.innerHTML += `<div class="lb-entry"><span>${name}</span><strong>${d.score}</strong></div>`;
+            });
+        } catch (e) { scoreList.innerHTML = "Become a Keeper to see the board."; }
+    }
+
+    async function submitScore() {
+        const session = JSON.parse(window.parent.localStorage.getItem('vault_session'));
+        if (session?.email && parentDb) {
+            await addDoc(collection(parentDb, "hopocalypse_scores"), {
+                email: session.email, score: Math.floor(score), timestamp: serverTimestamp()
+            });
+        }
+    }
+
+    // --- ENGINE ---
+    function loop() {
+        if (!isPlaying) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Update & Draw Platforms
+        platforms.forEach(p => {
+            p.x -= gameSpeed;
+            ctx.fillStyle = '#795548'; ctx.fillRect(p.x, p.y, p.width, p.height);
+            ctx.fillStyle = '#4CAF50'; ctx.fillRect(p.x, p.y, p.width, 20);
+        });
+
+        if (platforms[platforms.length-1].x < canvas.width) {
+            const last = platforms[platforms.length-1];
+            const p = { x: last.x + last.width + 120 + Math.random()*100, y: canvas.height - 100 - Math.random()*200, width: 300 + Math.random()*300, height: 500 };
+            platforms.push(p); spawnObstacle(p);
+        }
+
+        // Obstacles & Collision
+        obstacles.forEach((o, i) => {
+            o.x -= gameSpeed;
+            ctx.fillStyle = '#D32F2F'; ctx.fillRect(o.x, o.y, o.width, o.height);
+            if (bunny.x < o.x + o.width && bunny.x + 40 > o.x && bunny.y + 40 > o.y) gameOver("FORGOTTEN");
+        });
+
+        bunny.update();
+        let onGround = false;
+        platforms.forEach(p => {
+            if (bunny.x + 30 > p.x && bunny.x + 10 < p.x + p.width && bunny.y + 40 >= p.y && bunny.y + 40 <= p.y + 20 && bunny.dy >= 0) {
+                bunny.y = p.y - 40; bunny.dy = 0; bunny.jumpCount = 0; onGround = true;
+            }
+        });
+
+        score += 0.05; gameSpeed += 0.001;
+        document.getElementById('scoreHud').innerText = Math.floor(score);
+        bunny.draw();
+        requestAnimationFrame(loop);
+    }
+
+    function gameOver(reason) {
+        isPlaying = false; playSound('crash');
+        if (score > highScore) { highScore = score; localStorage.setItem('hopocalypseHighScore', highScore); }
+        document.getElementById('finalScore').innerText = Math.floor(score);
+        document.getElementById('gameOverScreen').classList.remove('hidden');
+        submitScore(); updateLeaderboard();
+    }
+
+    // --- CONTROLS ---
+    function jump() { if (isPlaying) bunny.jumpCount++ < 2 && (bunny.dy = JUMP_FORCE, playSound('jump')); }
+    window.addEventListener('keydown', (e) => (e.code === 'Space' || e.code === 'ArrowUp') && jump());
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); }, {passive: false});
+    canvas.addEventListener('mousedown', jump);
+
+    document.getElementById('startBtn').onclick = () => { isPlaying = true; document.getElementById('startScreen').classList.add('hidden'); init(); loop(); };
+    document.getElementById('restartBtn').onclick = () => { isPlaying = true; document.getElementById('gameOverScreen').classList.add('hidden'); init(); loop(); };
+    document.getElementById('claimLegacyBtn').onclick = () => window.parent.closeArcade();
+    document.getElementById('muteBtn').onclick = () => { isMuted = !isMuted; localStorage.setItem('hopocalypseMuted', isMuted); document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊'; };
+
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+</script>
+</body>
+</html>
