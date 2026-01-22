@@ -144,6 +144,9 @@
             const centerX = this.x + 20, bottomY = this.y + 40;
             ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(centerX, bottomY, 15, 4, 0, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#FFF'; ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
+            // EARS: Add these lines before the body
+    ctx.beginPath(); ctx.ellipse(centerX - 7, this.y + 5, 5, 15, -0.1, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(centerX + 7, this.y + 5, 5, 15, 0.1, 0, Math.PI*2); ctx.fill(); ctx.stroke();
             ctx.beginPath(); ctx.arc(centerX, this.y + 22, 18, 0, Math.PI*2); ctx.fill(); ctx.stroke(); // Body
             ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(centerX-5, this.y+16, 2, 0, Math.PI*2); ctx.fill(); // Eyes
             ctx.beginPath(); ctx.arc(centerX+5, this.y+16, 2, 0, Math.PI*2); ctx.fill();
@@ -153,10 +156,15 @@
 
     let platforms = [], obstacles = [];
     function init() {
-        platforms = [{ x: 0, y: canvas.height - 150, width: canvas.width, height: 150 }];
-        obstacles = []; score = 0; gameSpeed = SPEED_INITIAL;
-    }
+    platforms = [{ x: 0, y: canvas.height - 150, width: canvas.width, height: 150 }];
+    obstacles = []; 
+    score = 0; 
+    gameSpeed = SPEED_INITIAL;
 
+    // THE FIX: Bring the bunny back from the dead
+    bunny.y = 0;
+    bunny.dy = 0;
+}
     function spawnObstacle(p) {
         if (score > 20 && Math.random() < 0.5) {
             obstacles.push({ x: p.x + p.width/2, y: p.y - 30, width: 30, height: 30 });
