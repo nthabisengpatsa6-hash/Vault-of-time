@@ -42,6 +42,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app); // <--- ADD THIS LINE
 // THE BRIDGE: Allowing the game to talk to your database
 window.db = db;
 window.FirebaseFirestore = { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp };
@@ -911,8 +912,6 @@ if (isSignInWithEmailLink(auth, window.location.href)) {
 }
   if (closeLogin) closeLogin.onclick = () => loginModal.classList.add("hidden");
 
-
-const auth = getAuth();
 
 const actionCodeSettings = {
   url: 'https://vaultoftime.com/index.html', // Where they go after clicking the link
