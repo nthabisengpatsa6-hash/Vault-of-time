@@ -1,18 +1,19 @@
 // ================= FIREBASE IMPORTS =================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  doc,
-  getDocs,
-  getDoc,
-  setDoc,
-  updateDoc,
-  addDoc,
-  serverTimestamp,
-  query,      // <--- ADD THIS
-  orderBy,    // <--- ADD THIS
-  limit       // <--- ADD THIS
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  getDocs, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  addDoc, 
+  serverTimestamp, 
+  query, 
+  orderBy, 
+  limit,
+  where // <--- THIS IS THE CRITICAL ADDITION
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import {
   getStorage,
@@ -20,7 +21,14 @@ import {
   uploadBytes,
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
-
+import { 
+  getAuth, 
+  sendSignInLinkToEmail, 
+  isSignInWithEmailLink, 
+  signInWithEmailLink,
+  onAuthStateChanged // Add this too, it's very helpful
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 // ================= FIREBASE CONFIG ==================
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
@@ -33,7 +41,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
+const auth = getAuth(app);
 // THE BRIDGE: Allowing the game to talk to your database
 window.db = db;
 window.FirebaseFirestore = { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp };
@@ -89,24 +97,50 @@ let loginModal, menuLoginBtn, closeLogin;
 let loginStep1, loginStep2, loginEmailInput, loginSendBtn, loginCodeInput, loginConfirmBtn;
 let loginGeneratedCode = null;
 
-// ================= KEEPER'S MEMORY CHECK =================
-const sessionData = localStorage.getItem('vault_session');
-if (sessionData) {
-  const session = JSON.parse(sessionData);
-  if (Date.now() < session.expiresAt) {
-    loggedInUserEmail = session.email;
-    setTimeout(() => {
-      const loginBtn = document.getElementById('menuLoginBtn');
-      if (loginBtn) {
-        loginBtn.innerHTML = "👤 " + session.email;
-        loginBtn.style.color = "#4CAF50";
-      }
-    }, 200);
-    console.log("Vault Session Restored for:", session.email);
+// --- THE AUTH WATCHER ---
+// This replaces your manual localStorage checks and handles the "Handshake"
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    // 1. Recognize the Keeper
+    console.log("Vault Session Restored for:", user.email);
+    loggedInUserEmail = user.email;
+    
+    if (menuLoginBtn) {
+      menuLoginBtn.innerHTML = "👤 " + user.email;
+      menuLoginBtn.style.color = "#4CAF50"; // Brand success green
+    }
+
+    // 2. THE HANDSHAKE: Link any guest purchases to this UID
+    try {
+      // Look for paid blocks that have this email but no ownerId yet
+      const q = query(
+        blocksCollection, 
+        where("email", "==", user.email), 
+        where("ownerId", "==", null),
+        where("status", "==", "paid")
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      querySnapshot.forEach(async (blockDoc) => {
+        await updateDoc(doc(db, "blocks", blockDoc.id), {
+          ownerId: user.uid // Permanently link the purchase to this secure ID
+        });
+        console.log(`Legacy for Block #${blockDoc.id} secured to UID: ${user.uid}`);
+      });
+    } catch (err) {
+      console.error("Handshake failed:", err);
+    }
+
   } else {
-    localStorage.removeItem('vault_session');
+    // 3. User is signed out or session expired
+    loggedInUserEmail = null;
+    if (menuLoginBtn) {
+      menuLoginBtn.innerHTML = "🔑 Owner Login";
+      menuLoginBtn.style.color = "";
+    }
   }
-}
+});
 
 // ================= CORE FUNCTIONS =================
 
@@ -206,39 +240,63 @@ const valid = () => {
 
 const handleSave = async () => {
   if (!valid()) return;
+  
   const blockId = hiddenBlockNumber.value;
+  const user = auth.currentUser; // Identifying the authenticated Keeper
+
+  // 1. Check if the user is actually logged in before they try to save
+  if (!user) {
+    alert("Please login first so we know who owns this legacy!");
+    return;
+  }
+
+  const originalText = saveBtn.textContent;
+  saveBtn.disabled = true; 
+  saveBtn.textContent = "Sealing...";
 
   try {
     const file = fileInput.files[0];
     const isImg = file.type.startsWith("image/");
     const isAud = file.type.startsWith("audio/");
+    
+    // 2. Upload the file to Storage
     const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
     await uploadBytes(fileRef, file);
     const mediaUrl = await getDownloadURL(fileRef);
 
-    await setDoc(doc(blocksCollection, blockId), {
+    // 3. PUBLIC RECORD: Visible on the grid (Safe data only)
+    await setDoc(doc(db, "blocks", blockId), {
       blockNumber: Number(blockId),
       message: messageInput.value,
       mediaUrl,
       mediaType: isAud ? "audio" : "image",
-      imageUrl: isImg ? mediaUrl : null,
-      audioUrl: isAud ? mediaUrl : null,
-      status: "pending",
-      purchasedAt: null
+      ownerId: user.uid, // The permanent link to their account
+      status: "pending"
     });
 
-    await savePrivateSale(blockId, emailInput.value, nameInput.value);
+    // 4. PRIVATE RECORD: Stored in a sub-collection for your eyes only
+    await setDoc(doc(db, "blocks", blockId, "private", "ownerData"), {
+      email: user.email,
+      name: nameInput.value,
+      purchasedAt: serverTimestamp()
+    });
 
-    localStorage.setItem("pendingBlockId", blockId);
+    // 5. Trigger the PayPal button
     if (readyMsg) readyMsg.classList.remove("hidden");
-    if (paymentButtons) paymentButtons.classList.remove("hidden");
-
-    const payLink = document.getElementById("externalPayBtn");
-    if (payLink) payLink.href = `https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE?block=${blockId}`;
+    if (paymentButtons) {
+        paymentButtons.classList.remove("hidden");
+        const payLink = document.getElementById("externalPayBtn");
+        if (payLink) {
+            payLink.href = `https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE?block=${blockId}`;
+        }
+    }
 
   } catch (err) {
-    console.error("Upload error:", err);
-    alert("Upload failed.");
+    console.error("Vault save failed:", err);
+    alert("The Vault encountered an error. Please try again.");
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
   }
 };
 
@@ -719,20 +777,37 @@ function updateKeeper(pageNum) {
 const handlePaypalReturn = async () => {
   const params = new URLSearchParams(window.location.search);
   if (params.get("paid") !== "true") return;
+
   const pendingBlockId = localStorage.getItem("pendingBlockId");
   if (!pendingBlockId) return;
+
   try {
-    await setDoc(doc(blocksCollection, pendingBlockId), { status: "paid", purchasedAt: serverTimestamp() }, { merge: true });
+    const blockRef = doc(blocksCollection, pendingBlockId);
+    
+    // 1. Mark as Paid immediately so it shows up on the grid
+    await updateDoc(blockRef, { 
+      status: "paid", 
+      purchasedAt: serverTimestamp() 
+    });
+
     const numId = Number(pendingBlockId);
     if (!claimed.includes(numId)) {
-      claimed.push(numId); localStorage.setItem("claimed", JSON.stringify(claimed));
+      claimed.push(numId); 
+      localStorage.setItem("claimed", JSON.stringify(claimed));
     }
-    const snap = await getDoc(doc(blocksCollection, pendingBlockId));
-    if (snap.exists()) blockCache[numId] = snap.data();
+
+    // 2. Clear pending status but KEEP the ID for the "Claim" step
     localStorage.removeItem("pendingBlockId");
-    alert("Payment received! 🎉 Your block is sealed.");
+    
+    // 3. Prompt them to create their permanent account
+    alert("Payment received! 🎉 Your block is live. Now, 'Login' with the same email to permanently secure your editing rights.");
+    
+    // Clean URL
+    window.history.replaceState({}, document.title, "/index.html");
+
   } catch (err) {
-    console.error("Error finalising PayPal:", err); alert("Payment received but an error occurred.");
+    console.error("Error finalizing PayPal:", err);
+    alert("Payment detected, but the Vault is struggling to seal the block. Please contact support.");
   }
 };
 
@@ -775,54 +850,83 @@ document.addEventListener("DOMContentLoaded", async () => {
   loginConfirmBtn = document.getElementById("loginConfirmBtn");
   reserveBtn = document.getElementById("reserveBtn");
   payBtn = document.getElementById("paypalBtn");
+// --- THE MAGIC LINK CATCHER ---
+if (isSignInWithEmailLink(auth, window.location.href)) {
+    // 1. Get the email from storage (saved when they clicked 'Send')
+    let email = window.localStorage.getItem('emailForSignIn');
+    
+    // 2. If it's missing (e.g. they opened the link on a different device)
+    if (!email) {
+        email = window.prompt('Please provide your email for confirmation');
+    }
 
+    // 3. Complete the sign-in
+    signInWithEmailLink(auth, email, window.location.href)
+        .then((result) => {
+            window.localStorage.removeItem('emailForSignIn');
+            const user = result.user;
+            console.log("Vault Keeper Authenticated:", user.uid);
+            
+            // UI Update: Show their email in the menu
+            if (menuLoginBtn) {
+                menuLoginBtn.innerHTML = "👤 " + (user.email || "Keeper");
+                menuLoginBtn.style.color = "#4CAF50";
+            }
+            
+            // Clean up the URL (remove the long security tokens)
+            window.history.replaceState({}, document.title, "/index.html");
+            
+            alert("Welcome back, Keeper. Your session is secured.");
+        })
+        .catch((error) => {
+            console.error("Magic link failed:", error);
+            alert("This link has expired or was already used.");
+        });
+}
  if (menuLoginBtn) {
-    menuLoginBtn.addEventListener("click", () => {
-      // --- NEW LOGOUT LOGIC ---
-      if (loggedInUserEmail) {
-        const doLogout = confirm(`You are currently logged in as:\n${loggedInUserEmail}\n\nDo you want to log out?`);
-        if (doLogout) {
-          // 1. Destroy the session
-          localStorage.removeItem('vault_session');
-          loggedInUserEmail = null;
-          
-          // 2. Reset the button immediately
-          menuLoginBtn.innerHTML = "Login / Sign Up";
-          menuLoginBtn.style.color = ""; 
-
-          // 3. Reload the page to reset the grid/ownership view
+  menuLoginBtn.addEventListener("click", async () => {
+    // --- LOGOUT LOGIC ---
+    if (auth.currentUser) {
+      const doLogout = confirm(`You are currently logged in as:\n${auth.currentUser.email}\n\nDo you want to log out?`);
+      
+      if (doLogout) {
+        try {
+          await signOut(auth); // Official Firebase sign out
           alert("✅ You have been logged out.");
-          location.reload(); 
+          location.reload(); // Refresh to reset the grid view
+        } catch (err) {
+          console.error("Logout failed:", err);
         }
-        return; // Stop here, don't open the login modal
       }
-      // ------------------------
+      return; 
+    }
 
-      const sideMenu = document.getElementById("sideMenu");
-      if (sideMenu) sideMenu.classList.remove("open");
-      if (loginModal) loginModal.classList.remove("hidden");
-      if (loginStep1) loginStep1.classList.remove("hidden");
-      if (loginStep2) loginStep2.classList.add("hidden");
-    });
-  }
+    // --- LOGIN MODAL LOGIC (If not logged in) ---
+    const sideMenu = document.getElementById("sideMenu");
+    if (sideMenu) sideMenu.classList.remove("open");
+    if (loginModal) loginModal.classList.remove("hidden");
+    if (loginStep1) loginStep1.classList.remove("hidden");
+    if (loginStep2) loginStep2.classList.add("hidden");
+  });
+}
   if (closeLogin) closeLogin.onclick = () => loginModal.classList.add("hidden");
 
-  if (loginSendBtn) {
-    loginSendBtn.onclick = async () => {
-      const email = loginEmailInput.value.trim();
-      if (!email) return alert("Enter your email.");
-      loginSendBtn.textContent = "Sending..."; loginSendBtn.disabled = true;
-      try {
-        loginGeneratedCode = Math.floor(100000 + Math.random() * 900000).toString();
-        await emailjs.send("service_pmuwoaa", "template_ifxwqp6", { email: email, code: loginGeneratedCode });
-        alert("Code sent! Check your inbox.");
-        loginStep1.classList.add("hidden"); loginStep2.classList.remove("hidden");
-      } catch (err) {
-        console.error(err); alert("Error sending code.");
-        loginSendBtn.textContent = "Send Login Code"; loginSendBtn.disabled = false;
-      }
-    };
-  }
+ import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+const auth = getAuth();
+
+const actionCodeSettings = {
+  url: 'https://vaultoftime.com/index.html', // Where they go after clicking the link
+  handleCodeInApp: true,
+};
+
+// Replace your current loginSendBtn.onclick
+loginSendBtn.onclick = async () => {
+  const email = loginEmailInput.value.trim();
+  await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+  window.localStorage.setItem('emailForSignIn', email);
+  alert("Check your inbox! We've sent you a magic login link.");
+};
 
   if (loginConfirmBtn) {
     loginConfirmBtn.onclick = () => {
