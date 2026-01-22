@@ -911,7 +911,6 @@ if (isSignInWithEmailLink(auth, window.location.href)) {
 }
   if (closeLogin) closeLogin.onclick = () => loginModal.classList.add("hidden");
 
- import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const auth = getAuth();
 
