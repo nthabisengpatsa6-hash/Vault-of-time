@@ -27,7 +27,7 @@ import {
   isSignInWithEmailLink, 
   signInWithEmailLink,
   onAuthStateChanged, // Add this too, it's very helpful
-  signOut,
+  signOut
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 // ================= FIREBASE CONFIG ==================
 const firebaseConfig = {
