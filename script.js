@@ -261,7 +261,9 @@ const handleSave = async () => {
     const isAud = file.type.startsWith("audio/");
     
     // 2. Upload the file to Storage
-    const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
+    // ✨ Vibe Fix: Add a timestamp so filenames are always unique
+const uniqueName = `${Date.now()}_${file.name}`; 
+const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
     await uploadBytes(fileRef, file);
     const mediaUrl = await getDownloadURL(fileRef);
 
@@ -715,7 +717,9 @@ async function handleKeeperUpdate(blockId) {
         return;
       }
 
-      const fileRef = ref(storage, `blocks/${blockId}/${file.name}`);
+      // ✨ Vibe Fix: Add a timestamp so filenames are always unique
+const uniqueName = `${Date.now()}_${file.name}`; 
+const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
       await uploadBytes(fileRef, file);
       const mediaUrl = await getDownloadURL(fileRef);
       
