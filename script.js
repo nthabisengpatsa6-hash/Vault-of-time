@@ -336,63 +336,101 @@ const reserveBlock = async (blockId, userEmail) => {
   try {
     const blockRef = doc(blocksCollection, String(blockId));
     const snap = await getDoc(blockRef);
+    
+    // 1. Check if it's permanently gone (Paid)
     if (snap.exists() && snap.data().status === "paid") {
       alert("This block is already purchased."); return false;
     }
+
+    // 2. Check if it's currently reserved
     if (snap.exists() && snap.data().reserved === true) {
-      alert("Someone else has reserved this block."); return false;
+        const data = snap.data();
+        const now = Date.now();
+        // Default 30 mins limit for reservations
+        const timeLimit = 30 * 60 * 1000; 
+        const reservedAt = data.reservedAt ? data.reservedAt.toMillis() : 0;
+
+        // ✨ THE SMART CHECK:
+        // Only stop the user if the reservation is STILL VALID (Time hasn't run out)
+        if (now - reservedAt < timeLimit) {
+             const minutesLeft = Math.ceil((timeLimit - (now - reservedAt)) / 60000);
+             alert(`This block is reserved by someone else for another ${minutesLeft} minutes.`); 
+             return false;
+        }
+        
+        // If we get here, the time IS up. 
+        // We silently proceed and overwrite the old reservation!
+        console.log("Overwriting expired reservation on block #" + blockId);
     }
+
+    // 3. Secure the block (Overwrite or Create)
     await setDoc(blockRef, {
-      reserved: true, reservedBy: userEmail, reservedAt: serverTimestamp()
+      reserved: true, 
+      reservedBy: userEmail, 
+      reservedAt: serverTimestamp(),
+      status: "pending" 
     }, { merge: true });
 
     alert("Block reserved for 30 minutes! Complete your purchase.");
     return true;
+    
   } catch (err) {
     console.error("Reservation error:", err);
-    alert("Could not reserve block.");
+    // Usually means permissions error or connection issue
+    alert("Could not reserve block. Please try refreshing.");
     return false;
   }
 };
 
 async function executeBulkReservation() {
   if (!selectedBatch || selectedBatch.length === 0) return;
+  
   const name = prompt("Please enter your Name for the quote:");
   if (!name) return;
   const email = prompt("Please enter your Email address for the quote:");
   if (!email) return;
 
   const originalText = bulkReserveBtn ? bulkReserveBtn.textContent : "Reserve All";
-  if (bulkReserveBtn) { bulkReserveBtn.textContent = "Processing..."; bulkReserveBtn.disabled = true; }
+  if (bulkReserveBtn) { 
+      bulkReserveBtn.textContent = "Sending Request..."; 
+      bulkReserveBtn.disabled = true; 
+  }
 
   try {
-    const promises = selectedBatch.map(blockId => {
-      return setDoc(doc(blocksCollection, String(blockId)), {
-        reserved: true, reservedBy: email, reservedName: name,
-        reservedAt: serverTimestamp(), isBulk: true, status: "pending_quote"
-      }, { merge: true });
-    });
-
-    await Promise.all(promises);
-
+    // ✨ NEW LOGIC: Skip the database write entirely.
+    // Just send the email so the Keeper (you) gets the request.
+    
     const serviceID = "service_pmuwoaa";
     const templateID = "template_xraan78";
+    
     const emailParams = {
-      name: name, email: email, block_count: selectedBatch.length,
-      total_cost: selectedBatch.length * 6, block_list: selectedBatch.join(", ")
+      name: name, 
+      email: email, 
+      block_count: selectedBatch.length,
+      total_cost: selectedBatch.length * 6, 
+      block_list: selectedBatch.join(", ")
     };
 
+    // Send the email
     await emailjs.send(serviceID, templateID, emailParams);
-    alert(`SUCCESS! Blocks reserved. Check your email for the quote!`);
-    location.reload();
+    
+    alert(`✅ QUOTE REQUEST SENT!\n\nThe Keeper has received your request for ${selectedBatch.length} blocks.\nWe will review availability and email you a custom invoice.`);
+    
+    // Clear the selection so they can keep browsing (no reload needed)
+    selectedBatch = [];
+    document.querySelectorAll(".block").forEach(b => b.classList.remove("multi-selected"));
+    if (bulkBar) bulkBar.classList.add("hidden");
 
   } catch (err) {
-    console.error("Bulk reserve error:", err);
-    alert("Something went wrong.");
-    if (bulkReserveBtn) { bulkReserveBtn.textContent = originalText; bulkReserveBtn.disabled = false; }
+    console.error("Bulk email error:", err);
+    alert("❌ Could not send quote request. Please check your internet connection.");
+  } finally {
+    if (bulkReserveBtn) { 
+        bulkReserveBtn.textContent = originalText; 
+        bulkReserveBtn.disabled = false; 
+    }
   }
 }
-
 // 6. UI Rendering & Click Handling
 const highlightBlock = (num) => {
   const blocks = [...document.querySelectorAll(".block")];
