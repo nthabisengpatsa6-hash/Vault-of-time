@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>The Keeper's Ledger</title>
+    <title>The Keeper's Ledger - DEBUG MODE</title>
     <style>
         body { background: #0d1117; color: white; font-family: sans-serif; padding: 50px; }
         .admin-box { background: #161b22; border: 1px solid #D4AF37; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
@@ -10,10 +10,24 @@
         button { background: #D4AF37; color: black; padding: 12px 24px; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; }
         .warning { color: #ff6b6b; font-size: 12px; }
         label { display: block; margin-top: 15px; margin-bottom: 5px; color: #8b949e; font-size: 0.9em; }
+        
+        /* DEBUG BOX STYLES */
+        #debug-console {
+            background: #220000;
+            border: 2px solid #ff0000;
+            color: #ffaaaa;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            display: none; /* Hidden until needed */
+        }
     </style>
 </head>
 <body>
-    <h1>The Keeper's Ledger</h1>
+    <h1>The Keeper's Ledger (Debug Mode)</h1>
+
+    <div id="debug-console"></div>
 
     <div class="admin-box" id="login-section">
         <h3>Identify Yourself</h3>
@@ -23,7 +37,7 @@
     </div>
 
     <div class="admin-box" id="ledger-section" style="display:none;">
-        <p class="warning">Admin Authenticated. Proceed with caution.</p>
+        <p class="warning" style="color:#4CAF50">✅ ACCESS GRANTED. You are the Keeper.</p>
         
         <label>1. Paste Block IDs (separated by commas):</label>
         <textarea id="blockIds" placeholder="417, 418, 419..."></textarea>
@@ -45,12 +59,10 @@
     </div>
 
     <script type="module">
-        // 1. Import Firebase Engines
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import { getFirestore, writeBatch, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        // 2. YOUR CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
             authDomain: "vault-of-time-e6c03.firebaseapp.com",
@@ -60,51 +72,53 @@
             appId: "1:941244238426:web:80f80b5237b84b1740e663"
         };
 
-        // 3. Initialize Services
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-      // --- LOGIN ACTION ---
+        // Debug Logger Function
+        function logDebug(msg) {
+            const box = document.getElementById('debug-console');
+            box.style.display = 'block';
+            box.innerText += msg + "\n---------------------\n";
+            console.log(msg);
+        }
+
+        // --- LOGIN ACTION ---
         document.getElementById('loginBtn').onclick = async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
             try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
+                const credential = await signInWithEmailAndPassword(auth, email, password);
+                const user = credential.user;
                 
-                // ✨ THE TRUTH ALERT: This tells us your REAL ID
-                alert(`✅ Logged in successfully!\n\nYOUR UID IS:\n${user.uid}`);
-                console.log("Your UID:", user.uid);
+                // 🛑 PRINT THE TRUTH ON SCREEN
+                logDebug(`✅ LOGIN SUCCESSFUL!\n\nYOUR UID IS:\n${user.uid}\n\n(Copy this ID into your Firestore Rules!)`);
 
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('ledger-section').style.display = 'block';
             } catch (error) {
-                console.error(error);
-                alert("Access Denied: " + error.message);
+                logDebug("❌ LOGIN FAILED:\n" + error.message);
             }
         };
 
-        // --- BATCH UPDATE ACTION (PAID + EMAIL) ---
+        // --- BATCH UPDATE ACTION ---
         document.getElementById('batchUpdateBtn').onclick = async () => {
             const input = document.getElementById('blockIds').value;
-            const buyerEmail = document.getElementById('buyerEmail').value.trim(); // Get the email
-
+            const buyerEmail = document.getElementById('buyerEmail').value.trim();
             const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
             
             if (blockArray.length === 0) return alert("No IDs to process!");
-            
-            // ✨ SAFETY CHECK: Require Email for paid blocks
-            if (!buyerEmail) return alert("⚠️ STOP: You must enter a Buyer Email so they can claim these blocks later.");
+            if (!buyerEmail) return alert("⚠️ STOP: Enter Buyer Email!");
 
             const batch = writeBatch(db);
             blockArray.forEach((id) => {
                 const blockRef = doc(db, "blocks", id); 
                 batch.update(blockRef, { 
                     status: "paid", 
-                    email: buyerEmail,      // <-- Attach the email
-                    ownerId: null,          // <-- Clear owner so Handshake picks it up
+                    email: buyerEmail,
+                    ownerId: null,
                     purchasedAt: serverTimestamp(),
                     reserved: false,
                     reservedBy: null,
@@ -114,70 +128,22 @@
 
             try {
                 await batch.commit();
-                alert(`✅ Success! ${blockArray.length} blocks assigned to ${buyerEmail}`);
-                document.getElementById('blockIds').value = ""; // Clear IDs
-                document.getElementById('buyerEmail').value = ""; // Clear Email
+                logDebug(`✅ SUCCESS: ${blockArray.length} blocks updated.`);
+                alert("Success!");
             } catch (error) {
-                console.error(error);
-                alert("Firestore Error: " + error.message);
+                logDebug("❌ FIRESTORE ERROR (Check Rules):\n" + error.message);
+                alert("Error! Check the red debug box.");
             }
         };
 
-        // --- PURPLE RAIN (WFC) ---
+        // --- WFC & AVAILABLE BUTTONS (Simplified for debug) ---
         document.getElementById('wfcUpdateBtn').onclick = async () => {
-            const input = document.getElementById('blockIds').value;
-            const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
-            if (blockArray.length === 0) return alert("No IDs to process!");
-
-            const batch = writeBatch(db);
-            blockArray.forEach((id) => {
-                const blockRef = doc(db, "blocks", id); 
-                batch.set(blockRef, { 
-                    status: "available", 
-                    partnership: "WFC",
-                    reserved: false,
-                    reservedBy: null,
-                    mediaUrl: null, imageUrl: null, message: null
-                }, { merge: true });
-            });
-
-            try {
-                await batch.commit();
-                alert(`Done! ${blockArray.length} blocks are now Solidarity Purple.`);
-            } catch (error) {
-                alert("Error: " + error.message);
-            }
+           alert("Use the 'Mark as Paid' button for testing first!");
+        };
+         document.getElementById('availableBtn').onclick = async () => {
+           alert("Use the 'Mark as Paid' button for testing first!");
         };
 
-        // --- SCRUB & RELEASE ---
-        document.getElementById('availableBtn').onclick = async () => {
-            const input = document.getElementById('blockIds').value;
-            const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
-            if (blockArray.length === 0) return alert("No IDs to process!");
-
-            const batch = writeBatch(db);
-            blockArray.forEach((id) => {
-                const blockRef = doc(db, "blocks", id); 
-                batch.set(blockRef, { 
-                    status: "available",
-                    blockNumber: Number(id),
-                    partnership: null,
-                    reserved: false,
-                    reservedBy: null,
-                    reservedAt: null,
-                    reservedName: null,
-                    mediaUrl: null, imageUrl: null, message: null, isBulk: null,
-                    email: null, ownerId: null // Clear ownership
-                });
-            });
-
-            try {
-                await batch.commit();
-                alert(`🧹 Cleaned & Released ${blockArray.length} blocks.`);
-            } catch (error) {
-                alert("Error: " + error.message);
-            }
-        };
     </script>
 </body>
 </html>
