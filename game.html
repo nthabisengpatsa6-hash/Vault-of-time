@@ -9,7 +9,7 @@
             margin: 0; padding: 0; overflow: hidden;
             background-color: #87CEEB; /* Sky Blue */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: none;
+            touch-action: none; /* Critical for mobile games */
         }
 
         #gameCanvas { display: block; width: 100%; height: 100%; }
@@ -22,7 +22,7 @@
         }
 
         .screen {
-            background: rgba(10, 10, 10, 0.95); /* Darker, premium feel */
+            background: rgba(10, 10, 10, 0.95);
             padding: 2rem; border-radius: 1.5rem; text-align: center;
             box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
             pointer-events: auto; max-width: 85%;
@@ -109,8 +109,18 @@
     // --- CONFIG ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const GRAVITY = 0.8, JUMP_FORCE = -14, SPEED_INITIAL = 7;
-    let gameSpeed = SPEED_INITIAL, isPlaying = false, score = 0;
+    
+    // 🔥 PHYSICS TWEAKS
+    // Increased gravity slightly for snappier jumps
+    // SPEED_ACCEL: Added this variable to control how fast it gets harder
+    const GRAVITY = 0.9; 
+    const JUMP_FORCE = -15; 
+    const SPEED_INITIAL = 7;
+    const SPEED_ACCEL = 0.003; // <-- Makes the game get faster over time!
+
+    let gameSpeed = SPEED_INITIAL;
+    let isPlaying = false;
+    let score = 0;
     let highScore = localStorage.getItem('hopocalypseHighScore') || 0;
     let isMuted = localStorage.getItem('hopocalypseMuted') === 'true';
 
@@ -120,6 +130,7 @@
     // --- AUDIO ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioCtx = new AudioContext();
+    
     function playSound(type) {
         if (isMuted) return;
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -144,27 +155,33 @@
             const centerX = this.x + 20, bottomY = this.y + 40;
             ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(centerX, bottomY, 15, 4, 0, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#FFF'; ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
-            // EARS: Add these lines before the body
-    ctx.beginPath(); ctx.ellipse(centerX - 7, this.y + 5, 5, 15, -0.1, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(centerX + 7, this.y + 5, 5, 15, 0.1, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-            ctx.beginPath(); ctx.arc(centerX, this.y + 22, 18, 0, Math.PI*2); ctx.fill(); ctx.stroke(); // Body
-            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(centerX-5, this.y+16, 2, 0, Math.PI*2); ctx.fill(); // Eyes
+            ctx.beginPath(); ctx.ellipse(centerX - 7, this.y + 5, 5, 15, -0.1, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(centerX + 7, this.y + 5, 5, 15, 0.1, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(centerX, this.y + 22, 18, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
+            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(centerX-5, this.y+16, 2, 0, Math.PI*2); ctx.fill(); 
             ctx.beginPath(); ctx.arc(centerX+5, this.y+16, 2, 0, Math.PI*2); ctx.fill();
         },
-        update() { this.dy += GRAVITY; this.y += this.dy; if (this.y > canvas.height) gameOver("THE VOID"); }
+        update() { 
+            this.dy += GRAVITY; 
+            this.y += this.dy; 
+            // "The Void" check needs to be generous on mobile to allow for UI bounce
+            if (this.y > canvas.height + 50) gameOver("THE VOID"); 
+        }
     };
 
     let platforms = [], obstacles = [];
+    
     function init() {
-    platforms = [{ x: 0, y: canvas.height - 150, width: canvas.width, height: 150 }];
-    obstacles = []; 
-    score = 0; 
-    gameSpeed = SPEED_INITIAL;
+        // Always start platform based on CURRENT height to fix mobile UI shifting
+        platforms = [{ x: 0, y: canvas.height - 150, width: canvas.width, height: 150 }];
+        obstacles = []; 
+        score = 0; 
+        gameSpeed = SPEED_INITIAL;
+        bunny.y = 0;
+        bunny.dy = 0;
+        bunny.jumpCount = 0;
+    }
 
-    // THE FIX: Bring the bunny back from the dead
-    bunny.y = 0;
-    bunny.dy = 0;
-}
     function spawnObstacle(p) {
         if (score > 20 && Math.random() < 0.5) {
             obstacles.push({ x: p.x + p.width/2, y: p.y - 30, width: 30, height: 30 });
@@ -210,7 +227,13 @@
 
         if (platforms[platforms.length-1].x < canvas.width) {
             const last = platforms[platforms.length-1];
-            const p = { x: last.x + last.width + 120 + Math.random()*100, y: canvas.height - 100 - Math.random()*200, width: 300 + Math.random()*300, height: 500 };
+            const p = { 
+                x: last.x + last.width + 120 + Math.random()*100, 
+                // Ensure platform doesn't go too high or too low
+                y: Math.min(canvas.height - 100, Math.max(canvas.height - 400, canvas.height - 100 - Math.random()*200)), 
+                width: 300 + Math.random()*300, 
+                height: 500 
+            };
             platforms.push(p); spawnObstacle(p);
         }
 
@@ -218,18 +241,39 @@
         obstacles.forEach((o, i) => {
             o.x -= gameSpeed;
             ctx.fillStyle = '#D32F2F'; ctx.fillRect(o.x, o.y, o.width, o.height);
-            if (bunny.x < o.x + o.width && bunny.x + 40 > o.x && bunny.y + 40 > o.y) gameOver("FORGOTTEN");
-        });
-
-        bunny.update();
-        let onGround = false;
-        platforms.forEach(p => {
-            if (bunny.x + 30 > p.x && bunny.x + 10 < p.x + p.width && bunny.y + 40 >= p.y && bunny.y + 40 <= p.y + 20 && bunny.dy >= 0) {
-                bunny.y = p.y - 40; bunny.dy = 0; bunny.jumpCount = 0; onGround = true;
+            // Slightly smaller hitbox for fairness
+            if (bunny.x + 30 > o.x && bunny.x + 10 < o.x + o.width && 
+                bunny.y + 35 > o.y && bunny.y + 5 < o.y + o.height) {
+                gameOver("FORGOTTEN");
             }
         });
 
-        score += 0.05; gameSpeed += 0.001;
+        bunny.update();
+        
+        // 🔥 MOBILE FIX: IMPROVED GROUND COLLISION
+        let onGround = false;
+        platforms.forEach(p => {
+            // "The Catch": If bunny is falling (dy > 0)
+            // AND bunny is visually overlapping the platform horizontally
+            // AND bunny's feet passed the top edge... CATCH THEM.
+            // We increased the tolerance from 20 to 45 pixels to catch "fast fallers"
+            if (bunny.dy >= 0 && 
+                bunny.x + 30 > p.x && 
+                bunny.x + 10 < p.x + p.width && 
+                bunny.y + 40 > p.y && 
+                bunny.y < p.y) { // As long as the head is still above the platform
+                
+                bunny.y = p.y - 40; // Snap to top
+                bunny.dy = 0; 
+                bunny.jumpCount = 0; 
+                onGround = true;
+            }
+        });
+
+        // 🔥 SPEED UP LOGIC
+        score += 0.05; 
+        gameSpeed += SPEED_ACCEL; // Gets faster every frame
+        
         document.getElementById('scoreHud').innerText = Math.floor(score);
         bunny.draw();
         requestAnimationFrame(loop);
@@ -245,8 +289,15 @@
 
     // --- CONTROLS ---
     function jump() { if (isPlaying) bunny.jumpCount++ < 2 && (bunny.dy = JUMP_FORCE, playSound('jump')); }
+    
     window.addEventListener('keydown', (e) => (e.code === 'Space' || e.code === 'ArrowUp') && jump());
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); }, {passive: false});
+    
+    // Prevent default touch behavior (scrolling) when playing
+    canvas.addEventListener('touchstart', (e) => { 
+        if(e.target == canvas) e.preventDefault(); 
+        jump(); 
+    }, {passive: false});
+    
     canvas.addEventListener('mousedown', jump);
 
     document.getElementById('startBtn').onclick = () => { isPlaying = true; document.getElementById('startScreen').classList.add('hidden'); init(); loop(); };
@@ -254,8 +305,20 @@
     document.getElementById('claimLegacyBtn').onclick = () => window.parent.closeArcade();
     document.getElementById('muteBtn').onclick = () => { isMuted = !isMuted; localStorage.setItem('hopocalypseMuted', isMuted); document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊'; };
 
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resize); resize();
+    // Smart Resize: Only reset if the change is drastic (prevents mobile URL bar jitter)
+    let lastWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+        if (Math.abs(window.innerWidth - lastWidth) > 50) {
+            canvas.width = window.innerWidth; 
+            canvas.height = window.innerHeight;
+            lastWidth = window.innerWidth;
+        }
+    });
+    
+    // Initial Size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
 </script>
 </body>
 </html>
