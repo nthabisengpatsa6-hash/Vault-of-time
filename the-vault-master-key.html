@@ -77,7 +77,7 @@
             }
         };
 
-        // --- BATCH UPDATE ACTION (FIXED!) ---
+       // --- BATCH UPDATE ACTION (SECURE VERSION) ---
         document.getElementById('batchUpdateBtn').onclick = async () => {
             const input = document.getElementById('blockIds').value;
             const buyerEmail = document.getElementById('buyerEmail').value.trim();
@@ -87,25 +87,35 @@
             if (!buyerEmail) return alert("⚠️ STOP: Enter Buyer Email!");
 
             const batch = writeBatch(db);
+            
             blockArray.forEach((id) => {
                 const blockRef = doc(db, "blocks", id); 
-                
-                // ✨ FIX: Changed from .update() to .set(..., {merge: true})
-                // This creates the block if it doesn't exist yet!
+                const claimRef = doc(db, "claims", id); // ✨ The Secret Ledger
+
+                // 1. Update Public Block (Anonymously Paid)
+                // We REMOVE the email field from here to keep it private.
                 batch.set(blockRef, { 
                     status: "paid", 
-                    email: buyerEmail,
-                    ownerId: null,
+                    ownerId: null, // Cleared for handshake
+                    email: null,   // 🗑️ Scrub email from public view
                     purchasedAt: serverTimestamp(),
                     reserved: false,
                     reservedBy: null,
                     reservedAt: null
                 }, { merge: true });
+
+                // 2. Create Private Claim (The Secure Record)
+                // Only the buyer can read this document!
+                batch.set(claimRef, {
+                    email: buyerEmail,
+                    blockId: id,
+                    createdAt: serverTimestamp()
+                });
             });
 
             try {
                 await batch.commit();
-                alert(`✅ SUCCESS! ${blockArray.length} blocks assigned to ${buyerEmail}`);
+                alert(`✅ SECURE SUCCESS!\n\nBlocks marked as PAID (Publicly).\nEmails saved to CLAIMS (Privately).`);
                 document.getElementById('blockIds').value = "";
                 document.getElementById('buyerEmail').value = "";
             } catch (error) {
