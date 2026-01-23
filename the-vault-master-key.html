@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>The Keeper's Ledger - DEBUG MODE</title>
+    <title>The Keeper's Ledger</title>
     <style>
         body { background: #0d1117; color: white; font-family: sans-serif; padding: 50px; }
         .admin-box { background: #161b22; border: 1px solid #D4AF37; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
@@ -10,24 +10,10 @@
         button { background: #D4AF37; color: black; padding: 12px 24px; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; }
         .warning { color: #ff6b6b; font-size: 12px; }
         label { display: block; margin-top: 15px; margin-bottom: 5px; color: #8b949e; font-size: 0.9em; }
-        
-        /* DEBUG BOX STYLES */
-        #debug-console {
-            background: #220000;
-            border: 2px solid #ff0000;
-            color: #ffaaaa;
-            padding: 15px;
-            margin-bottom: 20px;
-            font-family: monospace;
-            white-space: pre-wrap;
-            display: none; /* Hidden until needed */
-        }
     </style>
 </head>
 <body>
-    <h1>The Keeper's Ledger (Debug Mode)</h1>
-
-    <div id="debug-console"></div>
+    <h1>The Keeper's Ledger</h1>
 
     <div class="admin-box" id="login-section">
         <h3>Identify Yourself</h3>
@@ -76,34 +62,22 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Debug Logger Function
-        function logDebug(msg) {
-            const box = document.getElementById('debug-console');
-            box.style.display = 'block';
-            box.innerText += msg + "\n---------------------\n";
-            console.log(msg);
-        }
-
         // --- LOGIN ACTION ---
         document.getElementById('loginBtn').onclick = async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
             try {
-                const credential = await signInWithEmailAndPassword(auth, email, password);
-                const user = credential.user;
-                
-                // 🛑 PRINT THE TRUTH ON SCREEN
-                logDebug(`✅ LOGIN SUCCESSFUL!\n\nYOUR UID IS:\n${user.uid}\n\n(Copy this ID into your Firestore Rules!)`);
-
+                await signInWithEmailAndPassword(auth, email, password);
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('ledger-section').style.display = 'block';
             } catch (error) {
-                logDebug("❌ LOGIN FAILED:\n" + error.message);
+                console.error(error);
+                alert("Access Denied: " + error.message);
             }
         };
 
-        // --- BATCH UPDATE ACTION ---
+        // --- BATCH UPDATE ACTION (FIXED!) ---
         document.getElementById('batchUpdateBtn').onclick = async () => {
             const input = document.getElementById('blockIds').value;
             const buyerEmail = document.getElementById('buyerEmail').value.trim();
@@ -115,7 +89,10 @@
             const batch = writeBatch(db);
             blockArray.forEach((id) => {
                 const blockRef = doc(db, "blocks", id); 
-                batch.update(blockRef, { 
+                
+                // ✨ FIX: Changed from .update() to .set(..., {merge: true})
+                // This creates the block if it doesn't exist yet!
+                batch.set(blockRef, { 
                     status: "paid", 
                     email: buyerEmail,
                     ownerId: null,
@@ -123,27 +100,75 @@
                     reserved: false,
                     reservedBy: null,
                     reservedAt: null
+                }, { merge: true });
+            });
+
+            try {
+                await batch.commit();
+                alert(`✅ SUCCESS! ${blockArray.length} blocks assigned to ${buyerEmail}`);
+                document.getElementById('blockIds').value = "";
+                document.getElementById('buyerEmail').value = "";
+            } catch (error) {
+                console.error(error);
+                alert("Firestore Error: " + error.message);
+            }
+        };
+
+        // --- PURPLE RAIN (WFC) ---
+        document.getElementById('wfcUpdateBtn').onclick = async () => {
+            const input = document.getElementById('blockIds').value;
+            const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
+            if (blockArray.length === 0) return alert("No IDs to process!");
+
+            const batch = writeBatch(db);
+            blockArray.forEach((id) => {
+                const blockRef = doc(db, "blocks", id); 
+                batch.set(blockRef, { 
+                    status: "available", 
+                    partnership: "WFC",
+                    reserved: false,
+                    reservedBy: null,
+                    mediaUrl: null, imageUrl: null, message: null
+                }, { merge: true });
+            });
+
+            try {
+                await batch.commit();
+                alert(`Done! ${blockArray.length} blocks are now Solidarity Purple.`);
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        };
+
+        // --- SCRUB & RELEASE ---
+        document.getElementById('availableBtn').onclick = async () => {
+            const input = document.getElementById('blockIds').value;
+            const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
+            if (blockArray.length === 0) return alert("No IDs to process!");
+
+            const batch = writeBatch(db);
+            blockArray.forEach((id) => {
+                const blockRef = doc(db, "blocks", id); 
+                batch.set(blockRef, { 
+                    status: "available",
+                    blockNumber: Number(id),
+                    partnership: null,
+                    reserved: false,
+                    reservedBy: null,
+                    reservedAt: null,
+                    reservedName: null,
+                    mediaUrl: null, imageUrl: null, message: null, isBulk: null,
+                    email: null, ownerId: null
                 });
             });
 
             try {
                 await batch.commit();
-                logDebug(`✅ SUCCESS: ${blockArray.length} blocks updated.`);
-                alert("Success!");
+                alert(`🧹 Cleaned & Released ${blockArray.length} blocks.`);
             } catch (error) {
-                logDebug("❌ FIRESTORE ERROR (Check Rules):\n" + error.message);
-                alert("Error! Check the red debug box.");
+                alert("Error: " + error.message);
             }
         };
-
-        // --- WFC & AVAILABLE BUTTONS (Simplified for debug) ---
-        document.getElementById('wfcUpdateBtn').onclick = async () => {
-           alert("Use the 'Mark as Paid' button for testing first!");
-        };
-         document.getElementById('availableBtn').onclick = async () => {
-           alert("Use the 'Mark as Paid' button for testing first!");
-        };
-
     </script>
 </body>
 </html>
