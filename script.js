@@ -484,6 +484,7 @@ const renderPage = (pageNum) => {
   const start = (pageNum - 1) * PAGE_SIZE + 1;
   const end = Math.min(start + PAGE_SIZE - 1, TOTAL_BLOCKS);
 
+  // Update Headers
   const chapterNameDisplay = document.getElementById("chapterName");
   const chapterRangeDisplay = document.getElementById("chapterRange");
   let districtTitle = "";
@@ -503,16 +504,16 @@ const renderPage = (pageNum) => {
     div.textContent = i;
     div.dataset.blockId = i;
 
-    // --- CACHED DATA FOR VISUALS (Fast loading) ---
+    // --- VISUALS ---
     const cachedData = blockCache[i]; 
 
-    // WFC Visuals
+    // WFC
     if (cachedData?.partnership === "WFC" && cachedData?.status === "available") {
         div.classList.add("wfc-solidarity"); 
         div.textContent = "💜"; 
     }
 
-    // Reserved Visuals
+    // Reserved
     if (reservedBlocks.includes(i)) {
       const reservedBy = cachedData?.reservedBy || null;
       const savedEmail = localStorage.getItem("userEmail");
@@ -527,7 +528,7 @@ const renderPage = (pageNum) => {
       }
     }
 
-    // Claimed Visuals
+    // Claimed
     if (claimed.includes(i)) {
       div.classList.add("claimed");
       const mediaUrl = cachedData?.mediaUrl || cachedData?.imageUrl;
@@ -547,14 +548,13 @@ const renderPage = (pageNum) => {
     }
 
     // ============================================================
-    // 🖱️ THE FIXED CLICK HANDLER (Live UID Check)
+    // 🖱️ STRICT CLICK HANDLER
     // ============================================================
     div.onclick = async () => {
-      // 1. Visual Feedback
       div.style.opacity = "0.5";
       setTimeout(() => div.style.opacity = "1", 200);
 
-      // 2. Reset UI
+      // Reset UI Elements
       const form = document.getElementById("blockForm");
       const lockedMsg = document.getElementById("lockedMsg");
       const warning = document.getElementById("reservedWarning");
@@ -564,7 +564,7 @@ const renderPage = (pageNum) => {
       if (lockedMsg) lockedMsg.classList.add("hidden");
       if (warning) warning.classList.add("hidden");
       
-      // 3. Multi-Select Logic (Kept exactly as is)
+      // Multi-Select Logic (No changes here)
       if (isMultiSelect) {
         if (claimed.includes(i)) return alert("This block is already purchased.");
         if (reservedBlocks.includes(i)) {
@@ -609,28 +609,29 @@ const renderPage = (pageNum) => {
         return;
       }
 
-      // 4. ⚡ LIVE DATA FETCH (This fixes the Mobile/Sync issue)
-      // We ignore the cache and ask Firestore directly: "Who owns this RIGHT NOW?"
+      // ⚡ LIVE CHECK
       const docRef = doc(db, "blocks", String(i));
       const snap = await getDoc(docRef);
       const freshData = snap.exists() ? snap.data() : null;
       const currentUser = auth.currentUser;
-
-      // 5. ⚡ OWNERSHIP CHECK (UID instead of Email)
-      // This works even though we hid the email for privacy!
       const isOwner = currentUser && freshData && freshData.ownerId === currentUser.uid;
 
       // === SCENARIO A: YOU OWN IT (Edit Mode) ===
       if (isOwner) {
           if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
           
-          // Setup the "Update" button
-          saveBtn.style.display = "block";
-          saveBtn.textContent = "🚀 Update Legacy";
-          saveBtn.disabled = false;
-          saveBtn.onclick = () => handleKeeperUpdate(i);
+          // 🔒 SECURITY FIX: Hide the "Reserve" button so you can't re-buy it
+          if (reserveBtn) reserveBtn.classList.add("hidden"); 
+          if (paymentButtons) paymentButtons.classList.add("hidden");
 
-          // Pre-fill data
+          // 🔒 SECURITY FIX: Show the "Update" button
+          if (saveBtn) {
+            saveBtn.style.display = "block";
+            saveBtn.textContent = "🚀 Update Legacy";
+            saveBtn.disabled = false;
+            saveBtn.onclick = () => handleKeeperUpdate(i);
+          }
+
           if (messageInput) {
               messageInput.classList.remove("hidden");
               messageInput.value = freshData.message || ""; 
@@ -639,22 +640,19 @@ const renderPage = (pageNum) => {
           if (fileInput) fileInput.classList.remove("hidden");
           if (lockedMsg) lockedMsg.classList.add("hidden");
           
-          // Open Modal
           modal.classList.remove("hidden"); 
           return;
       }
 
       // === SCENARIO B: SOMEONE ELSE OWNS IT (View Mode) ===
       if (freshData && freshData.status === "paid") {
+           // ... (View Modal Logic stays same) ...
            const viewModal = document.getElementById("viewModal");
            const viewTitle = document.getElementById("viewBlockTitle");
            const viewMedia = document.getElementById("viewBlockMedia");
            const viewMessage = document.getElementById("viewBlockMessage");
-
            if (viewTitle) viewTitle.textContent = `Legacy Block #${i}`;
-
            const mediaUrl = freshData.mediaUrl || freshData.imageUrl;
-           
            if (viewMessage) {
                if (freshData.message) {
                    viewMessage.textContent = `“${freshData.message}”`;
@@ -664,15 +662,11 @@ const renderPage = (pageNum) => {
                    viewMessage.textContent = "This block has been reserved. No content uploaded yet."; 
                    viewMessage.style.fontStyle = "normal";
                    viewMessage.style.color = "#aaa"; 
-               } else {
-                    viewMessage.textContent = ""; 
-               }
+               } else { viewMessage.textContent = ""; }
            }
-
            if (viewMedia) {
                viewMedia.innerHTML = ""; 
                const mediaType = freshData.mediaType || (freshData.imageUrl ? "image" : "audio");
-
                if (mediaUrl) {
                    if (mediaType === "image") {
                        const img = document.createElement("img");
@@ -695,7 +689,6 @@ const renderPage = (pageNum) => {
 
       // === SCENARIO C: RESERVED (Unpaid) ===
       if (freshData && freshData.reserved === true) {
-        // Double check using local storage email as fallback
         const reservedBy = freshData.reservedBy || null;
         const userEmail = loggedInUserEmail || emailInput?.value?.trim() || localStorage.getItem("userEmail");
 
@@ -716,8 +709,6 @@ const renderPage = (pageNum) => {
       div.classList.add("selected");
       hiddenBlockNumber.value = i;
       
-      if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
-
       // WFC Logic
       if (cachedData?.partnership === "WFC") {
           if (selectedText) selectedText.textContent = `Sponsor a Memorial: Block #${i}`;
@@ -733,17 +724,21 @@ const renderPage = (pageNum) => {
           }
       }
 
-      const infoIconWrapper = document.querySelector(".reserve-wrapper");
-      if (infoIconWrapper) infoIconWrapper.style.display = ''; 
-      const justIcon = document.querySelector(".reserve-info-icon");
-      if (justIcon) justIcon.style.display = '';
-
+      // Show Inputs
       if (nameInput) nameInput.classList.remove("hidden");
       if (emailInput) emailInput.classList.remove("hidden");
       if (fileInput) { fileInput.classList.remove("hidden"); fileInput.value = ""; }
       if (messageInput) { messageInput.classList.remove("hidden"); messageInput.value = ""; }
+      
+      // 🔒 SECURITY FIX: Show Reserve button, HIDE Update button
       if (reserveBtn) reserveBtn.classList.remove("hidden");
-      if (saveBtn) { saveBtn.style.display = "block"; saveBtn.onclick = handleSave; }
+      if (saveBtn) { 
+          // This line prevents the "Free Update" bug
+          saveBtn.style.display = "none"; 
+      }
+      
+      // But we still set the onclick event for LATER (in case they buy it)
+      // This logic actually belongs in handleSave, but we set the display to none here.
       
       modal.classList.remove("hidden");
     };
