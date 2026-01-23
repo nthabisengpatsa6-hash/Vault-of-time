@@ -106,13 +106,13 @@ let loginModal, menuLoginBtn, closeLogin;
 let loginStep1, loginStep2, loginEmailInput, loginSendBtn, loginCodeInput, loginConfirmBtn;
 let loginGeneratedCode = null;
 
-// --- THE AUTH WATCHER ---
+// --- THE AUTH WATCHER & SECURE HANDSHAKE ---
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    // === SCENARIO A: User is Logged In (Guest OR Owner) ===
+    // === SCENARIO A: User is Logged In ===
     
     if (user.isAnonymous) {
-      // It's a Guest! Let them save/buy, but don't change the UI name yet.
+      // It's a Guest! Let them browse/reserve.
       console.log("Guest mode active:", user.uid);
     } else {
       // It's a Real Owner! Update the UI.
@@ -124,31 +124,47 @@ onAuthStateChanged(auth, async (user) => {
         menuLoginBtn.style.color = "#4CAF50"; 
       }
 
-      // Run the Handshake (Link past purchases)
+      // ---------------------------------------------------------
+      // 🤝 NEW SECURE HANDSHAKE (Checks 'claims' collection)
+      // ---------------------------------------------------------
       try {
-        const q = query(
-          blocksCollection, 
-          where("email", "==", user.email), 
-          where("status", "==", "paid")
-        );
+        // 1. Look inside the secret 'claims' collection
+        const claimsRef = collection(db, "claims");
+        
+        // 2. Find claims matching this user's email
+        const q = query(claimsRef, where("email", "==", user.email));
         const querySnapshot = await getDocs(q);
-        querySnapshot.forEach(async (blockDoc) => {
-           // If the block has no owner (or was owned by a guest), claim it now
-           if (!blockDoc.data().ownerId || blockDoc.data().ownerId !== user.uid) {
-             await updateDoc(doc(db, "blocks", blockDoc.id), {
-               ownerId: user.uid 
-             });
-             console.log(`Legacy for Block #${blockDoc.id} secured to UID: ${user.uid}`);
-           }
-        });
+
+        if (!querySnapshot.empty) {
+          console.log(`Found ${querySnapshot.size} unclaimed blocks in the Secure Ledger.`);
+          
+          // 3. Loop through claims and stamp the blocks
+          const updates = [];
+          querySnapshot.forEach((claimDoc) => {
+            const blockId = claimDoc.id; // Claim ID = Block ID
+            
+            // Write the User's UID onto the public block
+            const blockRef = doc(db, "blocks", blockId);
+            const updatePromise = setDoc(blockRef, { 
+              ownerId: user.uid,  // <--- The Keys to the Castle
+              status: "paid"
+            }, { merge: true });
+            
+            updates.push(updatePromise);
+          });
+
+          await Promise.all(updates);
+          console.log("✅ All blocks successfully synced to user account.");
+        }
       } catch (err) {
-        console.error("Handshake failed:", err);
+        console.error("Handshake error:", err);
       }
+      // ---------------------------------------------------------
     }
 
   } else {
     // === SCENARIO B: No User at all ===
-    // Sign them in as a Guest immediately so they can pass Security Rules
+    // Auto-login as Guest so they can read the grid
     console.log("No user found. Signing in as Guest...");
     signInAnonymously(auth).catch((error) => {
       console.error("Guest login failed:", error);
