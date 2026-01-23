@@ -197,16 +197,21 @@ async function loadClaimedBlocks() {
         let timeLimit = 30 * 60 * 1000;
         if (data.isBulk === true) timeLimit = 1440 * 60 * 1000;
 
-        if (now - reservedTime > timeLimit) {
+       if (now - reservedTime > timeLimit) {
           console.log("Auto-releasing:", idNum);
-          await setDoc(doc(blocksCollection, String(idNum)), {
-            reserved: false, reservedBy: null, reservedAt: null, isBulk: null,
-            reservedName: null, status: "available"
-          }, { merge: true });
-          data.reserved = false;
+          
+          // ✨ SAFETY BUBBLE: Prevent Guest crash
+          try {
+              await setDoc(doc(blocksCollection, String(idNum)), {
+                reserved: false, reservedBy: null, reservedAt: null, isBulk: null,
+                reservedName: null, status: "available"
+              }, { merge: true });
+              data.reserved = false; // Only update memory if DB update worked
+          } catch (err) {
+              // If we are a Guest, we can't clean the DB. Just ignore it and move on!
+              console.log("Guest mode: Skipping cleanup for block #" + idNum);
+          }
         }
-      }
-
       if (data.status === "paid") claimed.push(idNum);
       else if (data.reserved === true) reservedBlocks.push(idNum);
       blockCache[idNum] = data;
