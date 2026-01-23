@@ -123,41 +123,47 @@ onAuthStateChanged(auth, async (user) => {
       }
 
       // ---------------------------------------------------------
-      // 🤝 SECURE HANDSHAKE (Fixes both errors here)
+      // 🤝 SECURE HANDSHAKE (Loop-Proof Version)
       // ---------------------------------------------------------
       try {
-        // 1. Look inside the secret 'claims' collection
         const claimsRef = collection(db, "claims");
         const q = query(claimsRef, where("email", "==", user.email));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
-          console.log(`Found ${querySnapshot.size} unclaimed blocks in the Secure Ledger.`);
           
-          // 2. Create the list (This was missing before!)
+          let didWork = false; // Flag: Did we actually change anything?
           const updates = [];
 
-          // 3. Loop through claims (This was missing before!)
-          querySnapshot.forEach((claimDoc) => {
+          // Use "for...of" loop to handle checks properly
+          for (const claimDoc of querySnapshot.docs) {
             const blockId = claimDoc.id; 
-            
-            // Stamp the block with your UID
             const blockRef = doc(db, "blocks", blockId);
-            const updatePromise = setDoc(blockRef, { 
-              ownerId: user.uid,  
-              status: "paid"
-            }, { merge: true });
             
-            updates.push(updatePromise);
-          });
+            // 🛑 SMART CHECK: Read the block first!
+            const blockSnap = await getDoc(blockRef);
+            
+            // Only update if I don't own it yet
+            if (blockSnap.exists() && blockSnap.data().ownerId !== user.uid) {
+                console.log(`⚡ Syncing new block #${blockId}...`);
+                didWork = true; // We found work to do!
 
-          // 4. Run the updates
-          await Promise.all(updates);
-          console.log("✅ All blocks successfully synced to user account.");
+                const updatePromise = setDoc(blockRef, { 
+                  ownerId: user.uid,  
+                  status: "paid"
+                }, { merge: true });
+                updates.push(updatePromise);
+            }
+          }
 
-          // 5. Refresh the page to unlock editing
-          alert("Ownership Verified! Reloading your Vault...");
-          window.location.reload(); 
+          // ONLY reload if we actually found NEW blocks
+          if (didWork) {
+            await Promise.all(updates);
+            alert("Ownership Verified! Reloading your Vault...");
+            window.location.reload(); 
+          } else {
+            console.log("✅ System Synced: All claims are already processed. No reload needed.");
+          }
         }
       } catch (err) {
         console.error("Handshake error:", err);
@@ -166,7 +172,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 
   } else {
-    // === SCENARIO B: No User at all (Guest Login) ===
+    // === SCENARIO B: Guest Login ===
     console.log("No user found. Signing in as Guest...");
     signInAnonymously(auth).catch((error) => {
       console.error("Guest login failed:", error);
