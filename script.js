@@ -197,7 +197,7 @@ async function loadClaimedBlocks() {
         let timeLimit = 30 * 60 * 1000;
         if (data.isBulk === true) timeLimit = 1440 * 60 * 1000;
 
-       if (now - reservedTime > timeLimit) {
+        if (now - reservedTime > timeLimit) {
           console.log("Auto-releasing:", idNum);
           
           // ✨ SAFETY BUBBLE: Prevent Guest crash
@@ -206,12 +206,14 @@ async function loadClaimedBlocks() {
                 reserved: false, reservedBy: null, reservedAt: null, isBulk: null,
                 reservedName: null, status: "available"
               }, { merge: true });
-              data.reserved = false; // Only update memory if DB update worked
+              data.reserved = false; 
           } catch (err) {
-              // If we are a Guest, we can't clean the DB. Just ignore it and move on!
+              // If we are a Guest, we can't clean the DB. Just ignore it!
               console.log("Guest mode: Skipping cleanup for block #" + idNum);
           }
         }
+      }
+
       if (data.status === "paid") claimed.push(idNum);
       else if (data.reserved === true) reservedBlocks.push(idNum);
       blockCache[idNum] = data;
@@ -220,13 +222,13 @@ async function loadClaimedBlocks() {
     localStorage.setItem("claimed", JSON.stringify(claimed));
     localStorage.setItem("reservedBlocks", JSON.stringify(reservedBlocks));
     console.log("Loaded → Claimed:", claimed.length, "Reserved:", reservedBlocks.length);
+    
   } catch (err) {
     console.error("Error loading block states:", err);
     claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
     reservedBlocks = JSON.parse(localStorage.getItem("reservedBlocks") || "[]");
   }
 }
-
 async function fetchBlock(num) {
   const snap = await getDoc(doc(blocksCollection, String(num)));
   return snap.exists() ? snap.data() : null;
