@@ -112,10 +112,8 @@ onAuthStateChanged(auth, async (user) => {
     // === SCENARIO A: User is Logged In ===
     
     if (user.isAnonymous) {
-      // It's a Guest! Let them browse/reserve.
       console.log("Guest mode active:", user.uid);
     } else {
-      // It's a Real Owner! Update the UI.
       console.log("Vault Session Restored for:", user.email);
       loggedInUserEmail = user.email;
       
@@ -125,62 +123,41 @@ onAuthStateChanged(auth, async (user) => {
       }
 
       // ---------------------------------------------------------
-      // 🤝 NEW SECURE HANDSHAKE (Checks 'claims' collection)
+      // 🤝 SECURE HANDSHAKE (Fixes both errors here)
       // ---------------------------------------------------------
       try {
         // 1. Look inside the secret 'claims' collection
         const claimsRef = collection(db, "claims");
-        
-        // 2. Find claims matching this user's email
         const q = query(claimsRef, where("email", "==", user.email));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
           console.log(`Found ${querySnapshot.size} unclaimed blocks in the Secure Ledger.`);
           
-          // 1. Create a list to hold the updates
+          // 2. Create the list (This was missing before!)
           const updates = [];
 
-          // 2. THE MISSING LOOP (This does the actual work!)
+          // 3. Loop through claims (This was missing before!)
           querySnapshot.forEach((claimDoc) => {
             const blockId = claimDoc.id; 
             
-            // Prepare the stamp
+            // Stamp the block with your UID
             const blockRef = doc(db, "blocks", blockId);
             const updatePromise = setDoc(blockRef, { 
               ownerId: user.uid,  
               status: "paid"
             }, { merge: true });
             
-            // Add it to our list
             updates.push(updatePromise);
           });
 
-          // 3. NOW run them all
+          // 4. Run the updates
           await Promise.all(updates);
           console.log("✅ All blocks successfully synced to user account.");
 
-          // 4. Refresh to see the changes
+          // 5. Refresh the page to unlock editing
           alert("Ownership Verified! Reloading your Vault...");
           window.location.reload(); 
-      }
-          // 3. Loop through claims and stamp the blocks
-          const updates = [];
-          querySnapshot.forEach((claimDoc) => {
-            const blockId = claimDoc.id; // Claim ID = Block ID
-            
-            // Write the User's UID onto the public block
-            const blockRef = doc(db, "blocks", blockId);
-            const updatePromise = setDoc(blockRef, { 
-              ownerId: user.uid,  // <--- The Keys to the Castle
-              status: "paid"
-            }, { merge: true });
-            
-            updates.push(updatePromise);
-          });
-
-          await Promise.all(updates);
-          console.log("✅ All blocks successfully synced to user account.");
         }
       } catch (err) {
         console.error("Handshake error:", err);
@@ -189,14 +166,12 @@ onAuthStateChanged(auth, async (user) => {
     }
 
   } else {
-    // === SCENARIO B: No User at all ===
-    // Auto-login as Guest so they can read the grid
+    // === SCENARIO B: No User at all (Guest Login) ===
     console.log("No user found. Signing in as Guest...");
     signInAnonymously(auth).catch((error) => {
       console.error("Guest login failed:", error);
     });
 
-    // Reset UI
     loggedInUserEmail = null;
     if (menuLoginBtn) {
       menuLoginBtn.innerHTML = "🔑 Owner Login";
