@@ -911,17 +911,20 @@ if (isSignInWithEmailLink(auth, window.location.href)) {
             alert("This link has expired or was already used.");
         });
 }
- if (menuLoginBtn) {
+if (menuLoginBtn) {
   menuLoginBtn.addEventListener("click", async () => {
-    // --- LOGOUT LOGIC ---
-    if (auth.currentUser) {
-      const doLogout = confirm(`You are currently logged in as:\n${auth.currentUser.email}\n\nDo you want to log out?`);
+    const user = auth.currentUser;
+
+    // 1. LOGOUT LOGIC (Only for Real Owners)
+    // We check !user.isAnonymous to make sure we don't try to log out a Guest
+    if (user && !user.isAnonymous) {
+      const doLogout = confirm(`You are currently logged in as:\n${user.email}\n\nDo you want to log out?`);
       
       if (doLogout) {
         try {
-          await signOut(auth); // Official Firebase sign out
+          await signOut(auth);
           alert("✅ You have been logged out.");
-          location.reload(); // Refresh to reset the grid view
+          location.reload(); 
         } catch (err) {
           console.error("Logout failed:", err);
         }
@@ -929,9 +932,11 @@ if (isSignInWithEmailLink(auth, window.location.href)) {
       return; 
     }
 
-    // --- LOGIN MODAL LOGIC (If not logged in) ---
+    // 2. LOGIN MODAL LOGIC (For Guests or Logged-out users)
+    // If they are a Guest, we treat them as "not logged in" so they can upgrade their account
     const sideMenu = document.getElementById("sideMenu");
     if (sideMenu) sideMenu.classList.remove("open");
+    
     if (loginModal) loginModal.classList.remove("hidden");
     if (loginStep1) loginStep1.classList.remove("hidden");
     if (loginStep2) loginStep2.classList.add("hidden");
