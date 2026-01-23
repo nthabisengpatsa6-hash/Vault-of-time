@@ -9,6 +9,7 @@
         input { background: #0d1117; color: white; border: 1px solid #30363d; padding: 10px; margin-bottom: 10px; width: 250px; border-radius: 5px; }
         button { background: #D4AF37; color: black; padding: 12px 24px; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; }
         .warning { color: #ff6b6b; font-size: 12px; }
+        label { display: block; margin-top: 15px; margin-bottom: 5px; color: #8b949e; font-size: 0.9em; }
     </style>
 </head>
 <body>
@@ -23,24 +24,33 @@
 
     <div class="admin-box" id="ledger-section" style="display:none;">
         <p class="warning">Admin Authenticated. Proceed with caution.</p>
-        <label>Paste Block IDs (separated by commas):</label><br>
-        <textarea id="blockIds" placeholder="417, 418, 419..."></textarea><br>
-        <button id="batchUpdateBtn">Mark as PAID</button>
-        <button id="wfcUpdateBtn" style="background: #6a0dad; color: white; margin-top: 10px;">
-    Purple Rain: Mark as WFC Available
-</button>
-        <button id="availableBtn" style="background: #ff4d4d; color: white; margin-top: 10px;">
-    🚮 Scrub & Release (Mark as Available)
-</button>
+        
+        <label>1. Paste Block IDs (separated by commas):</label>
+        <textarea id="blockIds" placeholder="417, 418, 419..."></textarea>
+        
+        <label>2. Attach Buyer Email (Required for Paid Blocks):</label>
+        <input type="email" id="buyerEmail" placeholder="client@gmail.com" style="width: 100%; box-sizing: border-box; border-color: #D4AF37;">
+
+        <br><br>
+        <button id="batchUpdateBtn">Mark as PAID & Assign Email</button>
+        
+        <hr style="border-color: #30363d; margin: 20px 0;">
+
+        <button id="wfcUpdateBtn" style="background: #6a0dad; color: white; margin-right: 10px;">
+            Purple Rain: Mark as WFC Available
+        </button>
+        <button id="availableBtn" style="background: #ff4d4d; color: white;">
+            🚮 Scrub & Release (Mark as Available)
+        </button>
     </div>
 
     <script type="module">
         // 1. Import Firebase Engines
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-        import { getFirestore, writeBatch, doc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getFirestore, writeBatch, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        // 2. YOUR CONFIG (Copy the values from your script.js or Firebase Console)
+        // 2. YOUR CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
             authDomain: "vault-of-time-e6c03.firebaseapp.com",
@@ -64,93 +74,105 @@
                 await signInWithEmailAndPassword(auth, email, password);
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('ledger-section').style.display = 'block';
-                alert("The Keeper recognizes his Queen. Welcome.");
+                // alert("The Keeper recognizes his Queen. Welcome."); 
             } catch (error) {
                 console.error(error);
                 alert("Access Denied: " + error.message);
             }
         };
 
-        // --- BATCH UPDATE ACTION ---
+        // --- BATCH UPDATE ACTION (PAID + EMAIL) ---
         document.getElementById('batchUpdateBtn').onclick = async () => {
             const input = document.getElementById('blockIds').value;
+            const buyerEmail = document.getElementById('buyerEmail').value.trim(); // Get the email
+
             const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
             
+            if (blockArray.length === 0) return alert("No IDs to process!");
+            
+            // ✨ SAFETY CHECK: Require Email for paid blocks
+            if (!buyerEmail) return alert("⚠️ STOP: You must enter a Buyer Email so they can claim these blocks later.");
+
+            const batch = writeBatch(db);
+            blockArray.forEach((id) => {
+                const blockRef = doc(db, "blocks", id); 
+                batch.update(blockRef, { 
+                    status: "paid", 
+                    email: buyerEmail,      // <-- Attach the email
+                    ownerId: null,          // <-- Clear owner so Handshake picks it up
+                    purchasedAt: serverTimestamp(),
+                    reserved: false,
+                    reservedBy: null,
+                    reservedAt: null
+                });
+            });
+
+            try {
+                await batch.commit();
+                alert(`✅ Success! ${blockArray.length} blocks assigned to ${buyerEmail}`);
+                document.getElementById('blockIds').value = ""; // Clear IDs
+                document.getElementById('buyerEmail').value = ""; // Clear Email
+            } catch (error) {
+                console.error(error);
+                alert("Firestore Error: " + error.message);
+            }
+        };
+
+        // --- PURPLE RAIN (WFC) ---
+        document.getElementById('wfcUpdateBtn').onclick = async () => {
+            const input = document.getElementById('blockIds').value;
+            const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
             if (blockArray.length === 0) return alert("No IDs to process!");
 
             const batch = writeBatch(db);
             blockArray.forEach((id) => {
                 const blockRef = doc(db, "blocks", id); 
-                batch.update(blockRef, { status: "paid", reservedAt: null });
+                batch.set(blockRef, { 
+                    status: "available", 
+                    partnership: "WFC",
+                    reserved: false,
+                    reservedBy: null,
+                    mediaUrl: null, imageUrl: null, message: null
+                }, { merge: true });
             });
 
             try {
                 await batch.commit();
-                alert(`Mogul move! ${blockArray.length} blocks are now PAID.`);
+                alert(`Done! ${blockArray.length} blocks are now Solidarity Purple.`);
             } catch (error) {
-                console.error(error);
-                alert("Firestore Error: Check your Security Rules and UID.");
+                alert("Error: " + error.message);
             }
         };
-        document.getElementById('wfcUpdateBtn').onclick = async () => {
-    const input = document.getElementById('blockIds').value;
-    const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
-    if (blockArray.length === 0) return alert("No IDs to process!");
 
-    const batch = writeBatch(db);
-    blockArray.forEach((id) => {
-        const blockRef = doc(db, "blocks", id); 
-        // This 'set' with merge:true cleans out old data and adds the WFC tag
-        batch.set(blockRef, { 
-            status: "available", 
-            partnership: "WFC",
-            reserved: false,
-            reservedBy: null,
-            mediaUrl: null, // Clear out any old test images
-            imageUrl: null,
-            message: null
-        }, { merge: true });
-    });
-
-    try {
-        await batch.commit();
-        alert(`Done! ${blockArray.length} blocks are now Solidarity Purple.`);
-    } catch (error) {
-        alert("Firestore Error: " + error.message);
-    }
-};
+        // --- SCRUB & RELEASE ---
         document.getElementById('availableBtn').onclick = async () => {
-    const input = document.getElementById('blockIds').value;
-    const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
-    if (blockArray.length === 0) return alert("No IDs to process!");
+            const input = document.getElementById('blockIds').value;
+            const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
+            if (blockArray.length === 0) return alert("No IDs to process!");
 
-    const batch = writeBatch(db);
-    blockArray.forEach((id) => {
-        const blockRef = doc(db, "blocks", id); 
-        // We use batch.set with merge:false here because we want to WIP out everything
-        // and reset it to a factory-default "Available" state.
-        batch.set(blockRef, { 
-            status: "available",
-            blockNumber: Number(id),
-            partnership: null,
-            reserved: false,
-            reservedBy: null,
-            reservedAt: null,
-            reservedName: null,
-            mediaUrl: null,
-            imageUrl: null,
-            message: null,
-            isBulk: null
-        });
-    });
+            const batch = writeBatch(db);
+            blockArray.forEach((id) => {
+                const blockRef = doc(db, "blocks", id); 
+                batch.set(blockRef, { 
+                    status: "available",
+                    blockNumber: Number(id),
+                    partnership: null,
+                    reserved: false,
+                    reservedBy: null,
+                    reservedAt: null,
+                    reservedName: null,
+                    mediaUrl: null, imageUrl: null, message: null, isBulk: null,
+                    email: null, ownerId: null // Clear ownership
+                });
+            });
 
-    try {
-        await batch.commit();
-        alert(`🧹 Cleaned & Released ${blockArray.length} blocks. They are now officially blank.`);
-    } catch (error) {
-        alert("Firestore Error: " + error.message);
-    }
-};
+            try {
+                await batch.commit();
+                alert(`🧹 Cleaned & Released ${blockArray.length} blocks.`);
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        };
     </script>
 </body>
 </html>
