@@ -138,6 +138,32 @@ onAuthStateChanged(auth, async (user) => {
         if (!querySnapshot.empty) {
           console.log(`Found ${querySnapshot.size} unclaimed blocks in the Secure Ledger.`);
           
+          // 1. Create a list to hold the updates
+          const updates = [];
+
+          // 2. THE MISSING LOOP (This does the actual work!)
+          querySnapshot.forEach((claimDoc) => {
+            const blockId = claimDoc.id; 
+            
+            // Prepare the stamp
+            const blockRef = doc(db, "blocks", blockId);
+            const updatePromise = setDoc(blockRef, { 
+              ownerId: user.uid,  
+              status: "paid"
+            }, { merge: true });
+            
+            // Add it to our list
+            updates.push(updatePromise);
+          });
+
+          // 3. NOW run them all
+          await Promise.all(updates);
+          console.log("✅ All blocks successfully synced to user account.");
+
+          // 4. Refresh to see the changes
+          alert("Ownership Verified! Reloading your Vault...");
+          window.location.reload(); 
+      }
           // 3. Loop through claims and stamp the blocks
           const updates = [];
           querySnapshot.forEach((claimDoc) => {
