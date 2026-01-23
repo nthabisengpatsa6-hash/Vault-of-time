@@ -487,11 +487,12 @@ const renderPage = (pageNum) => {
   const chapterNameDisplay = document.getElementById("chapterName");
   const chapterRangeDisplay = document.getElementById("chapterRange");
   let districtTitle = "";
-  if (pageNum <= 50) districtTitle = "THE PLAZA: Personal Legacies"; // Was Arena
+  if (pageNum <= 50) districtTitle = "THE PLAZA: Personal Legacies"; 
   else if (pageNum <= 80) districtTitle = "THE BOULEVARD: Iconic Brands";
-  else if (pageNum <= 110) districtTitle = "THE GARDEN: Memorials & Prayers"; // Renamed from Lobby
+  else if (pageNum <= 110) districtTitle = "THE GARDEN: Memorials & Prayers"; 
   else if (pageNum <= 160) districtTitle = "THE STAGE: Culture & Amapiano";
-  else districtTitle = "THE ARENA: Sports & GOATs"; // Moved Arena to the end
+  else districtTitle = "THE ARENA: Sports & GOATs"; 
+  
   if (chapterNameDisplay) chapterNameDisplay.textContent = districtTitle;
   if (chapterRangeDisplay) chapterRangeDisplay.textContent = `Blocks ${start} – ${end}`;
   updateKeeper(pageNum);
@@ -501,18 +502,19 @@ const renderPage = (pageNum) => {
     div.className = "block";
     div.textContent = i;
     div.dataset.blockId = i;
-    // --- WFC PARTNERSHIP VISUALS ---
-const data = blockCache[i]; // This pulls the block's data from memory
 
-if (data?.partnership === "WFC" && data?.status === "available") {
-    div.classList.add("wfc-solidarity"); // This links to the CSS we'll add
-    div.textContent = "💜"; // This replaces the number with a heart
-}
+    // --- CACHED DATA FOR VISUALS (Fast loading) ---
+    const cachedData = blockCache[i]; 
 
-    // --- VISUAL STYLING ---
+    // WFC Visuals
+    if (cachedData?.partnership === "WFC" && cachedData?.status === "available") {
+        div.classList.add("wfc-solidarity"); 
+        div.textContent = "💜"; 
+    }
+
+    // Reserved Visuals
     if (reservedBlocks.includes(i)) {
-      const data = blockCache[i];
-      const reservedBy = data?.reservedBy || null;
+      const reservedBy = cachedData?.reservedBy || null;
       const savedEmail = localStorage.getItem("userEmail");
       const userEmail = (emailInput?.value && emailInput.value.trim()) || savedEmail || null;
 
@@ -525,11 +527,11 @@ if (data?.partnership === "WFC" && data?.status === "available") {
       }
     }
 
+    // Claimed Visuals
     if (claimed.includes(i)) {
       div.classList.add("claimed");
-      const data = blockCache[i];
-      const mediaUrl = data?.mediaUrl || data?.imageUrl;
-      const mediaType = data?.mediaType || (data?.imageUrl ? "image" : data?.audioUrl ? "audio" : null);
+      const mediaUrl = cachedData?.mediaUrl || cachedData?.imageUrl;
+      const mediaType = cachedData?.mediaType || (cachedData?.imageUrl ? "image" : cachedData?.audioUrl ? "audio" : null);
 
       if (mediaUrl && mediaType === "image") {
         div.classList.add("claimed-has-image");
@@ -544,9 +546,15 @@ if (data?.partnership === "WFC" && data?.status === "available") {
       }
     }
 
-    // --- CLICK HANDLER ---
+    // ============================================================
+    // 🖱️ THE FIXED CLICK HANDLER (Live UID Check)
+    // ============================================================
     div.onclick = async () => {
-      // 1. Reset UI
+      // 1. Visual Feedback
+      div.style.opacity = "0.5";
+      setTimeout(() => div.style.opacity = "1", 200);
+
+      // 2. Reset UI
       const form = document.getElementById("blockForm");
       const lockedMsg = document.getElementById("lockedMsg");
       const warning = document.getElementById("reservedWarning");
@@ -556,7 +564,7 @@ if (data?.partnership === "WFC" && data?.status === "available") {
       if (lockedMsg) lockedMsg.classList.add("hidden");
       if (warning) warning.classList.add("hidden");
       
-      // 2. Multi-Select Logic
+      // 3. Multi-Select Logic (Kept exactly as is)
       if (isMultiSelect) {
         if (claimed.includes(i)) return alert("This block is already purchased.");
         if (reservedBlocks.includes(i)) {
@@ -601,97 +609,94 @@ if (data?.partnership === "WFC" && data?.status === "available") {
         return;
       }
 
-      // 3. CASE: CLAIMED / PAID BLOCK
-      if (claimed.includes(i)) {
-        const data = await fetchBlock(i);
-        document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
-        div.classList.add("selected");
-        hiddenBlockNumber.value = i;
-        
-        // Hide Reservation UI
-        if (reserveBtn) reserveBtn.classList.add("hidden");
-        const infoIconWrapper = document.querySelector(".reserve-wrapper");
-        if (infoIconWrapper) infoIconWrapper.style.display = 'none';
-        const justIcon = document.querySelector(".reserve-info-icon");
-        if (justIcon) justIcon.style.display = 'none';
+      // 4. ⚡ LIVE DATA FETCH (This fixes the Mobile/Sync issue)
+      // We ignore the cache and ask Firestore directly: "Who owns this RIGHT NOW?"
+      const docRef = doc(db, "blocks", String(i));
+      const snap = await getDoc(docRef);
+      const freshData = snap.exists() ? snap.data() : null;
+      const currentUser = auth.currentUser;
 
-        const ownerEmail = data?.reservedBy || data?.email;
-        const isOwner = loggedInUserEmail && ownerEmail && (loggedInUserEmail.toLowerCase() === ownerEmail.toLowerCase());
+      // 5. ⚡ OWNERSHIP CHECK (UID instead of Email)
+      // This works even though we hid the email for privacy!
+      const isOwner = currentUser && freshData && freshData.ownerId === currentUser.uid;
 
-        // --- OWNER (EDIT MODE) ---
-        if (isOwner) {
-            if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
-            saveBtn.style.display = "block";
-            saveBtn.textContent = "🚀 Update Legacy";
-            saveBtn.disabled = false;
-            saveBtn.onclick = () => handleKeeperUpdate(i);
+      // === SCENARIO A: YOU OWN IT (Edit Mode) ===
+      if (isOwner) {
+          if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
+          
+          // Setup the "Update" button
+          saveBtn.style.display = "block";
+          saveBtn.textContent = "🚀 Update Legacy";
+          saveBtn.disabled = false;
+          saveBtn.onclick = () => handleKeeperUpdate(i);
 
-            if (messageInput) {
-                messageInput.classList.remove("hidden");
-                messageInput.value = data.message || ""; 
-                if (messageCounter) messageCounter.textContent = `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
-            }
-            if (fileInput) fileInput.classList.remove("hidden");
-            if (lockedMsg) lockedMsg.classList.add("hidden");
-            modal.classList.remove("hidden"); 
-        
-        // --- STRANGER (VIEW MODE) ---
-        } else {
-            const viewModal = document.getElementById("viewModal");
-            const viewTitle = document.getElementById("viewBlockTitle");
-            const viewMedia = document.getElementById("viewBlockMedia");
-            const viewMessage = document.getElementById("viewBlockMessage");
-
-            if (viewTitle) viewTitle.textContent = `Legacy Block #${i}`;
-
-            const mediaUrl = data.mediaUrl || data.imageUrl;
-            
-            // Text Logic
-            if (viewMessage) {
-                if (data.message) {
-                    viewMessage.textContent = `“${data.message}”`;
-                    viewMessage.style.fontStyle = "italic";
-                    viewMessage.style.color = "#fff"; 
-                } else if (!mediaUrl) {
-                    // Truly Empty
-                    viewMessage.textContent = "This block has been reserved. No content uploaded yet."; 
-                    viewMessage.style.fontStyle = "normal";
-                    viewMessage.style.color = "#aaa"; 
-                } else {
-                    // Has Image but NO message
-                     viewMessage.textContent = ""; 
-                }
-            }
-
-            if (viewMedia) {
-                viewMedia.innerHTML = ""; 
-                const mediaType = data.mediaType || (data.imageUrl ? "image" : "audio");
-
-                if (mediaUrl) {
-                    if (mediaType === "image") {
-                        const img = document.createElement("img");
-                        img.src = mediaUrl;
-                        img.style.maxWidth = "100%";
-                        img.style.borderRadius = "8px";
-                        viewMedia.appendChild(img);
-                    } else if (mediaType === "audio") {
-                        const audio = document.createElement("audio");
-                        audio.controls = true;
-                        audio.src = mediaUrl;
-                        audio.style.width = "100%";
-                        viewMedia.appendChild(audio);
-                    }
-                }
-            }
-            if (viewModal) viewModal.classList.remove("hidden"); 
-        }
-        return; 
+          // Pre-fill data
+          if (messageInput) {
+              messageInput.classList.remove("hidden");
+              messageInput.value = freshData.message || ""; 
+              if (messageCounter) messageCounter.textContent = `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
+          }
+          if (fileInput) fileInput.classList.remove("hidden");
+          if (lockedMsg) lockedMsg.classList.add("hidden");
+          
+          // Open Modal
+          modal.classList.remove("hidden"); 
+          return;
       }
 
-      // 4. CASE: RESERVED (UNPAID) BLOCK
-      if (reservedBlocks.includes(i)) {
-        const data = blockCache[i];
-        const reservedBy = data?.reservedBy || null;
+      // === SCENARIO B: SOMEONE ELSE OWNS IT (View Mode) ===
+      if (freshData && freshData.status === "paid") {
+           const viewModal = document.getElementById("viewModal");
+           const viewTitle = document.getElementById("viewBlockTitle");
+           const viewMedia = document.getElementById("viewBlockMedia");
+           const viewMessage = document.getElementById("viewBlockMessage");
+
+           if (viewTitle) viewTitle.textContent = `Legacy Block #${i}`;
+
+           const mediaUrl = freshData.mediaUrl || freshData.imageUrl;
+           
+           if (viewMessage) {
+               if (freshData.message) {
+                   viewMessage.textContent = `“${freshData.message}”`;
+                   viewMessage.style.fontStyle = "italic";
+                   viewMessage.style.color = "#fff"; 
+               } else if (!mediaUrl) {
+                   viewMessage.textContent = "This block has been reserved. No content uploaded yet."; 
+                   viewMessage.style.fontStyle = "normal";
+                   viewMessage.style.color = "#aaa"; 
+               } else {
+                    viewMessage.textContent = ""; 
+               }
+           }
+
+           if (viewMedia) {
+               viewMedia.innerHTML = ""; 
+               const mediaType = freshData.mediaType || (freshData.imageUrl ? "image" : "audio");
+
+               if (mediaUrl) {
+                   if (mediaType === "image") {
+                       const img = document.createElement("img");
+                       img.src = mediaUrl;
+                       img.style.maxWidth = "100%";
+                       img.style.borderRadius = "8px";
+                       viewMedia.appendChild(img);
+                   } else if (mediaType === "audio") {
+                       const audio = document.createElement("audio");
+                       audio.controls = true;
+                       audio.src = mediaUrl;
+                       audio.style.width = "100%";
+                       viewMedia.appendChild(audio);
+                   }
+               }
+           }
+           if (viewModal) viewModal.classList.remove("hidden"); 
+           return;
+      }
+
+      // === SCENARIO C: RESERVED (Unpaid) ===
+      if (freshData && freshData.reserved === true) {
+        // Double check using local storage email as fallback
+        const reservedBy = freshData.reservedBy || null;
         const userEmail = loggedInUserEmail || emailInput?.value?.trim() || localStorage.getItem("userEmail");
 
         if (!userEmail || !reservedBy || userEmail.toLowerCase() !== reservedBy.toLowerCase()) {
@@ -706,27 +711,28 @@ if (data?.partnership === "WFC" && data?.status === "available") {
         }
       }
 
-      // 5. CASE: AVAILABLE BLOCK
+      // === SCENARIO D: AVAILABLE (Buy Mode) ===
       document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
       div.classList.add("selected");
       hiddenBlockNumber.value = i;
+      
       if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
-     // --- WFC CLICK MESSAGE ---
-// --- THE WFC CLICK LOGIC ---
-if (data?.partnership === "WFC") {
-    if (selectedText) selectedText.textContent = `Sponsor a Memorial: Block #${i}`;
-    if (readyMsg) {
-        readyMsg.innerHTML = "💜 <strong>Solidarity Block:</strong> $1 from this purchase goes directly to Women For Change.";
-        readyMsg.classList.remove("hidden"); // Show the message
-    }
-} else {
-    // THIS IS THE FIX: If it's NOT a WFC block, reset the text and hide the message
-    if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
-    if (readyMsg) {
-        readyMsg.innerHTML = ""; // Clear the WFC text
-        readyMsg.classList.add("hidden"); // Hide the element entirely
-    }
-}
+
+      // WFC Logic
+      if (cachedData?.partnership === "WFC") {
+          if (selectedText) selectedText.textContent = `Sponsor a Memorial: Block #${i}`;
+          if (readyMsg) {
+              readyMsg.innerHTML = "💜 <strong>Solidarity Block:</strong> $1 from this purchase goes directly to Women For Change.";
+              readyMsg.classList.remove("hidden"); 
+          }
+      } else {
+          if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
+          if (readyMsg) {
+              readyMsg.innerHTML = ""; 
+              readyMsg.classList.add("hidden"); 
+          }
+      }
+
       const infoIconWrapper = document.querySelector(".reserve-wrapper");
       if (infoIconWrapper) infoIconWrapper.style.display = ''; 
       const justIcon = document.querySelector(".reserve-info-icon");
@@ -741,6 +747,8 @@ if (data?.partnership === "WFC") {
       
       modal.classList.remove("hidden");
     };
+    // ============================================================
+
     grid.appendChild(div);
   }
   renderPagination();
