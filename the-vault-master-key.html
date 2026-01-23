@@ -65,16 +65,21 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- LOGIN ACTION ---
+      // --- LOGIN ACTION ---
         document.getElementById('loginBtn').onclick = async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // ✨ THE TRUTH ALERT: This tells us your REAL ID
+                alert(`✅ Logged in successfully!\n\nYOUR UID IS:\n${user.uid}`);
+                console.log("Your UID:", user.uid);
+
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('ledger-section').style.display = 'block';
-                // alert("The Keeper recognizes his Queen. Welcome."); 
             } catch (error) {
                 console.error(error);
                 alert("Access Denied: " + error.message);
