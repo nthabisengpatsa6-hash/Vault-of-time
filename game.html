@@ -12,12 +12,12 @@
             overflow: hidden; /* Stop scrolling */
             background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: none; 
+            touch-action: none; /* Critical for mobile game controls */
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* 2. THE FIX: Force Canvas to fill the container */
+        /* 2. CANVAs styling */
         #gameCanvas {
             display: block;
             width: 100%; 
@@ -114,40 +114,71 @@
     </div>
 
 <script type="module">
+    // Firebase Imports
     const parentDb = window.parent.db;
     const { collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } = window.parent.FirebaseFirestore || {};
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // --- 3. RESIZE HANDLER (CRITICAL) ---
-    // Sync internal resolution with CSS size
+    // --- FIX 1: HIGH DPI & RESIZE HANDLER ---
+    // We use "logical" dimensions for game logic, but physical pixels for rendering.
+    let logicalWidth, logicalHeight;
+
     function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        // Re-init clouds if needed, but keeping it simple prevents glitches
-        initClouds();
+        // Get the browser's visual viewport size
+        logicalWidth = window.innerWidth;
+        logicalHeight = window.innerHeight;
+
+        // Account for High DPI (Retina) screens
+        const dpr = window.devicePixelRatio || 1;
+        
+        // Set internal resolution matches physical pixels
+        canvas.width = logicalWidth * dpr;
+        canvas.height = logicalHeight * dpr;
+
+        // Scale all drawing operations by DPR so we can use logical coordinates
+        ctx.resetTransform(); // Reset before scaling to avoid infinite growth
+        ctx.scale(dpr, dpr);
+
+        // If we are sitting on the menu, re-init clouds to fill screen
+        if (!isPlaying) {
+            initClouds();
+        }
     }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas(); // Call immediately on load
+
+    // Call resize immediately
+    resizeCanvas();
+    
+    // On mobile, only resize width during gameplay to prevent "Jump" glitch when URL bar hides
+    window.addEventListener('resize', () => {
+        if (isPlaying && Math.abs(window.innerHeight - logicalHeight) < 150) {
+             // If height change is small (URL bar), ignore it to prevent glitching
+             return;
+        }
+        resizeCanvas();
+    });
 
     // --- GAME CONFIG ---
     const isMobile = window.innerWidth < 600;
+    // Adjusted constants for logical pixels
     const BUNNY_SIZE = isMobile ? 32 : 40;
-    const GRAVITY = isMobile ? 0.7 : 0.8; 
-    const JUMP_FORCE = isMobile ? -12 : -14; 
-    const SPEED_INITIAL = isMobile ? 5 : 6;
-    const SPEED_ACCEL = 0.002; 
+    const GRAVITY = 0.6; 
+    const JUMP_FORCE = -11; 
+    const SPEED_INITIAL = 5;
+    const SPEED_ACCEL = 0.003; 
 
     let gameSpeed = SPEED_INITIAL;
     let isPlaying = false;
     let score = 0;
     let highScore = localStorage.getItem('hopocalypseHighScore') || 0;
     let isMuted = localStorage.getItem('hopocalypseMuted') === 'true';
+    let animationFrameId; // To stop the loop cleanly
 
     document.getElementById('highScoreHud').innerText = Math.floor(highScore);
     document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
 
+    // Audio Setup
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioCtx = new AudioContext();
     function playSound(type) {
@@ -158,11 +189,11 @@
         const now = audioCtx.currentTime;
         if (type === 'jump') {
             osc.frequency.setValueAtTime(300, now); osc.frequency.linearRampToValueAtTime(600, now + 0.1);
-            gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+            gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
             osc.start(now); osc.stop(now + 0.1);
         } else if (type === 'crash') {
             osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
-            gain.gain.setValueAtTime(0.5, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+            gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
             osc.start(now); osc.stop(now + 0.3);
         }
     }
@@ -173,8 +204,8 @@
         clouds = [];
         for(let i=0; i<5; i++) {
             clouds.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * (canvas.height/2),
+                x: Math.random() * logicalWidth,
+                y: Math.random() * (logicalHeight/2),
                 width: 60 + Math.random() * 80,
                 speed: 0.5 + Math.random() * 0.5
             });
@@ -184,7 +215,7 @@
         ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
         clouds.forEach(c => {
             c.x -= c.speed;
-            if(c.x + c.width < 0) { c.x = canvas.width; c.y = Math.random() * (canvas.height/2); }
+            if(c.x + c.width < 0) { c.x = logicalWidth; c.y = Math.random() * (logicalHeight/2); }
             ctx.beginPath();
             ctx.arc(c.x, c.y, c.width/3, 0, Math.PI * 2);
             ctx.arc(c.x + c.width/3, c.y - c.width/4, c.width/2.5, 0, Math.PI * 2);
@@ -202,13 +233,17 @@
         scaleY: 1, scaleX: 1,
         
         draw() {
-            const centerX = this.x + (this.width/2), bottomY = this.y + this.height;
+            const centerX = this.x + (this.width/2);
+            const bottomY = this.y + this.height;
+            
+            // Squash and Stretch logic
             if (this.dy < -5) { this.scaleY = 1.2; this.scaleX = 0.8; } 
             else if (this.dy > 5) { this.scaleY = 1.1; this.scaleX = 0.9; } 
             else { 
                 this.scaleY += (1 - this.scaleY) * 0.1; 
                 this.scaleX += (1 - this.scaleX) * 0.1;
             }
+
             ctx.save();
             ctx.translate(centerX, bottomY);
             ctx.scale(this.scaleX, this.scaleY);
@@ -216,7 +251,7 @@
             
             const radius = this.width / 2;
 
-            // Shadow
+            // Shadow (simple oval)
             ctx.fillStyle = 'rgba(0,0,0,0.2)'; 
             ctx.beginPath(); ctx.ellipse(centerX, bottomY, radius - 5, 4, 0, 0, Math.PI*2); ctx.fill();
             
@@ -240,7 +275,8 @@
         update() { 
             this.dy += GRAVITY; 
             this.y += this.dy; 
-            if (this.y > canvas.height + 100) gameOver("THE VOID"); 
+            // Safety check: if fallen way below screen
+            if (this.y > logicalHeight + 100) gameOver("THE VOID"); 
         },
         squash() { this.scaleY = 0.7; this.scaleX = 1.3; }
     };
@@ -248,80 +284,99 @@
     let platforms = [], obstacles = [];
     
     function init() {
-        // 4. GUARANTEED VISIBLE SPAWN
-        // We spawn the first platform at height - 250px.
-        // This is high enough to avoid mobile URL bars, but low enough to look like ground.
-        const startY = canvas.height - 250;
+        // Ensure we have correct dimensions before starting
+        resizeCanvas();
+
+        // Spawn first platform based on LOGICAL height
+        const startY = logicalHeight - 200;
         
-        platforms = [{ x: 0, y: startY, width: canvas.width, height: 400 }]; 
+        platforms = [{ x: 0, y: startY, width: logicalWidth, height: 400 }]; 
         obstacles = []; 
         score = 0; 
         gameSpeed = SPEED_INITIAL;
+        
+        // Reset bunny position
         bunny.y = startY - 100;
-        bunny.dy = 0; bunny.jumpCount = 0;
+        bunny.dy = 0; 
+        bunny.jumpCount = 0;
+        
         initClouds();
     }
 
     function spawnObstacle(p) {
-        if (score > 20 && Math.random() < 0.5) {
+        if (score > 15 && Math.random() < 0.5) {
             obstacles.push({ x: p.x + p.width/2, y: p.y - 30, width: 30, height: 30 });
         }
     }
 
     function loop() {
         if (!isPlaying) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Clear using logical dimensions
+        ctx.clearRect(0, 0, logicalWidth, logicalHeight);
         
         drawClouds();
 
-        // Draw Platforms
+        // Update & Draw Platforms
         platforms.forEach(p => {
             p.x -= gameSpeed;
             ctx.fillStyle = '#795548'; ctx.fillRect(p.x, p.y, p.width, p.height);
             ctx.fillStyle = '#4CAF50'; ctx.fillRect(p.x, p.y, p.width, 20); 
         });
 
+        // Garbage collection (Remove old platforms)
+        if (platforms.length > 0 && platforms[0].x + platforms[0].width < -100) {
+            platforms.shift();
+        }
+
         // Spawn New Platforms
-        if (platforms[platforms.length-1].x < canvas.width) {
+        // FIX: Ensure we always have a last platform to reference
+        if (platforms.length > 0) {
             const last = platforms[platforms.length-1];
             
-            // Clamp safe area (Center of screen)
-            const minSafeY = canvas.height * 0.3; 
-            const maxSafeY = canvas.height - 250; // Respect the bottom safety margin
+            if (last.x < logicalWidth) {
+                const minSafeY = logicalHeight * 0.3; 
+                const maxSafeY = logicalHeight - 150; 
 
-            let newY = last.y + (Math.random() * 150 - 75); 
-            if(newY < minSafeY) newY = minSafeY;
-            if(newY > maxSafeY) newY = maxSafeY;
+                let newY = last.y + (Math.random() * 140 - 70); 
+                if(newY < minSafeY) newY = minSafeY;
+                if(newY > maxSafeY) newY = maxSafeY;
 
-            const p = { 
-                x: last.x + last.width + (isMobile ? 80 : 120) + Math.random()*100, 
-                y: newY,
-                width: 200 + Math.random()*300, 
-                height: 500 
-            };
-            platforms.push(p); spawnObstacle(p);
+                const p = { 
+                    x: last.x + last.width + (isMobile ? 70 : 100) + Math.random()*80, 
+                    y: newY,
+                    width: 200 + Math.random()*300, 
+                    height: 500 
+                };
+                platforms.push(p); spawnObstacle(p);
+            }
         }
 
         // Obstacles
         obstacles.forEach((o, i) => {
             o.x -= gameSpeed;
             ctx.fillStyle = '#D32F2F'; ctx.fillRect(o.x, o.y, o.width, o.height);
+            
+            // Simple AABB Collision
             if (bunny.x + (bunny.width*0.7) > o.x && bunny.x + (bunny.width*0.3) < o.x + o.width && 
                 bunny.y + (bunny.height*0.8) > o.y && bunny.y + (bunny.height*0.1) < o.y + o.height) {
                 gameOver("FORGOTTEN");
             }
         });
+        
+        // Remove old obstacles
+        obstacles = obstacles.filter(o => o.x + o.width > -100);
 
         bunny.update();
         
-        // Ground Collision (Thick floor for anti-tunneling)
+        // Ground Collision
         let onGround = false;
         platforms.forEach(p => {
             if (bunny.dy >= 0 && 
-                bunny.x + (bunny.width*0.7) > p.x && 
-                bunny.x + (bunny.width*0.3) < p.x + p.width && 
+                bunny.x + (bunny.width*0.6) > p.x && 
+                bunny.x + (bunny.width*0.4) < p.x + p.width && 
                 bunny.y + bunny.height >= p.y && 
-                bunny.y + bunny.height <= p.y + 60) { 
+                bunny.y + bunny.height <= p.y + 60) { // Tolerance for falling through
                 
                 if(bunny.dy > 5) bunny.squash();
                 bunny.y = p.y - bunny.height; 
@@ -335,9 +390,11 @@
         gameSpeed += SPEED_ACCEL; 
         document.getElementById('scoreHud').innerText = Math.floor(score);
         bunny.draw();
-        requestAnimationFrame(loop);
+        
+        animationFrameId = requestAnimationFrame(loop);
     }
 
+    // --- FIREBASE LOGIC ---
     async function updateLeaderboard() {
         if (!parentDb) return;
         const scoreList = document.getElementById('scoreList');
@@ -363,23 +420,48 @@
     }
 
     function gameOver(reason) {
-        isPlaying = false; playSound('crash');
+        isPlaying = false; 
+        cancelAnimationFrame(animationFrameId); // Stop the loop logic
+        playSound('crash');
         if (score > highScore) { highScore = score; localStorage.setItem('hopocalypseHighScore', highScore); }
         document.getElementById('finalScore').innerText = Math.floor(score);
         document.getElementById('gameOverScreen').classList.remove('hidden');
         submitScore(); updateLeaderboard();
     }
 
-    function jump() { if (isPlaying) bunny.jumpCount++ < 2 && (bunny.dy = JUMP_FORCE, playSound('jump')); }
+    // --- CONTROLS ---
+    function jump() { 
+        if (isPlaying && bunny.jumpCount < 2) {
+            bunny.dy = JUMP_FORCE;
+            bunny.jumpCount++;
+            playSound('jump');
+        } 
+    }
+    
+    // Add touchstart specifically for mobile instant response
     window.addEventListener('keydown', (e) => (e.code === 'Space' || e.code === 'ArrowUp') && jump());
     canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); jump(); });
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); }, {passive: false});
 
-    document.getElementById('startBtn').onclick = () => { isPlaying = true; document.getElementById('startScreen').classList.add('hidden'); init(); loop(); };
-    document.getElementById('restartBtn').onclick = () => { isPlaying = true; document.getElementById('gameOverScreen').classList.add('hidden'); init(); loop(); };
+    document.getElementById('startBtn').onclick = () => { 
+        if(isPlaying) return; // Prevent double click
+        document.getElementById('startScreen').classList.add('hidden'); 
+        isPlaying = true; 
+        init(); 
+        loop(); 
+    };
+    
+    document.getElementById('restartBtn').onclick = () => { 
+        document.getElementById('gameOverScreen').classList.add('hidden'); 
+        isPlaying = true; 
+        init(); 
+        loop(); 
+    };
+
     document.getElementById('claimLegacyBtn').onclick = () => window.parent.closeArcade();
     document.getElementById('muteBtn').onclick = () => { isMuted = !isMuted; localStorage.setItem('hopocalypseMuted', isMuted); document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊'; };
 
-    resizeCanvas();
+    // Initial load
     initClouds(); 
 
 </script>
