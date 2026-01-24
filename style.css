@@ -1155,21 +1155,31 @@ html, body {
 @media (max-width: 768px) {
   .grid-container {
     display: grid !important;
-    width: 95vw !important; /* This keeps the grid smaller than the screen */
+    /* We're going to 98% of the screen width to fit 19 and 20 back in */
+    width: 98vw !important; 
+    max-width: 100% !important;
     margin: 10px auto !important;
+    
+    /* 1fr is our best friend here—it forces 20 equal slices */
     grid-template-columns: repeat(20, 1fr) !important; 
     gap: 0 !important;
-    overflow: hidden !important;
+    
+    /* This stops the grid from physically growing wider than the phone */
+    overflow: hidden !important; 
+    box-sizing: border-box !important;
   }
 
   .block {
     width: 100% !important;
     height: auto !important;
     aspect-ratio: 1 / 1 !important;
-    font-size: 1.2vw !important;
-    border: none !important;
-    outline: none !important;
-    /* We removed scale(1.01) to stop the zooming issue */
+    font-size: 1.5vw !important; /* Slightly larger so you can actually see the numbers */
+    
+    /* We're ditching 'scale' to avoid the zoom-glitch */
     transform: none !important; 
+    
+    /* This is the secret for the ghost lines—it fills the gaps better than scale */
+    outline: 1px solid rgba(255, 255, 255, 0.05); 
+    border: none !important;
   }
 }
