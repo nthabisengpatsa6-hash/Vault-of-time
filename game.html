@@ -5,48 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hopocalypse: Run from Oblivion</title>
     <style>
-        body {
-            margin: 0; padding: 0; overflow: hidden;
+        /* 1. RESET EVERYTHING */
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden; /* Stop scrolling */
             background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: none; /* Prevents scrolling on mobile taps */
-            user-select: none; /* Prevents highlighting text on tap */
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        #gameCanvas { display: block; width: 100%; height: 100%; }
+        /* 2. THE FIX: Force Canvas to fill the container */
+        #gameCanvas {
+            display: block;
+            width: 100%; 
+            height: 100%;
+        }
 
         /* UI Overlays */
         #ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; display: flex; flex-direction: column;
             justify-content: center; align-items: center;
+            z-index: 10;
         }
 
         .screen {
             background: rgba(10, 10, 10, 0.95);
-            padding: 2rem; border-radius: 1.5rem; text-align: center;
+            padding: 1.5rem; 
+            border-radius: 1.5rem; text-align: center;
             box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
-            pointer-events: auto; max-width: 85%;
+            pointer-events: auto; 
+            width: 85%; max-width: 400px;
             border: 3px solid #D4AF37; color: #fff;
         }
 
-        h1 { margin: 0 0 10px 0; color: #D4AF37; font-size: 2rem; font-weight: 900; text-transform: uppercase; }
-        p { color: #ccc; margin-bottom: 20px; font-size: 0.9rem; }
+        h1 { margin: 0 0 10px 0; color: #D4AF37; font-size: 1.8rem; font-weight: 900; text-transform: uppercase; }
+        p { color: #ccc; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.4; }
         
-        .score-display { font-size: 3rem; font-weight: bold; color: #fff; margin: 10px 0; }
+        .score-display { font-size: 2.5rem; font-weight: bold; color: #fff; margin: 10px 0; }
 
         #leaderboard {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px; padding: 15px; margin: 15px 0;
-            text-align: left; font-size: 0.85rem; border: 1px solid #444;
-            max-height: 150px; overflow-y: auto;
+            border-radius: 10px; padding: 10px; margin: 15px 0;
+            text-align: left; font-size: 0.8rem; border: 1px solid #444;
+            max-height: 120px; overflow-y: auto;
         }
         .lb-entry { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
 
         button {
             background: #D4AF37; color: #000; border: none;
-            padding: 12px 25px; font-size: 1rem; border-radius: 50px;
-            cursor: pointer; margin: 5px; font-weight: 900;
+            padding: 12px; font-size: 1rem; border-radius: 50px;
+            cursor: pointer; margin: 5px 0; font-weight: 900;
             transition: transform 0.1s; box-shadow: 0 4px 0 #997d29;
             width: 100%;
         }
@@ -55,16 +67,17 @@
         #claimLegacyBtn { background: #6a0dad; color: white; box-shadow: 0 4px 0 #4b0082; margin-top: 10px; }
 
         #hud {
-            position: absolute; top: 20px; left: 20px;
-            font-size: 1.2rem; font-weight: 900; color: white;
-            text-shadow: 2px 2px 0 #000; pointer-events: none;
+            position: absolute; top: 15px; left: 15px;
+            font-size: 1.1rem; font-weight: 900; color: white;
+            text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 10;
         }
 
         #muteBtn {
             position: absolute; top: 10px; right: 10px;
             background: rgba(0, 0, 0, 0.5); color: white;
-            border: none; border-radius: 50%; width: 45px; height: 45px;
-            cursor: pointer; z-index: 100;
+            border: none; border-radius: 50%; width: 40px; height: 40px;
+            cursor: pointer; z-index: 100; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
         }
         .hidden { display: none !important; }
     </style>
@@ -82,7 +95,7 @@
     <div id="ui-layer">
         <div id="startScreen" class="screen">
             <h1>🥕 HOPOCALYPSE 🥕</h1>
-            <p>Run from the chaos.<br>Tap to Jump. Double Tap to Double Jump.</p>
+            <p>Run from the chaos.<br>Tap to Jump.</p>
             <button id="startBtn">START RUNNING</button>
         </div>
 
@@ -106,11 +119,24 @@
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    
-    // 🔥 MOBILE TUNED PHYSICS
-    const GRAVITY = 0.8; // Slightly floatier for easier mobile timing
-    const JUMP_FORCE = -14; 
-    const SPEED_INITIAL = 6;
+
+    // --- 3. RESIZE HANDLER (CRITICAL) ---
+    // Sync internal resolution with CSS size
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        // Re-init clouds if needed, but keeping it simple prevents glitches
+        initClouds();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas(); // Call immediately on load
+
+    // --- GAME CONFIG ---
+    const isMobile = window.innerWidth < 600;
+    const BUNNY_SIZE = isMobile ? 32 : 40;
+    const GRAVITY = isMobile ? 0.7 : 0.8; 
+    const JUMP_FORCE = isMobile ? -12 : -14; 
+    const SPEED_INITIAL = isMobile ? 5 : 6;
     const SPEED_ACCEL = 0.002; 
 
     let gameSpeed = SPEED_INITIAL;
@@ -167,13 +193,16 @@
         });
     }
 
-    // --- ANIMATED BUNNY ---
+    // --- BUNNY ---
     const bunny = {
-        x: 80, y: 0, width: 40, height: 40, dy: 0, jumpCount: 0, maxJumps: 2,
+        x: isMobile ? 40 : 80, 
+        y: 0, 
+        width: BUNNY_SIZE, height: BUNNY_SIZE, 
+        dy: 0, jumpCount: 0, maxJumps: 2,
         scaleY: 1, scaleX: 1,
         
         draw() {
-            const centerX = this.x + 20, bottomY = this.y + 40;
+            const centerX = this.x + (this.width/2), bottomY = this.y + this.height;
             if (this.dy < -5) { this.scaleY = 1.2; this.scaleX = 0.8; } 
             else if (this.dy > 5) { this.scaleY = 1.1; this.scaleX = 0.9; } 
             else { 
@@ -184,21 +213,33 @@
             ctx.translate(centerX, bottomY);
             ctx.scale(this.scaleX, this.scaleY);
             ctx.translate(-centerX, -bottomY);
-            ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(centerX, bottomY, 15, 4, 0, 0, Math.PI*2); ctx.fill();
+            
+            const radius = this.width / 2;
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.2)'; 
+            ctx.beginPath(); ctx.ellipse(centerX, bottomY, radius - 5, 4, 0, 0, Math.PI*2); ctx.fill();
+            
+            // Body
             ctx.fillStyle = '#FFF'; ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
+            
+            // Ears
             const earWiggle = this.dy * 0.05;
-            ctx.beginPath(); ctx.ellipse(centerX - 7, this.y + 5, 5, 15, -0.1 + earWiggle, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-            ctx.beginPath(); ctx.ellipse(centerX + 7, this.y + 5, 5, 15, 0.1 - earWiggle, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-            ctx.beginPath(); ctx.arc(centerX, this.y + 22, 18, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
+            ctx.beginPath(); ctx.ellipse(centerX - (radius/3), this.y + (radius/4), radius/4, radius/1.5, -0.1 + earWiggle, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(centerX + (radius/3), this.y + (radius/4), radius/4, radius/1.5, 0.1 - earWiggle, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            
+            // Face
+            ctx.beginPath(); ctx.arc(centerX, this.y + (radius + 2), radius - 2, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
+            
+            // Eyes
             ctx.fillStyle = '#000'; 
-            ctx.beginPath(); ctx.arc(centerX-5, this.y+16, 2, 0, Math.PI*2); ctx.fill(); 
-            ctx.beginPath(); ctx.arc(centerX+5, this.y+16, 2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(centerX - 4, this.y + radius, 2, 0, Math.PI*2); ctx.fill(); 
+            ctx.beginPath(); ctx.arc(centerX + 4, this.y + radius, 2, 0, Math.PI*2); ctx.fill();
             ctx.restore();
         },
         update() { 
             this.dy += GRAVITY; 
             this.y += this.dy; 
-            // Generous void check for mobile
             if (this.y > canvas.height + 100) gameOver("THE VOID"); 
         },
         squash() { this.scaleY = 0.7; this.scaleX = 1.3; }
@@ -207,13 +248,16 @@
     let platforms = [], obstacles = [];
     
     function init() {
-        // Start platform lower down (75% of screen height) so it's always visible on mobile
-        const startY = canvas.height * 0.75;
-        platforms = [{ x: 0, y: startY, width: canvas.width, height: 200 }];
+        // 4. GUARANTEED VISIBLE SPAWN
+        // We spawn the first platform at height - 250px.
+        // This is high enough to avoid mobile URL bars, but low enough to look like ground.
+        const startY = canvas.height - 250;
+        
+        platforms = [{ x: 0, y: startY, width: canvas.width, height: 400 }]; 
         obstacles = []; 
         score = 0; 
         gameSpeed = SPEED_INITIAL;
-        bunny.y = startY - 100; // Drop bunny onto the platform
+        bunny.y = startY - 100;
         bunny.dy = 0; bunny.jumpCount = 0;
         initClouds();
     }
@@ -224,69 +268,63 @@
         }
     }
 
-    // --- LOGIC LOOP ---
     function loop() {
         if (!isPlaying) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         drawClouds();
 
-        // 1. Update Platforms
+        // Draw Platforms
         platforms.forEach(p => {
             p.x -= gameSpeed;
             ctx.fillStyle = '#795548'; ctx.fillRect(p.x, p.y, p.width, p.height);
             ctx.fillStyle = '#4CAF50'; ctx.fillRect(p.x, p.y, p.width, 20); 
         });
 
-        // 2. Spawn New Platforms (RELATIVE TO LAST ONE)
-        // This fixes the "Can't see ground" bug
+        // Spawn New Platforms
         if (platforms[platforms.length-1].x < canvas.width) {
             const last = platforms[platforms.length-1];
             
-            // Calculate new Y relative to the last one (don't jump too high/low)
-            let newY = last.y + (Math.random() * 200 - 100);
-            
-            // Clamp so it stays on screen (between 40% and 85% of screen height)
-            const minY = canvas.height * 0.4;
-            const maxY = canvas.height * 0.85;
-            if(newY < minY) newY = minY;
-            if(newY > maxY) newY = maxY;
+            // Clamp safe area (Center of screen)
+            const minSafeY = canvas.height * 0.3; 
+            const maxSafeY = canvas.height - 250; // Respect the bottom safety margin
+
+            let newY = last.y + (Math.random() * 150 - 75); 
+            if(newY < minSafeY) newY = minSafeY;
+            if(newY > maxSafeY) newY = maxSafeY;
 
             const p = { 
-                x: last.x + last.width + 120 + Math.random()*100, 
+                x: last.x + last.width + (isMobile ? 80 : 120) + Math.random()*100, 
                 y: newY,
-                width: 300 + Math.random()*300, 
+                width: 200 + Math.random()*300, 
                 height: 500 
             };
             platforms.push(p); spawnObstacle(p);
         }
 
-        // 3. Obstacles
+        // Obstacles
         obstacles.forEach((o, i) => {
             o.x -= gameSpeed;
             ctx.fillStyle = '#D32F2F'; ctx.fillRect(o.x, o.y, o.width, o.height);
-            // Hitbox
-            if (bunny.x + 30 > o.x && bunny.x + 10 < o.x + o.width && 
-                bunny.y + 35 > o.y && bunny.y + 5 < o.y + o.height) {
+            if (bunny.x + (bunny.width*0.7) > o.x && bunny.x + (bunny.width*0.3) < o.x + o.width && 
+                bunny.y + (bunny.height*0.8) > o.y && bunny.y + (bunny.height*0.1) < o.y + o.height) {
                 gameOver("FORGOTTEN");
             }
         });
 
         bunny.update();
         
-        // 4. 🔥 MOBILE COLLISION FIX (Anti-Tunneling)
-        // If bunny is falling (dy > 0), check if they are near the top of a platform.
-        // We check a thicker slice (60px) so fast falls get caught.
+        // Ground Collision (Thick floor for anti-tunneling)
         let onGround = false;
         platforms.forEach(p => {
-            if (bunny.dy >= 0 && // Falling
-                bunny.x + 30 > p.x && // Within Left Edge
-                bunny.x + 10 < p.x + p.width && // Within Right Edge
-                bunny.y + 40 >= p.y && // Feet are below platform top
-                bunny.y + 40 <= p.y + 60) { // Feet are NOT too deep (anti-tunneling)
+            if (bunny.dy >= 0 && 
+                bunny.x + (bunny.width*0.7) > p.x && 
+                bunny.x + (bunny.width*0.3) < p.x + p.width && 
+                bunny.y + bunny.height >= p.y && 
+                bunny.y + bunny.height <= p.y + 60) { 
                 
                 if(bunny.dy > 5) bunny.squash();
-                bunny.y = p.y - 40; // Snap to top
+                bunny.y = p.y - bunny.height; 
                 bunny.dy = 0; 
                 bunny.jumpCount = 0; 
                 onGround = true;
@@ -300,7 +338,6 @@
         requestAnimationFrame(loop);
     }
 
-    // --- LEADERBOARD ---
     async function updateLeaderboard() {
         if (!parentDb) return;
         const scoreList = document.getElementById('scoreList');
@@ -335,32 +372,14 @@
 
     function jump() { if (isPlaying) bunny.jumpCount++ < 2 && (bunny.dy = JUMP_FORCE, playSound('jump')); }
     window.addEventListener('keydown', (e) => (e.code === 'Space' || e.code === 'ArrowUp') && jump());
-    
-    // 🔥 MOBILE TAP FIX
-    // Use 'pointerdown' for better responsiveness than touchstart
-    canvas.addEventListener('pointerdown', (e) => { 
-        e.preventDefault(); 
-        jump(); 
-    });
+    canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); jump(); });
 
     document.getElementById('startBtn').onclick = () => { isPlaying = true; document.getElementById('startScreen').classList.add('hidden'); init(); loop(); };
     document.getElementById('restartBtn').onclick = () => { isPlaying = true; document.getElementById('gameOverScreen').classList.add('hidden'); init(); loop(); };
     document.getElementById('claimLegacyBtn').onclick = () => window.parent.closeArcade();
     document.getElementById('muteBtn').onclick = () => { isMuted = !isMuted; localStorage.setItem('hopocalypseMuted', isMuted); document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊'; };
 
-    // Resize Logic
-    let lastWidth = window.innerWidth;
-    window.addEventListener('resize', () => {
-        // Only reset if width changes significantly (prevents vertical jitter on mobile)
-        if (Math.abs(window.innerWidth - lastWidth) > 50) {
-            canvas.width = window.innerWidth; 
-            canvas.height = window.innerHeight;
-            lastWidth = window.innerWidth;
-            initClouds();
-        }
-    });
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    resizeCanvas();
     initClouds(); 
 
 </script>
