@@ -7,10 +7,10 @@
     <style>
         body {
             margin: 0; padding: 0; overflow: hidden;
-            /* ✨ UPGRADE 1: Sky Gradient */
             background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: none;
+            touch-action: none; /* Prevents scrolling on mobile taps */
+            user-select: none; /* Prevents highlighting text on tap */
         }
 
         #gameCanvas { display: block; width: 100%; height: 100%; }
@@ -39,6 +39,7 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px; padding: 15px; margin: 15px 0;
             text-align: left; font-size: 0.85rem; border: 1px solid #444;
+            max-height: 150px; overflow-y: auto;
         }
         .lb-entry { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; }
 
@@ -81,7 +82,7 @@
     <div id="ui-layer">
         <div id="startScreen" class="screen">
             <h1>🥕 HOPOCALYPSE 🥕</h1>
-            <p>Run from the chaos. Or be forgotten forever.</p>
+            <p>Run from the chaos.<br>Tap to Jump. Double Tap to Double Jump.</p>
             <button id="startBtn">START RUNNING</button>
         </div>
 
@@ -106,11 +107,11 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    // 🔥 PHYSICS
-    const GRAVITY = 0.9; 
-    const JUMP_FORCE = -15; 
-    const SPEED_INITIAL = 7;
-    const SPEED_ACCEL = 0.003; 
+    // 🔥 MOBILE TUNED PHYSICS
+    const GRAVITY = 0.8; // Slightly floatier for easier mobile timing
+    const JUMP_FORCE = -14; 
+    const SPEED_INITIAL = 6;
+    const SPEED_ACCEL = 0.002; 
 
     let gameSpeed = SPEED_INITIAL;
     let isPlaying = false;
@@ -121,7 +122,6 @@
     document.getElementById('highScoreHud').innerText = Math.floor(highScore);
     document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
 
-    // --- AUDIO ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioCtx = new AudioContext();
     function playSound(type) {
@@ -141,7 +141,7 @@
         }
     }
 
-    // --- ✨ UPGRADE 2: CLOUD GENERATOR ---
+    // --- CLOUDS ---
     let clouds = [];
     function initClouds() {
         clouds = [];
@@ -150,7 +150,7 @@
                 x: Math.random() * canvas.width,
                 y: Math.random() * (canvas.height/2),
                 width: 60 + Math.random() * 80,
-                speed: 0.5 + Math.random() * 0.5 // Slower than the ground for parallax
+                speed: 0.5 + Math.random() * 0.5
             });
         }
     }
@@ -159,8 +159,6 @@
         clouds.forEach(c => {
             c.x -= c.speed;
             if(c.x + c.width < 0) { c.x = canvas.width; c.y = Math.random() * (canvas.height/2); }
-            
-            // Draw fluffy cloud shape
             ctx.beginPath();
             ctx.arc(c.x, c.y, c.width/3, 0, Math.PI * 2);
             ctx.arc(c.x + c.width/3, c.y - c.width/4, c.width/2.5, 0, Math.PI * 2);
@@ -169,69 +167,54 @@
         });
     }
 
-    // --- ✨ UPGRADE 3: ANIMATED BUNNY ---
+    // --- ANIMATED BUNNY ---
     const bunny = {
         x: 80, y: 0, width: 40, height: 40, dy: 0, jumpCount: 0, maxJumps: 2,
-        scaleY: 1, scaleX: 1, // Animation variables
+        scaleY: 1, scaleX: 1,
         
         draw() {
             const centerX = this.x + 20, bottomY = this.y + 40;
-            
-            // Squash & Stretch Logic
-            // Falling? Stretch thin. Landing? Squash flat.
-            if (this.dy < -5) { this.scaleY = 1.2; this.scaleX = 0.8; } // Jump stretch
-            else if (this.dy > 5) { this.scaleY = 1.1; this.scaleX = 0.9; } // Fall stretch
+            if (this.dy < -5) { this.scaleY = 1.2; this.scaleX = 0.8; } 
+            else if (this.dy > 5) { this.scaleY = 1.1; this.scaleX = 0.9; } 
             else { 
-                // Return to normal smoothly
                 this.scaleY += (1 - this.scaleY) * 0.1; 
                 this.scaleX += (1 - this.scaleX) * 0.1;
             }
-
             ctx.save();
-            ctx.translate(centerX, bottomY); // Anchor at feet
+            ctx.translate(centerX, bottomY);
             ctx.scale(this.scaleX, this.scaleY);
-            ctx.translate(-centerX, -bottomY); // Reset coordinate space
-
-            // Shadow
+            ctx.translate(-centerX, -bottomY);
             ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(centerX, bottomY, 15, 4, 0, 0, Math.PI*2); ctx.fill();
-            
-            // Body
             ctx.fillStyle = '#FFF'; ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
-            
-            // Ears (Wiggle them based on Y velocity for cuteness)
             const earWiggle = this.dy * 0.05;
             ctx.beginPath(); ctx.ellipse(centerX - 7, this.y + 5, 5, 15, -0.1 + earWiggle, 0, Math.PI*2); ctx.fill(); ctx.stroke();
             ctx.beginPath(); ctx.ellipse(centerX + 7, this.y + 5, 5, 15, 0.1 - earWiggle, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-            
-            // Head/Body
             ctx.beginPath(); ctx.arc(centerX, this.y + 22, 18, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
-            
-            // Eyes (Blink logic could be added, but kept simple)
             ctx.fillStyle = '#000'; 
             ctx.beginPath(); ctx.arc(centerX-5, this.y+16, 2, 0, Math.PI*2); ctx.fill(); 
             ctx.beginPath(); ctx.arc(centerX+5, this.y+16, 2, 0, Math.PI*2); ctx.fill();
-
             ctx.restore();
         },
         update() { 
             this.dy += GRAVITY; 
             this.y += this.dy; 
-            if (this.y > canvas.height + 50) gameOver("THE VOID"); 
+            // Generous void check for mobile
+            if (this.y > canvas.height + 100) gameOver("THE VOID"); 
         },
-        squash() {
-            // Triggered on landing
-            this.scaleY = 0.7; this.scaleX = 1.3;
-        }
+        squash() { this.scaleY = 0.7; this.scaleX = 1.3; }
     };
 
     let platforms = [], obstacles = [];
     
     function init() {
-        platforms = [{ x: 0, y: canvas.height - 150, width: canvas.width, height: 150 }];
+        // Start platform lower down (75% of screen height) so it's always visible on mobile
+        const startY = canvas.height * 0.75;
+        platforms = [{ x: 0, y: startY, width: canvas.width, height: 200 }];
         obstacles = []; 
         score = 0; 
         gameSpeed = SPEED_INITIAL;
-        bunny.y = 0; bunny.dy = 0; bunny.jumpCount = 0;
+        bunny.y = startY - 100; // Drop bunny onto the platform
+        bunny.dy = 0; bunny.jumpCount = 0;
         initClouds();
     }
 
@@ -241,7 +224,83 @@
         }
     }
 
-    // --- LEADERBOARD LOGIC ---
+    // --- LOGIC LOOP ---
+    function loop() {
+        if (!isPlaying) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        drawClouds();
+
+        // 1. Update Platforms
+        platforms.forEach(p => {
+            p.x -= gameSpeed;
+            ctx.fillStyle = '#795548'; ctx.fillRect(p.x, p.y, p.width, p.height);
+            ctx.fillStyle = '#4CAF50'; ctx.fillRect(p.x, p.y, p.width, 20); 
+        });
+
+        // 2. Spawn New Platforms (RELATIVE TO LAST ONE)
+        // This fixes the "Can't see ground" bug
+        if (platforms[platforms.length-1].x < canvas.width) {
+            const last = platforms[platforms.length-1];
+            
+            // Calculate new Y relative to the last one (don't jump too high/low)
+            let newY = last.y + (Math.random() * 200 - 100);
+            
+            // Clamp so it stays on screen (between 40% and 85% of screen height)
+            const minY = canvas.height * 0.4;
+            const maxY = canvas.height * 0.85;
+            if(newY < minY) newY = minY;
+            if(newY > maxY) newY = maxY;
+
+            const p = { 
+                x: last.x + last.width + 120 + Math.random()*100, 
+                y: newY,
+                width: 300 + Math.random()*300, 
+                height: 500 
+            };
+            platforms.push(p); spawnObstacle(p);
+        }
+
+        // 3. Obstacles
+        obstacles.forEach((o, i) => {
+            o.x -= gameSpeed;
+            ctx.fillStyle = '#D32F2F'; ctx.fillRect(o.x, o.y, o.width, o.height);
+            // Hitbox
+            if (bunny.x + 30 > o.x && bunny.x + 10 < o.x + o.width && 
+                bunny.y + 35 > o.y && bunny.y + 5 < o.y + o.height) {
+                gameOver("FORGOTTEN");
+            }
+        });
+
+        bunny.update();
+        
+        // 4. 🔥 MOBILE COLLISION FIX (Anti-Tunneling)
+        // If bunny is falling (dy > 0), check if they are near the top of a platform.
+        // We check a thicker slice (60px) so fast falls get caught.
+        let onGround = false;
+        platforms.forEach(p => {
+            if (bunny.dy >= 0 && // Falling
+                bunny.x + 30 > p.x && // Within Left Edge
+                bunny.x + 10 < p.x + p.width && // Within Right Edge
+                bunny.y + 40 >= p.y && // Feet are below platform top
+                bunny.y + 40 <= p.y + 60) { // Feet are NOT too deep (anti-tunneling)
+                
+                if(bunny.dy > 5) bunny.squash();
+                bunny.y = p.y - 40; // Snap to top
+                bunny.dy = 0; 
+                bunny.jumpCount = 0; 
+                onGround = true;
+            }
+        });
+
+        score += 0.05; 
+        gameSpeed += SPEED_ACCEL; 
+        document.getElementById('scoreHud').innerText = Math.floor(score);
+        bunny.draw();
+        requestAnimationFrame(loop);
+    }
+
+    // --- LEADERBOARD ---
     async function updateLeaderboard() {
         if (!parentDb) return;
         const scoreList = document.getElementById('scoreList');
@@ -266,69 +325,6 @@
         }
     }
 
-    // --- ENGINE ---
-    function loop() {
-        if (!isPlaying) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        drawClouds(); // Draw BG first
-
-        // Platforms
-        platforms.forEach(p => {
-            p.x -= gameSpeed;
-            ctx.fillStyle = '#795548'; ctx.fillRect(p.x, p.y, p.width, p.height);
-            ctx.fillStyle = '#4CAF50'; ctx.fillRect(p.x, p.y, p.width, 20); // Grass top
-        });
-
-        if (platforms[platforms.length-1].x < canvas.width) {
-            const last = platforms[platforms.length-1];
-            const p = { 
-                x: last.x + last.width + 120 + Math.random()*100, 
-                y: Math.min(canvas.height - 100, Math.max(canvas.height - 400, canvas.height - 100 - Math.random()*200)), 
-                width: 300 + Math.random()*300, 
-                height: 500 
-            };
-            platforms.push(p); spawnObstacle(p);
-        }
-
-        // Obstacles
-        obstacles.forEach((o, i) => {
-            o.x -= gameSpeed;
-            ctx.fillStyle = '#D32F2F'; ctx.fillRect(o.x, o.y, o.width, o.height);
-            if (bunny.x + 30 > o.x && bunny.x + 10 < o.x + o.width && 
-                bunny.y + 35 > o.y && bunny.y + 5 < o.y + o.height) {
-                gameOver("FORGOTTEN");
-            }
-        });
-
-        bunny.update();
-        
-        // Ground Collision with Squash Effect
-        let onGround = false;
-        platforms.forEach(p => {
-            if (bunny.dy >= 0 && 
-                bunny.x + 30 > p.x && 
-                bunny.x + 10 < p.x + p.width && 
-                bunny.y + 40 > p.y && 
-                bunny.y < p.y) { 
-                
-                // Only squash if hitting hard
-                if(bunny.dy > 5) bunny.squash();
-                
-                bunny.y = p.y - 40; 
-                bunny.dy = 0; 
-                bunny.jumpCount = 0; 
-                onGround = true;
-            }
-        });
-
-        score += 0.05; 
-        gameSpeed += SPEED_ACCEL; 
-        document.getElementById('scoreHud').innerText = Math.floor(score);
-        bunny.draw();
-        requestAnimationFrame(loop);
-    }
-
     function gameOver(reason) {
         isPlaying = false; playSound('crash');
         if (score > highScore) { highScore = score; localStorage.setItem('hopocalypseHighScore', highScore); }
@@ -337,20 +333,25 @@
         submitScore(); updateLeaderboard();
     }
 
-    // Controls
     function jump() { if (isPlaying) bunny.jumpCount++ < 2 && (bunny.dy = JUMP_FORCE, playSound('jump')); }
     window.addEventListener('keydown', (e) => (e.code === 'Space' || e.code === 'ArrowUp') && jump());
-    canvas.addEventListener('touchstart', (e) => { if(e.target == canvas) e.preventDefault(); jump(); }, {passive: false});
-    canvas.addEventListener('mousedown', jump);
+    
+    // 🔥 MOBILE TAP FIX
+    // Use 'pointerdown' for better responsiveness than touchstart
+    canvas.addEventListener('pointerdown', (e) => { 
+        e.preventDefault(); 
+        jump(); 
+    });
 
     document.getElementById('startBtn').onclick = () => { isPlaying = true; document.getElementById('startScreen').classList.add('hidden'); init(); loop(); };
     document.getElementById('restartBtn').onclick = () => { isPlaying = true; document.getElementById('gameOverScreen').classList.add('hidden'); init(); loop(); };
     document.getElementById('claimLegacyBtn').onclick = () => window.parent.closeArcade();
     document.getElementById('muteBtn').onclick = () => { isMuted = !isMuted; localStorage.setItem('hopocalypseMuted', isMuted); document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊'; };
 
-    // Resize
+    // Resize Logic
     let lastWidth = window.innerWidth;
     window.addEventListener('resize', () => {
+        // Only reset if width changes significantly (prevents vertical jitter on mobile)
         if (Math.abs(window.innerWidth - lastWidth) > 50) {
             canvas.width = window.innerWidth; 
             canvas.height = window.innerHeight;
@@ -360,7 +361,7 @@
     });
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    initClouds(); // Start the clouds moving even before play
+    initClouds(); 
 
 </script>
 </body>
