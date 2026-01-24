@@ -1153,33 +1153,39 @@ html, body {
 }
 
 @media (max-width: 768px) {
+  /* Force the body and html to be exactly the screen width */
+  html, body {
+    width: 100% !important;
+    overflow-x: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   .grid-container {
     display: grid !important;
-    /* We're going to 98% of the screen width to fit 19 and 20 back in */
-    width: 98vw !important; 
-    max-width: 100% !important;
-    margin: 10px auto !important;
+    /* We use 100% to ensure it touches both edges */
+    width: 100% !important; 
+    margin: 10px 0 !important;
+    padding: 0 !important;
     
-    /* 1fr is our best friend here—it forces 20 equal slices */
-    grid-template-columns: repeat(20, 1fr) !important; 
+    /* Hard percentages: 20 columns at 5% each = Exactly 100% */
+    grid-template-columns: repeat(20, 5%) !important; 
     gap: 0 !important;
-    
-    /* This stops the grid from physically growing wider than the phone */
-    overflow: hidden !important; 
-    box-sizing: border-box !important;
+    border: none !important;
   }
 
   .block {
+    /* Reset everything to be absolutely sure */
     width: 100% !important;
     height: auto !important;
     aspect-ratio: 1 / 1 !important;
-    font-size: 1.5vw !important; /* Slightly larger so you can actually see the numbers */
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
     
-    /* We're ditching 'scale' to avoid the zoom-glitch */
-    transform: none !important; 
+    /* This closes the gap without growing the block */
+    outline: 0.5px solid rgba(255, 255, 255, 0.1); 
     
-    /* This is the secret for the ghost lines—it fills the gaps better than scale */
-    outline: 1px solid rgba(255, 255, 255, 0.05); 
-    border: none !important;
+    font-size: 1.5vw !important;
   }
 }
