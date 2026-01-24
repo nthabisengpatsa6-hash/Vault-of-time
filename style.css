@@ -1123,3 +1123,22 @@ html, body {
     outline: none !important;
   }
 }
+
+@media (max-width: 768px) {
+  .grid-container {
+    display: grid;
+    width: 100%;
+    /* Change this line: 1fr makes each column 1/20th of the screen */
+    grid-template-columns: repeat(20, 1fr); 
+    gap: 0 !important;
+    margin: 10px 0;
+  }
+
+  .block {
+    /* Remove the 35px fixed width/height */
+    width: 100% !important; 
+    height: auto !important;
+    aspect-ratio: 1 / 1; /* This keeps them square */
+    font-size: 1.5vw; /* Scales text relative to screen width */
+  }
+}
