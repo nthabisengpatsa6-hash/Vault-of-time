@@ -1168,6 +1168,15 @@ html, body {
   .block {
     width: 100% !important;
     aspect-ratio: 1 / 1 !important;
-    overflow: hidden; /* This clips any image that tries to "expand" the block */
+    
+    /* THE FIX: Overlap the blocks by 1% to hide the gaps */
+    transform: scale(1.01);
+    
+    /* THE SMOOTHER: Keeps images crisp while scaled */
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    
+    border: none !important;
+    outline: none !important;
   }
 }
