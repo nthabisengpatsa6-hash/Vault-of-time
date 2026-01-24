@@ -1082,3 +1082,10 @@ footer {
         padding: 12px 25px;
     }
 }
+
+/* Force the site to never be wider than the screen */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden !important; /* Hides anything sticking out the side */
+    position: relative; 
+}
