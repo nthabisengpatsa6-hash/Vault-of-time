@@ -1091,33 +1091,35 @@ html, body {
 }
 
 /* =========================================
-   MOBILE GRID FIX (Horizontal Scroll)
+   MOBILE GRID FIX (Seamless Version)
 ========================================= */
 @media (max-width: 768px) {
   .grid-container {
-    /* 1. Force the container to handle scrolling */
     display: grid;
     width: 100%;
-    overflow-x: auto; /* Enables the swipe action */
+    overflow-x: auto; /* Enables swipe */
+    -webkit-overflow-scrolling: touch;
     
-    /* 2. CRITICAL CHANGE: Instead of '1fr' (fraction), we use fixed pixels */
-    /* 20 columns * 35px = 700px total width. This forces the scrollbar to appear. */
+    /* FIX: Set gap to 0 to merge images back together */
+    gap: 0 !important; 
+    
+    /* Force 20 columns of fixed width */
     grid-template-columns: repeat(20, 35px); 
     
-    /* 3. Aesthetic tweaks for mobile */
-    gap: 2px; /* Add a tiny gap so touches don't overlap */
-    padding-bottom: 15px; /* Room for the scrollbar/thumb */
+    padding-bottom: 15px; 
     margin: 10px 0;
-    
-    /* 4. Ensure smooth scrolling on iPhones */
-    -webkit-overflow-scrolling: touch; 
-    justify-content: start; /* Locks grid to the left side */
+    justify-content: start;
   }
 
-  /* Ensure the blocks stay square and readable */
   .block {
-    font-size: 10px; /* Force a readable font size */
-    width: 35px;     /* Match the column width */
-    height: 35px;    /* Match the width to keep it square */
+    /* Force exact square size to match the column width */
+    width: 35px !important;
+    height: 35px !important;
+    font-size: 9px; /* Slightly smaller text to fit */
+    
+    /* Ensure no borders create accidental gaps */
+    border: none !important;
+    margin: 0 !important;
+    outline: none !important;
   }
 }
