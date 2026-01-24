@@ -1152,31 +1152,24 @@ html, body {
     display: block;
 }
 
-/* 2. Update your mobile grid to be "Elastic" */
 @media (max-width: 768px) {
   .grid-container {
     display: grid !important;
-    width: 95vw !important; /* Almost full screen width */
-    max-width: 100% !important;
+    width: 95vw !important; /* This keeps the grid smaller than the screen */
     margin: 10px auto !important;
-    
-    /* This is the magic: it forces 20 columns regardless of image size */
     grid-template-columns: repeat(20, 1fr) !important; 
     gap: 0 !important;
+    overflow: hidden !important;
   }
 
   .block {
     width: 100% !important;
+    height: auto !important;
     aspect-ratio: 1 / 1 !important;
-    
-    /* THE FIX: Overlap the blocks by 1% to hide the gaps */
-    transform: scale(1.01);
-    
-    /* THE SMOOTHER: Keeps images crisp while scaled */
-    backface-visibility: hidden;
-    -webkit-font-smoothing: antialiased;
-    
+    font-size: 1.2vw !important;
     border: none !important;
     outline: none !important;
+    /* We removed scale(1.01) to stop the zooming issue */
+    transform: none !important; 
   }
 }
