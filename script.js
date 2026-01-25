@@ -636,8 +636,11 @@ const renderPage = (pageNum) => {
       const snap = await getDoc(docRef);
       const freshData = snap.exists() ? snap.data() : null;
       const currentUser = auth.currentUser;
-      const isOwner = currentUser && freshData && freshData.ownerId === currentUser.uid;
-
+      // THE FIX: You only own it if your ID is on it AND you actually paid for it.
+const isOwner = currentUser && 
+                freshData && 
+                freshData.ownerId === currentUser.uid && 
+                freshData.status === "paid";
       // === SCENARIO A: YOU OWN IT (Edit Mode) ===
       if (isOwner) {
           if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
