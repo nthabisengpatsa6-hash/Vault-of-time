@@ -919,8 +919,8 @@ const handlePaypalReturn = async () => {
 
     const numId = Number(pendingBlockId);
     if (!claimed.includes(numId)) {
-      claimed.push(numId); 
-      localStorage.setItem("claimed", JSON.stringify(claimed));
+     // claimed.push(numId); 
+      //localStorage.setItem("claimed", JSON.stringify(claimed));
     }
 
     // 2. Clear pending status but KEEP the ID for the "Claim" step
