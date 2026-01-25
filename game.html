@@ -32,15 +32,10 @@
 
         h1 { margin: 0 0 10px 0; color: #D4AF37; font-size: 2rem; font-weight: 900; text-transform: uppercase; }
         
-        /* Bun-Bun's Backstory Styling */
         .backstory {
-            color: #ccc;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            line-height: 1.4;
-            border-left: 2px solid #D4AF37;
-            padding-left: 10px;
-            text-align: left;
+            color: #ccc; margin-bottom: 20px; font-size: 0.9rem;
+            line-height: 1.4; border-left: 2px solid #D4AF37;
+            padding-left: 10px; text-align: left;
         }
         
         .score-display { font-size: 3rem; font-weight: bold; color: #fff; margin: 10px 0; }
@@ -104,10 +99,11 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    const GRAVITY = 0.9; 
-    const JUMP_FORCE = -15; 
-    const SPEED_INITIAL = 7;
-    const SPEED_ACCEL = 0.003; 
+    // --- 🔧 TUNING: Slowed down physics for stability ---
+    const GRAVITY = 0.6;       // Reduced from 0.9 (less heavy)
+    const JUMP_FORCE = -11;    // Reduced from -15 (matches new gravity)
+    const SPEED_INITIAL = 5;   // Reduced from 7 (slower start)
+    const SPEED_ACCEL = 0.001; // Slower acceleration curve
 
     let gameSpeed = SPEED_INITIAL;
     let isPlaying = false;
@@ -225,11 +221,15 @@
         if (!isPlaying) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawClouds();
+
+        // 1. Move and Draw Platforms
         platforms.forEach(p => {
             p.x -= gameSpeed;
             ctx.fillStyle = '#795548'; ctx.fillRect(p.x, p.y, p.width, p.height);
             ctx.fillStyle = '#4CAF50'; ctx.fillRect(p.x, p.y, p.width, 20);
         });
+
+        // 2. Generate New Land
         if (platforms[platforms.length-1].x < canvas.width) {
             const last = platforms[platforms.length-1];
             const p = { 
@@ -240,6 +240,13 @@
             };
             platforms.push(p); spawnObstacle(p);
         }
+
+        // 3. 🧹 CLEAN UP (Crucial for stability!) 
+        // Remove platforms that have gone off screen
+        platforms = platforms.filter(p => p.x + p.width > -50);
+        obstacles = obstacles.filter(o => o.x + o.width > -50);
+
+        // 4. Obstacles
         obstacles.forEach((o, i) => {
             o.x -= gameSpeed;
             ctx.fillStyle = '#D32F2F'; ctx.fillRect(o.x, o.y, o.width, o.height);
@@ -248,6 +255,7 @@
                 gameOver("FORGOTTEN");
             }
         });
+
         bunny.update();
         platforms.forEach(p => {
             if (bunny.dy >= 0 && bunny.x + 30 > p.x && bunny.x + 10 < p.x + p.width && 
@@ -258,6 +266,7 @@
                 bunny.jumpCount = 0; 
             }
         });
+
         score += 0.05; 
         gameSpeed += SPEED_ACCEL; 
         document.getElementById('scoreHud').innerText = Math.floor(score);
@@ -317,6 +326,7 @@
 </script>
 </body>
 </html>
+
 
 
 
