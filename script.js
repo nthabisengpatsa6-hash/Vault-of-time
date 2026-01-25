@@ -31,6 +31,27 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app-check.js";
+// ================= GLOBAL SHERIFF ====================
+// Define this at the TOP of script.js, outside any other functions
+const toggleLegalButtons = () => {
+    // We re-fetch these inside the function to ensure we always have the current elements
+    const termsCheckbox = document.getElementById("termsCheckbox");
+    const saveBtn = document.getElementById("uploadBtn");
+    const reserveBtn = document.getElementById("reserveBtn");
+    
+    const isChecked = termsCheckbox ? termsCheckbox.checked : false;
+    
+    [saveBtn, reserveBtn].forEach(btn => {
+      if (btn) {
+        btn.disabled = !isChecked; 
+        btn.style.opacity = isChecked ? "1" : "0.4"; 
+        btn.style.cursor = isChecked ? "pointer" : "not-allowed"; 
+      }
+    });
+};
+
+// This makes sure the function can be called from ANYWHERE in your code
+window.toggleLegalButtons = toggleLegalButtons;
 // ================= FIREBASE CONFIG ==================
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
@@ -957,30 +978,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   reserveBtn = document.getElementById("reserveBtn");
   payBtn = document.getElementById("paypalBtn");
 
-  // 1. Point the script to the checkbox
-  termsCheckbox = document.getElementById("termsCheckbox");
+  // Inside document.addEventListener("DOMContentLoaded", ...) 
 
-  // 2. Define the "Lockdown" rule
-  const toggleLegalButtons = () => {
-    const isChecked = termsCheckbox ? termsCheckbox.checked : false;
-    
-    // This targets both the "Save Details" and "Reserve" buttons
-    [saveBtn, reserveBtn].forEach(btn => {
-      if (btn) {
-        btn.disabled = !isChecked; // Lock it
-        btn.style.opacity = isChecked ? "1" : "0.4"; // Fade it
-        btn.style.cursor = isChecked ? "pointer" : "not-allowed"; // Change the mouse icon
-      }
-    });
-  };
+// 1. Point to the checkbox
+termsCheckbox = document.getElementById("termsCheckbox");
 
-  // 3. Watch for the user to click the checkbox
-  if (termsCheckbox) {
-    termsCheckbox.addEventListener("change", toggleLegalButtons);
-  }
+// 2. Watch for the click using the now-global function
+if (termsCheckbox) {
+  termsCheckbox.addEventListener("change", window.toggleLegalButtons);
+}
 
-  // 4. Run it once immediately so the buttons start "Locked"
-  toggleLegalButtons();
+// 3. Run it once immediately
+window.toggleLegalButtons();
 // --- THE MAGIC LINK CATCHER ---
 if (isSignInWithEmailLink(auth, window.location.href)) {
     // 1. Get the email from storage (saved when they clicked 'Send')
