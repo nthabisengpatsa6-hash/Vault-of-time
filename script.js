@@ -640,7 +640,8 @@ const renderPage = (pageNum) => {
           }
           if (fileInput) fileInput.classList.remove("hidden");
           if (lockedMsg) lockedMsg.classList.add("hidden");
-          
+          // Sync the checkbox every time the modal opens
+      toggleLegalButtons();
           modal.classList.remove("hidden"); 
           return;
       }
@@ -734,9 +735,15 @@ const renderPage = (pageNum) => {
       // 🔒 SECURITY FIX: Show Reserve button, HIDE Update button
       if (reserveBtn) reserveBtn.classList.remove("hidden");
       if (saveBtn) { 
-          // This line prevents the "Free Update" bug
-          saveBtn.style.display = "none"; 
-      }
+    saveBtn.style.display = "block"; // Show the button
+    saveBtn.textContent = "Save Details"; // Set the text for a new buyer
+    
+    // THE SECURITY FIX: Force it to ONLY handle a new save
+    saveBtn.onclick = async () => {
+       if (termsCheckbox && !termsCheckbox.checked) return; 
+       await handleSave(); 
+    };
+}
       
       // But we still set the onclick event for LATER (in case they buy it)
       // This logic actually belongs in handleSave, but we set the display to none here.
