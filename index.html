@@ -5,33 +5,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vault of Time</title>
- <!-- Primary Meta Tags -->
-<meta name="title" content="The Vault of Time">
+ <meta name="title" content="The Vault of Time">
 <meta name="description" content="A digital monument built for memory. What will you leave behind?">
 
-<!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://vaultoftime.com/">
 <meta property="og:title" content="The Vault of Time">
 <meta property="og:description" content="A digital monument built for memory. What will you leave behind?">
 <meta property="og:image" content="https://vaultoftime.com/preview.png">
 
-<!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image">
 <meta property="twitter:url" content="https://vaultoftime.com/">
 <meta property="twitter:title" content="The Vault of Time">
 <meta property="twitter:description" content="A digital monument built for memory. What will you leave behind?">
 <meta property="twitter:image" content="https://vaultoftime.com/preview.png">
 
-<!-- Mobile + Browser Settings -->
 <meta name="theme-color" content="#0d1117">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="vault-assets/favicon.svg" />
 
-  <!-- Styles -->
   <link rel="stylesheet" href="style.css?v=2.0" />
 
 </head>
@@ -46,10 +40,8 @@
   </div>
 </div>
 
-<!-- MAIN CONTENT -->
 <div id="vault-main-content">
 
-<!-- RULES BANNER -->
 <div id="rules-banner" style="display:none;
   width:100%;
   background:#2d1f07;
@@ -157,7 +149,6 @@
 
 
 
-<!-- TITLE -->
 <header id="vaultHeader">
   <div class="header-icons">
     <svg class="mini-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
@@ -191,39 +182,46 @@
   </label>
 </div>
 
-<div id="bulkActionBar" class="hidden">
-        <span id="bulkCount">0 Blocks Selected</span>
-        <button id="markStartBtn" style="
-            background: transparent;
-            border: 1px solid #D4AF37;
-            color: #D4AF37;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-right: 10px;
-        ">
-            1. Mark Start
-        </button>
-        <button id="bulkReserveBtn" class="vault-btn" style="
-            background: #D4AF37;
-            color: #0d1117;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-        ">
-            Reserve All
-        </button>
-    </div>
+<div id="bulkActionBar" class="hidden" style="flex-direction: column; align-items: center; gap: 8px;">
+    <span style="font-size: 10px; color: #777; width: 100%; text-align: center;">
+      By clicking "Reserve All", you agree to the 
+      <a href="terms.html" target="_blank" style="color: #d4af37;">Vault Terms</a>.
+    </span>
 
-<!-- BLOCK GRID -->
+    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+        <span id="bulkCount">0 Blocks Selected</span>
+        <div>
+            <button id="markStartBtn" style="
+                background: transparent;
+                border: 1px solid #D4AF37;
+                color: #D4AF37;
+                padding: 8px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+                margin-right: 10px;
+            ">
+                1. Mark Start
+            </button>
+            <button id="bulkReserveBtn" class="vault-btn" style="
+                background: #D4AF37;
+                color: #0d1117;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-weight: bold;
+                cursor: pointer;
+            ">
+                Reserve All
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="grid-container" id="grid"></div>
 <div id="pagination"></div>
 
-<!-- CLAIM MODAL -->
-  <div id="reservedWarning" class="reserved-warning hidden">
+<div id="reservedWarning" class="reserved-warning hidden">
   ⚠ This block is currently reserved.<br>
   Only the email used to reserve it can upload or complete payment.<br>
   If the 30 minutes expire, the block opens again.
@@ -251,8 +249,13 @@
   <span class="btn-spinner hidden"></span>
       </button>
 
-      <!-- RESERVE BUTTON -->
-<div class="reserve-wrapper" style="width:100%; margin-top:12px;">
+      <p style="font-size: 11px; color: #777; margin-top: 15px; margin-bottom: 5px; text-align: left;">
+        By reserving or paying for a block, you agree to our 
+        <a href="terms.html" target="_blank" style="color: #d4af37; text-decoration: underline;">Terms & Conditions</a>, 
+        including our zero-tolerance policy on prohibited content.
+      </p>
+
+      <div class="reserve-wrapper" style="width:100%; margin-top:12px;">
   
   <button
     type="button"
@@ -307,23 +310,17 @@
   </a>
       </div>
 
-</div>
-
     </form>
   </div>
 </div>
 
-<!-- VIEW MODAL — WITH SHARE BUTTON PLACEHOLDER -->
 <div id="viewModal" class="hidden">
   <div id="viewModalContent">
     <span class="close-view">&times;</span>
     <h2 id="viewBlockTitle"></h2>
-    <div id="viewBlockBadge"></div>   <!-- ⭐ badge goes here -->
-    
-    <div id="viewBlockMedia"></div>
+    <div id="viewBlockBadge"></div>   <div id="viewBlockMedia"></div>
     <p id="viewBlockMessage"></p>
 
-    <!-- Share button (only active after payment in JS) -->
     <button id="shareBlockBtn" class="hidden"
       style="margin-top:15px;padding:10px 16px;border:none;border-radius:6px;background:#d4af37;color:#111;font-weight:bold;cursor:pointer;">
       📤 Share This Block
@@ -340,9 +337,7 @@
   </p>
 </footer>
 
-</div> <!-- end MAIN CONTENT -->
-
-<div id="keeper-welcome-modal" class="keeper-modal" style="display:none;">
+</div> <div id="keeper-welcome-modal" class="keeper-modal" style="display:none;">
     <div class="keeper-modal-content">
         <div class="keeper-header">
             <span class="keeper-large-avatar">🏺</span>
@@ -392,15 +387,14 @@
     <h2 style="color:#D4AF37; margin-bottom: 20px;">Owner Login</h2>
     
     <div id="loginStep1">
-        <p style="color: #ccc; margin-bottom: 15px;">Enter the email used to purchase your blocks.</p>
+        <p style="color: #ccc; margin-bottom: 15px;">Enter the email used to purchase your blocks. We'll send you a secure Magic Link.</p>
         <input type="email" id="loginEmailInput" placeholder="name@example.com" style="width:100%; padding:12px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #333; background: #0d1117; color: white;">
-        <button id="loginSendBtn" style="width:100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; border-radius: 4px;">Send Login Code</button>
+        <button id="loginSendBtn" style="width:100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; border-radius: 4px;">Send Magic Link</button>
     </div>
 
     <div id="loginStep2" class="hidden">
-        <p style="color: #ccc; margin-bottom: 15px;">Check your email for the code.</p>
-        <input type="text" id="loginCodeInput" placeholder="123456" style="width:100%; padding:12px; margin-bottom: 15px; letter-spacing: 5px; text-align: center; font-size: 20px; border-radius: 4px; border: 1px solid #333; background: #0d1117; color: white;">
-        <button id="loginConfirmBtn" style="width:100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; border-radius: 4px;">Verify</button>
+        <p style="color: #ccc; margin-bottom: 15px;">A Magic Link has been sent to your inbox.</p>
+        <p style="font-size: 12px; color: #777;">Click the link in your email to be logged in automatically.</p>
     </div>
 
   </div>
@@ -415,3 +409,4 @@
 </div>
 </body>
 </html>
+
