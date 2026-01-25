@@ -182,41 +182,32 @@
   </label>
 </div>
 
-<div id="bulkActionBar" class="hidden" style="flex-direction: column; align-items: center; gap: 8px;">
-    <span style="font-size: 10px; color: #777; width: 100%; text-align: center;">
-      By clicking "Reserve All", you agree to the 
-      <a href="terms.html" target="_blank" style="color: #d4af37;">Vault Terms</a>.
-    </span>
-
-    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+<div id="bulkActionBar" class="hidden">
         <span id="bulkCount">0 Blocks Selected</span>
-        <div>
-            <button id="markStartBtn" style="
-                background: transparent;
-                border: 1px solid #D4AF37;
-                color: #D4AF37;
-                padding: 8px 12px;
-                border-radius: 4px;
-                cursor: pointer;
-                font-weight: bold;
-                margin-right: 10px;
-            ">
-                1. Mark Start
-            </button>
-            <button id="bulkReserveBtn" class="vault-btn" style="
-                background: #D4AF37;
-                color: #0d1117;
-                border: none;
-                padding: 8px 12px;
-                border-radius: 4px;
-                font-weight: bold;
-                cursor: pointer;
-            ">
-                Reserve All
-            </button>
-        </div>
+        <button id="markStartBtn" style="
+            background: transparent;
+            border: 1px solid #D4AF37;
+            color: #D4AF37;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+        ">
+            1. Mark Start
+        </button>
+        <button id="bulkReserveBtn" class="vault-btn" style="
+            background: #D4AF37;
+            color: #0d1117;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        ">
+            Reserve All
+        </button>
     </div>
-</div>
 
 <div class="grid-container" id="grid"></div>
 <div id="pagination"></div>
@@ -244,16 +235,17 @@
       <p id="messageCounter" style="font-size:12px; opacity:0.7; margin-top:4px;">0/300</p>
       <input type="file" id="fileUpload" accept="image/*,audio/*" required>
 
-      <button type="button" id="uploadBtn" class="vault-btn">
-  <span class="btn-text">Save Details</span>
-  <span class="btn-spinner hidden"></span>
-      </button>
+      <div style="margin-top: 15px; margin-bottom: 10px; text-align: left; display: flex; align-items: flex-start; gap: 8px;">
+          <input type="checkbox" id="termsCheckbox" style="margin-top: 4px; cursor: pointer;">
+          <label for="termsCheckbox" style="font-size: 11px; color: #ccc; cursor: pointer; line-height: 1.4;">
+              I agree to the <a href="terms.html" target="_blank" style="color: #d4af37; text-decoration: underline;">Terms & Conditions</a>, including the <strong>No-Refund</strong> and <strong>Content Seizure</strong> policies.
+          </label>
+      </div>
 
-      <p style="font-size: 11px; color: #777; margin-top: 15px; margin-bottom: 5px; text-align: left;">
-        By reserving or paying for a block, you agree to our 
-        <a href="terms.html" target="_blank" style="color: #d4af37; text-decoration: underline;">Terms & Conditions</a>, 
-        including our zero-tolerance policy on prohibited content.
-      </p>
+      <button type="button" id="uploadBtn" class="vault-btn">
+        <span class="btn-text">Save Details</span>
+        <span class="btn-spinner hidden"></span>
+      </button>
 
       <div class="reserve-wrapper" style="width:100%; margin-top:12px;">
   
@@ -387,14 +379,14 @@
     <h2 style="color:#D4AF37; margin-bottom: 20px;">Owner Login</h2>
     
     <div id="loginStep1">
-        <p style="color: #ccc; margin-bottom: 15px;">Enter the email used to purchase your blocks. We'll send you a secure Magic Link.</p>
+        <p style="color: #ccc; margin-bottom: 15px;">Enter the email used to purchase your blocks.</p>
         <input type="email" id="loginEmailInput" placeholder="name@example.com" style="width:100%; padding:12px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #333; background: #0d1117; color: white;">
         <button id="loginSendBtn" style="width:100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; border-radius: 4px;">Send Magic Link</button>
     </div>
 
     <div id="loginStep2" class="hidden">
-        <p style="color: #ccc; margin-bottom: 15px;">A Magic Link has been sent to your inbox.</p>
-        <p style="font-size: 12px; color: #777;">Click the link in your email to be logged in automatically.</p>
+        <p style="color: #ccc; margin-bottom: 15px;">Check your email for the link.</p>
+        <p style="font-size: 12px; color: #777;">You can now close this window and open the link from your inbox.</p>
     </div>
 
   </div>
@@ -409,4 +401,3 @@
 </div>
 </body>
 </html>
-
