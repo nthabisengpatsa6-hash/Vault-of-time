@@ -97,6 +97,7 @@ let blockCache = {};
 
 // ================= UI GLOBALS =================
 let grid, pagination, modal, viewModal;
+let termsCheckbox;
 let nameInput, emailInput, messageInput, messageCounter, fileInput;
 let modalCloseBtn, viewCloseBtn, readyMsg, paymentButtons;
 let banner, ackBtn, searchInput, searchBtn, saveBtn, hiddenBlockNumber;
@@ -948,7 +949,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   loginConfirmBtn = document.getElementById("loginConfirmBtn");
   reserveBtn = document.getElementById("reserveBtn");
   payBtn = document.getElementById("paypalBtn");
-  
+
+  // 1. Point the script to the checkbox
+  termsCheckbox = document.getElementById("termsCheckbox");
+
+  // 2. Define the "Lockdown" rule
+  const toggleLegalButtons = () => {
+    const isChecked = termsCheckbox ? termsCheckbox.checked : false;
+    
+    // This targets both the "Save Details" and "Reserve" buttons
+    [saveBtn, reserveBtn].forEach(btn => {
+      if (btn) {
+        btn.disabled = !isChecked; // Lock it
+        btn.style.opacity = isChecked ? "1" : "0.4"; // Fade it
+        btn.style.cursor = isChecked ? "pointer" : "not-allowed"; // Change the mouse icon
+      }
+    });
+  };
+
+  // 3. Watch for the user to click the checkbox
+  if (termsCheckbox) {
+    termsCheckbox.addEventListener("change", toggleLegalButtons);
+  }
+
+  // 4. Run it once immediately so the buttons start "Locked"
+  toggleLegalButtons();
 // --- THE MAGIC LINK CATCHER ---
 if (isSignInWithEmailLink(auth, window.location.href)) {
     // 1. Get the email from storage (saved when they clicked 'Send')
@@ -1103,6 +1128,11 @@ loginSendBtn.onclick = async () => {
   if (searchBtn) searchBtn.onclick = searchBlock;
   if (reserveBtn) {
     reserveBtn.onclick = async () => {
+      // THE GUARD:
+      if (termsCheckbox && !termsCheckbox.checked) {
+        alert("🛡️ You must agree to the Terms & Conditions first!");
+        return;
+      }
       const blockId = hiddenBlockNumber.value;
       const userEmail = emailInput.value.trim();
       if (!blockId) return alert("No block selected.");
@@ -1119,6 +1149,8 @@ loginSendBtn.onclick = async () => {
 
   if (saveBtn) {
     saveBtn.onclick = async () => {
+      // THE GUARD:
+      if (termsCheckbox && !termsCheckbox.checked) return;
       const originalText = saveBtn.textContent;
       saveBtn.disabled = true; saveBtn.textContent = "Saving…";
       try { await handleSave(); } catch (err) { console.error(err); alert("❌ Error saving."); }
