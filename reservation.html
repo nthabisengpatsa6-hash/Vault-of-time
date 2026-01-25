@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reservation & Login System | Vault of Time</title>
+  <title>System Guide: Reservations & Ownership | Vault of Time</title>
   <link rel="icon" type="image/svg+xml" href="vault-assets/favicon.svg" />
   <link rel="stylesheet" href="style.css" />
   
@@ -42,8 +42,15 @@
         margin: 20px 0;
     }
 
+    .warning-box {
+        background: rgba(211, 47, 47, 0.1); /* Red tint for warnings */
+        border-left: 4px solid #d32f2f;
+        padding: 15px;
+        margin: 20px 0;
+    }
+
     .security-box {
-        background: rgba(76, 175, 80, 0.1); /* Slight green tint for security */
+        background: rgba(76, 175, 80, 0.1);
         border-left: 4px solid #4CAF50;
         padding: 15px;
         margin: 20px 0;
@@ -51,14 +58,13 @@
     
     li { margin-bottom: 10px; }
     
-    /* Small helper for the timer table */
     .timer-table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 10px;
     }
     .timer-table td {
-        padding: 8px;
+        padding: 12px;
         border-bottom: 1px solid #333;
     }
     .timer-table strong { color: #fff; }
@@ -69,74 +75,71 @@
   <div class="reservation-container">
     <a href="index.html" class="back-link">← Back to The Vault</a>
 
-    <h1>System Guide: Reservations & Login</h1>
+    <h1>System Guide: Reservations & Ownership</h1>
     
-    <p>The Vault of Time uses a specialized system to ensure fair access during reservations and secure access for owners.</p>
+    <p>The Vault of Time is a digital archive. To keep it organized and fair, we operate under the following protocols.</p>
 
     <hr style="border: 0; border-top: 1px solid #333; margin: 30px 0;">
 
     <h2>Part 1: Buying & Reservations</h2>
     
     <h3>Step 1: Selecting Blocks</h3>
-    <p>You can select blocks in two ways:</p>
-    <ul>
-        <li><strong>Individual Selection:</strong> Simply click on any empty block to select it.</li>
-        <li><strong>Range Selection (New):</strong> To select a large area at once:
-            <ol>
-                <li>Toggle <strong>"Multi-Select"</strong> ON.</li>
-                <li>Click your starting block.</li>
-                <li>Click the <strong>"1. Mark Start"</strong> button on the floating bar.</li>
-                <li>Click your ending block. All blocks in between will be selected automatically.</li>
-            </ol>
-        </li>
-    </ul>
+    <p>Selection is straightforward. Use the <strong>Multi-Select</strong> toggle to highlight a specific range or individual blocks you wish to claim.</p>
 
-    <h3>Step 2: Reservation Timers</h3>
-    <p>Once you click "Reserve," your blocks are locked so no one else can take them while you pay. The duration of this lock depends on your order size:</p>
+    <h3>Step 2: The "Arena" Rules (Payment)</h3>
+    <p>Time is the only thing we don't have enough of. Depending on your order size, the following rules apply:</p>
 
     <div class="highlight-box">
-        <h3>⚠️ Payment Windows</h3>
+        <h3>⚡ Payment Windows</h3>
         <table class="timer-table">
             <tr>
                 <td><strong>Single Block Orders</strong></td>
-                <td>You have <strong>30 Minutes</strong> to complete payment via PayPal.</td>
+                <td>You have <strong>30 Minutes</strong> to complete payment via the automated gateway. If the timer hits zero, the block returns to the Vault.</td>
             </tr>
             <tr>
-                <td><strong>Multi-Block Orders</strong></td>
-                <td>You have <strong>30 minutes</strong> to pay after the invoice has been sent to your email.</td>
+                <td><strong>Bulk Orders (2+ Blocks)</strong></td>
+                <td><strong>First Come, First Served.</strong> After selecting your blocks, you will receive a quote via email. These blocks <u>remain available to the public</u> until payment is confirmed.</td>
             </tr>
         </table>
-        <p style="margin-top:15px; font-size:0.9em;"><em>If payment is not confirmed within these windows, the system automatically releases the blocks back to the public.</em></p>
+    </div>
+
+    <div class="warning-box">
+        <h3>⚠️ The "Showroom" Policy</h3>
+        <p>Think of bulk blocks like a car on a showroom floor: it's up for grabs until someone pays for it. Even if you have an invoice in your inbox, another user can claim and pay for those blocks before you. <strong>Move fast.</strong> We use precision timestamps to verify the first successful transaction.</p>
     </div>
 
     <hr style="border: 0; border-top: 1px solid #333; margin: 30px 0;">
 
     <h2>Part 2: Owner Login & Editing</h2>
-    <p>Once you own a block, you can edit its content at any time using our secure login system.</p>
+    <p>Once your payment is time-stamped and confirmed, you own that piece of history.</p>
 
-    <h3>How to Edit Your Blocks</h3>
+    <h3>How to Edit Your Content</h3>
     <ol>
-        <li>Open the Menu and click <strong>🔑 Owner Login</strong>.</li>
-        <li>Enter the email address you used to purchase the blocks.</li>
-        <li>We will email you a <strong>6-digit Verification Code</strong>.</li>
-        <li>Enter the code on the site to verify your identity.</li>
-        <li><strong>Success:</strong> You can now click on <em>any</em> of your empty blocks, and the upload form will open immediately.</li>
+        <li>Access the <strong>🔑 Owner Login</strong> from the menu.</li>
+        <li>Enter your registered email address to receive a <strong>6-digit One-Time Pin (OTP)</strong>.</li>
+        <li>Verification allows you a 6-hour session to upload images, audio, or messages to your blocks.</li>
     </ol>
 
-    <div class="security-box">
-        <h3>🔐 Security & Privacy</h3>
-        <p><strong>We do not have access to your account.</strong></p>
+    <hr style="border: 0; border-top: 1px solid #333; margin: 30px 0;">
+
+    <h2>Part 3: The Code of Conduct</h2>
+    <p>The Vault is a place for legacy, not chaos. We maintain a strict moderation policy to protect the integrity of the archive.</p>
+
+    <div class="warning-box">
+        <h3>🚫 Prohibited Content</h3>
+        <p>The upload of hate speech, illegal symbols (e.g., swastikas), or explicit adult content is strictly forbidden. <strong>Zero tolerance.</strong></p>
         <ul>
-            <li>The code sent to your email is a <strong>One-Time Pin (OTP)</strong>.</li>
-            <li>It is randomly generated instantly and is valid for <strong>one session only</strong>.</li>
-            <li><strong>For your security:</strong> Each login session lasts 6 hours. After that time has lapsed, you will need to login again</li>
+            <li>Content violating our Ts&Cs will be removed immediately.</li>
+            <li>Users found in violation will be <strong>permanently banned</strong> from the system.</li>
+            <li><strong>No refunds</strong> are issued for blocks seized due to policy violations.</li>
         </ul>
     </div>
 
-    <p style="margin-top:40px; text-align:center; color:#777; font-size: 0.9rem;">
-        © 2026 Vault Of Time (Pty) Ltd
+    <p style="margin-top:40px; text-align:center; color:#777; font-size: 0.8rem;">
+        © 2026 Vault Of Time (Pty) Ltd | All Rights Reserved
     </p>
   </div>
 
 </body>
 </html>
+
