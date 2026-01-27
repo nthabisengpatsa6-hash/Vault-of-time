@@ -374,8 +374,7 @@
             // This runs the function we just added to script.js!
             await window.parent.createCoupon(email, couponCode);
 
-            // 5. SUCCESS!
-            alert(`🎉 SUCCESS!\n\nYour code is: ${couponCode}\n\n(Saved to database! Next step: Emailing it.)`);
+            alert(`🎉 SUCCESS!\n\nYour code is: ${couponCode}\n\nBun-Bun has sent your Golden Ticket to your email address.\n(Check your spam folder if you don't see it!)`);
             
             // Close the game/modal
             document.getElementById('winnerScreen').classList.add('hidden');
