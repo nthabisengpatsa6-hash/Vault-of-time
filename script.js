@@ -755,6 +755,35 @@ const isOwner = currentUser &&
                    }
                }
            }
+        // 🚩 THE TIP LINE (Inside Scenario B)
+           const reportBtn = document.getElementById("reportBtn");
+           if (reportBtn) {
+               reportBtn.onclick = async () => {
+                   const reason = prompt("Director, why are you reporting this block?");
+                   if (!reason) return;
+
+                   try {
+                       // 1. Log the report to Firestore
+                       await addDoc(collection(db, "reports"), {
+                           blockId: i, // 'i' is correctly scoped here from your loop
+                           reason: reason,
+                           reportedAt: serverTimestamp(),
+                           status: "pending_review"
+                       });
+
+                       // 2. Alert the Keeper via EmailJS
+                       await emailjs.send("service_pmuwoaa", "template_xraan78", {
+                           to_email: "support@vaultoftime.com",
+                           subject: `🚨 CONTENT REPORT: Block #${i}`,
+                           message: `Report filed for Block #${i}.\nReason: ${reason}`
+                       });
+
+                       alert("Report sent. The Keeper will investigate.");
+                   } catch (err) {
+                       console.error("Report failed:", err);
+                   }
+               };
+           }
            if (viewModal) viewModal.classList.remove("hidden"); 
            return;
       }
