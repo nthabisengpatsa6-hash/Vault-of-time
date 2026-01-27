@@ -196,6 +196,34 @@
             }
         };
 
+// 🔎 THE ARCHIVE SCANNER
+document.getElementById('searchOwnerBtn').onclick = async () => {
+    const email = document.getElementById('investigateEmail').value.trim().toLowerCase();
+    const resultsDiv = document.getElementById('investigationResults');
+    
+    if (!email) return alert("Enter an email, Keeper.");
+    resultsDiv.innerHTML = "Searching private records...";
+
+    try {
+        // We query the 'claims' collection where the master records live
+        const q = query(collection(db, "claims"), where("email", "==", email)); 
+        const snap = await getDocs(q);
+        let blocks = [];
+        
+        snap.forEach((doc) => blocks.push(doc.id)); // doc.id is the Block Number
+
+        if (blocks.length > 0) {
+            resultsDiv.innerHTML = `⚠️ FOUND: ${email}<br>Blocks: ${blocks.join(', ')}`;
+            // Auto-fill the Scrub box for you!
+            document.getElementById('blockIds').value = blocks.join(', ');
+        } else {
+            resultsDiv.innerHTML = "No private records found for this email.";
+        }
+    } catch (err) {
+        resultsDiv.innerHTML = "Error: " + err.message;
+    }
+};
+        
         // --- SCRUB & RELEASE ---
         document.getElementById('availableBtn').onclick = async () => {
             const input = document.getElementById('blockIds').value;
