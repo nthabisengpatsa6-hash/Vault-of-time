@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,11 +6,13 @@
     <style>
         body { background: #0d1117; color: white; font-family: sans-serif; padding: 50px; }
         .admin-box { background: #161b22; border: 1px solid #D4AF37; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        textarea { width: 100%; height: 150px; background: #0d1117; color: #D4AF37; border: 1px solid #30363d; padding: 10px; box-sizing: border-box; }
+        textarea { width: 100%; height: 100px; background: #0d1117; color: #D4AF37; border: 1px solid #30363d; padding: 10px; box-sizing: border-box; font-family: monospace; }
         input { background: #0d1117; color: white; border: 1px solid #30363d; padding: 10px; margin-bottom: 10px; width: 250px; border-radius: 5px; }
-        button { background: #D4AF37; color: black; padding: 12px 24px; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; }
+        button { background: #D4AF37; color: black; padding: 12px 24px; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; transition: 0.2s; }
+        button:hover { opacity: 0.8; }
         .warning { color: #ff6b6b; font-size: 12px; }
         label { display: block; margin-top: 15px; margin-bottom: 5px; color: #8b949e; font-size: 0.9em; }
+        .ban-hammer { border-color: #ff4d4d; }
     </style>
 </head>
 <body>
@@ -39,9 +42,19 @@
         <button id="wfcUpdateBtn" style="background: #6a0dad; color: white; margin-right: 10px;">
             Purple Rain: Mark as WFC Available
         </button>
-        <button id="availableBtn" style="background: #ff4d4d; color: white;">
+        <button id="availableBtn" style="background: #30363d; color: white;">
             🚮 Scrub & Release (Mark as Available)
         </button>
+
+        <div class="admin-box ban-hammer" style="margin-top: 30px;">
+            <h3 style="color: #ff4d4d;">🚫 The Ban Hammer</h3>
+            <label>Paste Emails to Banish (separated by commas):</label>
+            <textarea id="banEmails" placeholder="weirdo1@gmail.com, spammer2@yahoo.com..."></textarea>
+            <label>Reason for Banishment:</label>
+            <input type="text" id="banReason" placeholder="e.g. Hate speech, T&C violation" style="width: 100%; box-sizing: border-box;">
+            <br><br>
+            <button id="batchBanBtn" style="background: #ff4d4d; color: white;">EXECUTE BANISHMENT</button>
+        </div>
     </div>
 
     <script type="module">
@@ -77,7 +90,7 @@
             }
         };
 
-       // --- BATCH UPDATE ACTION (SECURE VERSION) ---
+        // --- BATCH UPDATE ACTION ---
         document.getElementById('batchUpdateBtn').onclick = async () => {
             const input = document.getElementById('blockIds').value;
             const buyerEmail = document.getElementById('buyerEmail').value.trim();
@@ -87,25 +100,20 @@
             if (!buyerEmail) return alert("⚠️ STOP: Enter Buyer Email!");
 
             const batch = writeBatch(db);
-            
             blockArray.forEach((id) => {
                 const blockRef = doc(db, "blocks", id); 
-                const claimRef = doc(db, "claims", id); // ✨ The Secret Ledger
+                const claimRef = doc(db, "claims", id); 
 
-                // 1. Update Public Block (Anonymously Paid)
-                // We REMOVE the email field from here to keep it private.
                 batch.set(blockRef, { 
                     status: "paid", 
-                    ownerId: null, // Cleared for handshake
-                    email: null,   // 🗑️ Scrub email from public view
+                    ownerId: null, 
+                    email: null,   
                     purchasedAt: serverTimestamp(),
                     reserved: false,
                     reservedBy: null,
                     reservedAt: null
                 }, { merge: true });
 
-                // 2. Create Private Claim (The Secure Record)
-                // Only the buyer can read this document!
                 batch.set(claimRef, {
                     email: buyerEmail,
                     blockId: id,
@@ -115,12 +123,43 @@
 
             try {
                 await batch.commit();
-                alert(`✅ SECURE SUCCESS!\n\nBlocks marked as PAID (Publicly).\nEmails saved to CLAIMS (Privately).`);
+                alert(`✅ SUCCESS! ${blockArray.length} blocks processed.`);
                 document.getElementById('blockIds').value = "";
                 document.getElementById('buyerEmail').value = "";
             } catch (error) {
+                alert("Error: " + error.message);
+            }
+        };
+
+        // --- 🔨 BATCH BANISHMENT ACTION ---
+        document.getElementById('batchBanBtn').onclick = async () => {
+            const emailInput = document.getElementById('banEmails').value;
+            const reason = document.getElementById('banReason').value.trim() || "Admin Banishment";
+            const emailArray = emailInput.split(',').map(e => e.trim().toLowerCase()).filter(e => e !== "");
+
+            if (emailArray.length === 0) return alert("The hammer needs targets! Paste some emails.");
+
+            const confirmBan = confirm(`⚠️ DANGER: You are about to banish ${emailArray.length} email(s) permanently. Proceed?`);
+            if (!confirmBan) return;
+
+            const batch = writeBatch(db);
+            emailArray.forEach((email) => {
+                const banRef = doc(db, "banned_users", email);
+                batch.set(banRef, {
+                    bannedAt: serverTimestamp(),
+                    reason: reason,
+                    bannedBy: "Keeper Admin UI"
+                });
+            });
+
+            try {
+                await batch.commit();
+                alert(`🚫 EXECUTED: ${emailArray.length} users have been cast out.`);
+                document.getElementById('banEmails').value = "";
+                document.getElementById('banReason').value = "";
+            } catch (error) {
                 console.error(error);
-                alert("Firestore Error: " + error.message);
+                alert("The hammer missed: " + error.message);
             }
         };
 
