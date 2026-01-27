@@ -399,8 +399,15 @@ const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
 
     // 5. Trigger the PayPal button
     if (readyMsg) readyMsg.classList.remove("hidden");
+    
     if (paymentButtons) {
         paymentButtons.classList.remove("hidden");
+        
+        // --- NEW: Show the Discount Box too! ---
+        const discountSection = document.getElementById("discountSection");
+        if (discountSection) discountSection.classList.remove("hidden");
+        
+        // Reset the link to the original $6 price (just in case they are re-trying)
         const payLink = document.getElementById("externalPayBtn");
         if (payLink) {
             payLink.href = `https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE?block=${blockId}`;
@@ -1281,4 +1288,57 @@ loginSendBtn.onclick = async () => {
   await loadClaimedBlocks();
   renderPage(currentPage);
   hideLoader();
+  // ================= DISCOUNT CODE LOGIC =================
+  const applyBtn = document.getElementById("applyCouponBtn");
+  
+  if (applyBtn) {
+    applyBtn.onclick = async () => {
+        const couponInput = document.getElementById("couponInput");
+        const couponMsg = document.getElementById("couponMsg");
+        const payLink = document.getElementById("externalPayBtn"); 
+        
+        const code = couponInput.value.trim().toUpperCase();
+        if (!code) return;
+        
+        // UI Feedback: "Thinking..."
+        const originalText = applyBtn.textContent;
+        applyBtn.textContent = "⏳";
+        couponMsg.textContent = "";
+
+        try {
+            // 1. Check the Database
+            // We search the 'coupons' collection for a matching code
+            const q = query(collection(db, "coupons"), where("code", "==", code));
+            const snapshot = await getDocs(q);
+
+            if (!snapshot.empty) {
+                // 🎉 VALID CODE!
+                couponMsg.textContent = "✅ Discount Applied! ($5.40)";
+                couponMsg.style.color = "#4CAF50"; // Green
+                
+                // 🪄 THE MAGIC SWITCH 🪄
+                // We construct the new link using your $5.40 PayPal ID
+                const discountID = "2C27Z8DP7K27U"; // <--- PASTE YOUR $5.40 PAYPAL ID HERE
+                const blockId = document.getElementById("blockNumber").value;
+                
+                // Swap the link!
+                payLink.href = `https://www.paypal.com/ncp/payment/${discountID}?block=${blockId}`;
+                
+                // Lock the input so they can't change it
+                couponInput.disabled = true;
+                applyBtn.disabled = true;
+                applyBtn.textContent = "✔";
+            } else {
+                // ❌ FAKE CODE
+                couponMsg.textContent = "❌ Invalid Code";
+                couponMsg.style.color = "#d32f2f"; // Red
+                applyBtn.textContent = originalText;
+            }
+        } catch (err) {
+            console.error("Coupon check failed:", err);
+            couponMsg.textContent = "⚠️ System Error";
+            applyBtn.textContent = originalText;
+        }
+    };
+  }
 });
