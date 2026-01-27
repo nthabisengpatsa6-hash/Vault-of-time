@@ -352,6 +352,16 @@ const valid = () => {
 
 const handleSave = async () => {
   if (!valid()) return;
+
+  const emailToCheck = emailInput.value.trim().toLowerCase();
+    
+    // 🛡️ THE FRONT-END SHIELD
+    // We check if this specific email is on the naughty list BEFORE we even try to save
+    const banDoc = await getDoc(doc(db, "banned_users", emailToCheck));
+    if (banDoc.exists()) {
+        alert("This email has been restricted from the Vault due to a violation of our Terms & Conditions.");
+        return; // Kill the process right here.
+    }
   
   const blockId = hiddenBlockNumber.value;
   
