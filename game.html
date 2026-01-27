@@ -95,6 +95,21 @@
         </div>
     </div>
 
+<div id="winnerScreen" class="screen hidden">
+    <h1>🥕 LEGENDARY RUN! 🥕</h1>
+    <div class="backstory" style="text-align: center; border: none;">
+        You scored <span id="winnerScore" style="color: #D4AF37; font-weight: bold;">0</span>!
+        <br><br>
+        Bun-Bun is impressed. Enter your email to receive a <b>Secret Discount Code</b> for the Vault.
+    </div>
+    
+    <input type="email" id="winnerEmail" placeholder="Enter your email address" 
+           style="padding: 10px; width: 80%; border-radius: 5px; border: none; margin-bottom: 10px;">
+    
+    <button id="claimBtn">CLAIM REWARD</button>
+    <button id="skipBtn" style="background: #555; font-size: 0.8rem;">No thanks, I hate saving money</button>
+</div>
+    
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -275,11 +290,31 @@
     }
 
     function gameOver(reason) {
-        isPlaying = false; playSound('crash');
-        if (score > highScore) { highScore = score; localStorage.setItem('hopocalypseHighScore', highScore); }
-        document.getElementById('finalScore').innerText = Math.floor(score);
+    isPlaying = false; 
+    playSound('crash');
+
+    // 1. Save the high score as usual
+    if (score > highScore) { 
+        highScore = score; 
+        localStorage.setItem('hopocalypseHighScore', highScore); 
+    }
+
+    // 2. THE NEW CHECK: Did they score over 200?
+    // (Note: score is a float, so we round it down)
+    const finalScore = Math.floor(score);
+
+    if (finalScore >= 10) {
+        // --- WINNER SCENARIO ---
+        document.getElementById('winnerScore').innerText = finalScore;
+        document.getElementById('winnerScreen').classList.remove('hidden');
+        // We hide the start screen just in case
+        document.getElementById('startScreen').classList.add('hidden');
+    } else {
+        // --- LOSER SCENARIO (Standard) ---
+        document.getElementById('finalScore').innerText = finalScore;
         document.getElementById('gameOverScreen').classList.remove('hidden');
     }
+}
 
     function jump() { 
         if (isPlaying && bunny.jumpCount < 2) {
@@ -304,6 +339,25 @@
 
     restartBtn.onclick = restartGame;
     restartBtn.addEventListener('touchstart', (e) => { e.preventDefault(); restartGame(); });
+    // Handle the "Claim" button (We will add the email logic in Phase 2)
+    document.getElementById('claimBtn').onclick = () => {
+        const email = document.getElementById('winnerEmail').value;
+        if (!email || !email.includes('@')) {
+            alert("Bun-Bun needs a valid email address!");
+            return;
+        }
+        alert("🎉 PHASE 1 COMPLETE! In the next step, we will actually send the code to: " + email);
+        // For now, just restart the game
+        document.getElementById('winnerScreen').classList.add('hidden');
+        init(); 
+        loop();
+    };
+
+    // Handle the "Skip" button (Just goes to the normal Game Over screen)
+    document.getElementById('skipBtn').onclick = () => {
+        document.getElementById('winnerScreen').classList.add('hidden');
+        document.getElementById('gameOverScreen').classList.remove('hidden');
+    };
 
     document.getElementById('closeBtn').onclick = () => {
         try { window.parent.closeArcade(); } catch(e) { alert("Game Over"); }
