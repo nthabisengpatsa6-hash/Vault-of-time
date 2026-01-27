@@ -75,10 +75,10 @@ provider: new ReCaptchaV3Provider('6LfcVFMsAAAAACJlRkwVbkHEKgc3gQklwRZcRXfl'),
 // THE BRIDGE: Allowing the game to talk to your database
 window.db = db;
 window.FirebaseFirestore = { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp };
-// ================= COUPON CLERK (Game Bridge) =================
-// The game calls this function to print a coupon in the main database
+// ================= COUPON CLERK (Game Bridge & Emailer) =================
 window.createCoupon = async (email, code) => {
   try {
+    // 1. SAVE TO FIRESTORE (The bit you already had)
     const couponsRef = collection(db, "coupons");
     await addDoc(couponsRef, {
       code: code,
@@ -88,10 +88,29 @@ window.createCoupon = async (email, code) => {
       createdAt: serverTimestamp(),
       source: "Hopocalypse High Score"
     });
-    console.log("🎟️ Coupon created:", code);
+    console.log("🎟️ Coupon saved to DB:", code);
+
+    // 2. SEND THE EMAIL (The New Upgrade!) 📧
+    // We use the same Service ID as your bulk reservations
+    const serviceID = "service_pmuwoaa"; 
+    
+    // 👇👇👇 PASTE YOUR NEW ID HERE 👇👇👇
+    const templateID = "template_leeso2n"; 
+
+    const emailParams = {
+      name: "Legendary Runner", // Matches {{name}} in the template
+      email: email,             // Matches {{email}} in the template
+      code: code,               // Matches {{code}} in the template
+      discount: "10"            // Matches {{discount}} in the template
+    };
+
+    await emailjs.send(serviceID, templateID, emailParams);
+    console.log("📧 Email sent to:", email);
+
     return true;
+
   } catch (err) {
-    console.error("Coupon generation failed:", err);
+    console.error("Coupon process failed:", err);
     throw err; 
   }
 };
