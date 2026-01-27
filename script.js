@@ -75,6 +75,26 @@ provider: new ReCaptchaV3Provider('6LfcVFMsAAAAACJlRkwVbkHEKgc3gQklwRZcRXfl'),
 // THE BRIDGE: Allowing the game to talk to your database
 window.db = db;
 window.FirebaseFirestore = { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp };
+// ================= COUPON CLERK (Game Bridge) =================
+// The game calls this function to print a coupon in the main database
+window.createCoupon = async (email, code) => {
+  try {
+    const couponsRef = collection(db, "coupons");
+    await addDoc(couponsRef, {
+      code: code,
+      email: email,
+      discountPercent: 10, // 10% off
+      status: "active",
+      createdAt: serverTimestamp(),
+      source: "Hopocalypse High Score"
+    });
+    console.log("🎟️ Coupon created:", code);
+    return true;
+  } catch (err) {
+    console.error("Coupon generation failed:", err);
+    throw err; 
+  }
+};
 
 // THE ARCADE FUNCTIONS: Making the buttons work
 window.openArcade = () => {
