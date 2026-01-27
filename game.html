@@ -344,7 +344,7 @@
     restartBtn.onclick = restartGame;
     restartBtn.addEventListener('touchstart', (e) => { e.preventDefault(); restartGame(); });
     
-   // PHASE 2: The Golden Ticket Logic
+  // PHASE 2: The Golden Ticket Logic (Cross-Realm Fix)
     document.getElementById('claimBtn').onclick = async () => {
         const emailInput = document.getElementById('winnerEmail');
         const claimBtn = document.getElementById('claimBtn');
@@ -356,38 +356,26 @@
             return;
         }
 
-        // 2. Lock the button so they don't click twice
+        // 2. Lock the button
         claimBtn.disabled = true;
         claimBtn.textContent = "Generating Magic...";
 
         try {
             // 3. GENERATE THE CODE
-            // Creates a code like "BUNNY-4921"
             const randomNum = Math.floor(1000 + Math.random() * 9000);
             const couponCode = `BUNNY-${randomNum}`;
 
-            // 4. ACCESS THE PARENT DATABASE (The Bridge)
-            // We are reaching out of the iframe to the main window
-            if (!window.parent || !window.parent.db) {
+            // 4. CALL THE PARENT WINDOW
+            // We ask the main site to do the heavy lifting
+            if (!window.parent || !window.parent.createCoupon) {
                 throw new Error("Cannot connect to the Vault. Are you playing inside the main site?");
             }
 
-            const parentFirestore = window.parent.FirebaseFirestore;
-            const db = window.parent.db;
+            // This runs the function we just added to script.js!
+            await window.parent.createCoupon(email, couponCode);
 
-            // 5. SAVE TO FIRESTORE
-            await parentFirestore.addDoc(parentFirestore.collection(db, "coupons"), {
-                code: couponCode,
-                email: email,
-                discountPercent: 10, // 10% off
-                status: "active",
-                createdAt: parentFirestore.serverTimestamp(),
-                source: "Hopocalypse High Score"
-            });
-
-            // 6. SUCCESS!
-            // (For now, we show it here. Phase 3 will email it!)
-            alert(`🎉 SUCCESS!\n\nYour code is: ${couponCode}\n\n(We have saved this to the database. Next step: Emailing it!)`);
+            // 5. SUCCESS!
+            alert(`🎉 SUCCESS!\n\nYour code is: ${couponCode}\n\n(Saved to database! Next step: Emailing it.)`);
             
             // Close the game/modal
             document.getElementById('winnerScreen').classList.add('hidden');
