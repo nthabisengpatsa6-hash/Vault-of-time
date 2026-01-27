@@ -72,11 +72,6 @@
     <canvas id="gameCanvas"></canvas>
     <button id="muteBtn">🔊</button>
 
-    <div id="hud">
-        <div style="font-size: 0.8rem; opacity: 0.8;">HI: <span id="highScoreHud">0</span></div>
-        <div>SCORE: <span id="scoreHud">0</span></div>
-    </div>
-
     <div id="ui-layer">
         <div id="startScreen" class="screen">
             <h1>🥕 HOPOCALYPSE 🥕</h1>
@@ -93,23 +88,28 @@
             <button id="restartBtn">TRY AGAIN</button>
             <button id="closeBtn">EXIT ARCADE</button>
         </div>
-        
-    <div id="winnerScreen" class="screen hidden">
-    <h1>🥕 LEGENDARY RUN! 🥕</h1>
-    <div class="backstory" style="text-align: center; border: none;">
-        You scored <span id="winnerScore" style="color: #D4AF37; font-weight: bold;">0</span>!
-        <br><br>
-        Bun-Bun is impressed. Enter your email to receive a <b>Secret Discount Code</b> for the Vault.
-    </div>
-    
-    </div>
-    
-    <input type="email" id="winnerEmail" placeholder="Enter your email address" 
-           style="padding: 10px; width: 80%; border-radius: 5px; border: none; margin-bottom: 10px;">
-    
-    <button id="claimBtn">CLAIM REWARD</button>
-    <button id="skipBtn" style="background: #555; font-size: 0.8rem;">No thanks, I hate saving money</button>
-</div>
+
+        <div id="winnerScreen" class="screen hidden">
+            <h1>🥕 LEGENDARY RUN! 🥕</h1>
+            <div class="backstory" style="text-align: center; border: none;">
+                You scored <span id="winnerScore" style="color: #D4AF37; font-weight: bold;">0</span>!
+                <br><br>
+                Bun-Bun is impressed. Enter your email to receive a <b>Secret Discount Code</b> for the Vault.
+            </div>
+            
+            <input type="email" id="winnerEmail" placeholder="Enter your email address" 
+                style="padding: 10px; width: 80%; border-radius: 5px; border: none; margin-bottom: 10px;">
+            
+            <button id="claimBtn">CLAIM REWARD</button>
+            <button id="skipBtn" style="background: #555; font-size: 0.8rem;">No thanks, I hate saving money</button>
+        </div>
+    </div> 
+
+### Why this fixes it:
+1.  **Nesting:** All three screens (`start`, `gameOver`, `winner`) are now siblings inside the `ui-layer` parent. This ensures the flexbox centering works for all of them.
+2.  **Containment:** The closing `</div>` for `winnerScreen` is now definitely **after** the buttons, so when the screen hides, the buttons hide with it.
+
+Save that, and those buttons should vanish until you earn them! 🐰
     
 <script>
     const canvas = document.getElementById('gameCanvas');
