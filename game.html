@@ -93,14 +93,15 @@
             <button id="restartBtn">TRY AGAIN</button>
             <button id="closeBtn">EXIT ARCADE</button>
         </div>
-    </div>
-
-<div id="winnerScreen" class="screen hidden">
+        
+    <div id="winnerScreen" class="screen hidden">
     <h1>🥕 LEGENDARY RUN! 🥕</h1>
     <div class="backstory" style="text-align: center; border: none;">
         You scored <span id="winnerScore" style="color: #D4AF37; font-weight: bold;">0</span>!
         <br><br>
         Bun-Bun is impressed. Enter your email to receive a <b>Secret Discount Code</b> for the Vault.
+    </div>
+    
     </div>
     
     <input type="email" id="winnerEmail" placeholder="Enter your email address" 
@@ -303,7 +304,7 @@
     // (Note: score is a float, so we round it down)
     const finalScore = Math.floor(score);
 
-    if (finalScore >= 10) {
+    if (finalScore >= 80) {
         // --- WINNER SCENARIO ---
         document.getElementById('winnerScore').innerText = finalScore;
         document.getElementById('winnerScreen').classList.remove('hidden');
