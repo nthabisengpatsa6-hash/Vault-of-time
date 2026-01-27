@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,6 +12,7 @@
         .warning { color: #ff6b6b; font-size: 12px; }
         label { display: block; margin-top: 15px; margin-bottom: 5px; color: #8b949e; font-size: 0.9em; }
         .ban-hammer { border-color: #ff4d4d; }
+        hr { border: 0; border-top: 1px solid #30363d; margin: 25px 0; }
     </style>
 </head>
 <body>
@@ -21,7 +21,7 @@
     <div class="admin-box" id="login-section">
         <h3>Identify Yourself</h3>
         <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password"><br>
+        <input type="password" id="password" placeholder="Password"><br><br>
         <button id="loginBtn">Login to the Vault</button>
     </div>
 
@@ -37,7 +37,7 @@
         <br><br>
         <button id="batchUpdateBtn">Mark as PAID & Assign Email</button>
         
-        <hr style="border-color: #30363d; margin: 20px 0;">
+        <hr>
 
         <button id="wfcUpdateBtn" style="background: #6a0dad; color: white; margin-right: 10px;">
             Purple Rain: Mark as WFC Available
@@ -55,19 +55,30 @@
             <br><br>
             <button id="batchBanBtn" style="background: #ff4d4d; color: white;">EXECUTE BANISHMENT</button>
         </div>
-        <div class="admin-box" style="border-color: #4CAF50;">
-    <h3>🔍 The Deep Investigator</h3>
-    <label>Search Private Claims by Email:</label>
-    <input type="email" id="investigateEmail" placeholder="weirdo@gmail.com" style="width: 70%;">
-    <button id="searchOwnerBtn" style="background: #4CAF50; color: white;">Scan Archives</button>
-    <div id="investigationResults" style="margin-top: 15px; color: #D4AF37; font-family: monospace;"></div>
-</div>
+
+        <div class="admin-box" style="border-color: #4CAF50; margin-top: 30px;">
+            <h3 style="color: #4CAF50;">🔍 The Deep Investigator</h3>
+            <label>Search Private Claims by Email:</label>
+            <input type="email" id="investigateEmail" placeholder="weirdo@gmail.com" style="width: 70%;">
+            <button id="searchOwnerBtn" style="background: #4CAF50; color: white;">Scan Archives</button>
+            <div id="investigationResults" style="margin-top: 15px; color: #D4AF37; font-family: monospace; line-height: 1.6;"></div>
+        </div>
     </div>
 
     <script type="module">
+        // --- FIREBASE IMPORTS ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-        import { getFirestore, writeBatch, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { 
+            getFirestore, 
+            writeBatch, 
+            doc, 
+            serverTimestamp, 
+            collection, 
+            query, 
+            where, 
+            getDocs 
+        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
@@ -97,7 +108,7 @@
             }
         };
 
-        // --- BATCH UPDATE ACTION ---
+        // --- BATCH UPDATE: MARK AS PAID ---
         document.getElementById('batchUpdateBtn').onclick = async () => {
             const input = document.getElementById('blockIds').value;
             const buyerEmail = document.getElementById('buyerEmail').value.trim();
@@ -130,7 +141,7 @@
 
             try {
                 await batch.commit();
-                alert(`✅ SUCCESS! ${blockArray.length} blocks processed.`);
+                alert(`✅ SUCCESS! ${blockArray.length} blocks updated.`);
                 document.getElementById('blockIds').value = "";
                 document.getElementById('buyerEmail').value = "";
             } catch (error) {
@@ -138,15 +149,15 @@
             }
         };
 
-        // --- 🔨 BATCH BANISHMENT ACTION ---
+        // --- 🔨 BATCH BANISHMENT ---
         document.getElementById('batchBanBtn').onclick = async () => {
             const emailInput = document.getElementById('banEmails').value;
             const reason = document.getElementById('banReason').value.trim() || "Admin Banishment";
             const emailArray = emailInput.split(',').map(e => e.trim().toLowerCase()).filter(e => e !== "");
 
-            if (emailArray.length === 0) return alert("The hammer needs targets! Paste some emails.");
+            if (emailArray.length === 0) return alert("Enter emails to banish.");
 
-            const confirmBan = confirm(`⚠️ DANGER: You are about to banish ${emailArray.length} email(s) permanently. Proceed?`);
+            const confirmBan = confirm(`⚠️ DANGER: Ban ${emailArray.length} users?`);
             if (!confirmBan) return;
 
             const batch = writeBatch(db);
@@ -155,18 +166,44 @@
                 batch.set(banRef, {
                     bannedAt: serverTimestamp(),
                     reason: reason,
-                    bannedBy: "Keeper Admin UI"
+                    bannedBy: "Keeper Admin"
                 });
             });
 
             try {
                 await batch.commit();
-                alert(`🚫 EXECUTED: ${emailArray.length} users have been cast out.`);
+                alert(`🚫 EXECUTED: ${emailArray.length} users cast out.`);
                 document.getElementById('banEmails').value = "";
-                document.getElementById('banReason').value = "";
             } catch (error) {
-                console.error(error);
-                alert("The hammer missed: " + error.message);
+                alert("Banishment failed: " + error.message);
+            }
+        };
+
+        // --- 🔎 THE ARCHIVE SCANNER (Deep Investigator) ---
+        document.getElementById('searchOwnerBtn').onclick = async () => {
+            const email = document.getElementById('investigateEmail').value.trim().toLowerCase();
+            const resultsDiv = document.getElementById('investigationResults');
+            
+            if (!email) return alert("Enter an email to scan archives.");
+            resultsDiv.innerHTML = "⏳ Scanning private claims...";
+
+            try {
+                const q = query(collection(db, "claims"), where("email", "==", email)); 
+                const snap = await getDocs(q);
+                let blocks = [];
+                
+                snap.forEach((doc) => blocks.push(doc.id));
+
+                if (blocks.length > 0) {
+                    resultsDiv.innerHTML = `⚠️ <strong style="color:white">FOUND:</strong> ${email}<br>Blocks: ${blocks.join(', ')}`;
+                    // Auto-fill the IDs box for quick scrubbing
+                    document.getElementById('blockIds').value = blocks.join(', ');
+                } else {
+                    resultsDiv.innerHTML = "No private records found for this email.";
+                }
+            } catch (err) {
+                console.error(err);
+                resultsDiv.innerHTML = "❌ Search failed: " + err.message;
             }
         };
 
@@ -183,7 +220,6 @@
                     status: "available", 
                     partnership: "WFC",
                     reserved: false,
-                    reservedBy: null,
                     mediaUrl: null, imageUrl: null, message: null
                 }, { merge: true });
             });
@@ -196,34 +232,6 @@
             }
         };
 
-// 🔎 THE ARCHIVE SCANNER
-document.getElementById('searchOwnerBtn').onclick = async () => {
-    const email = document.getElementById('investigateEmail').value.trim().toLowerCase();
-    const resultsDiv = document.getElementById('investigationResults');
-    
-    if (!email) return alert("Enter an email, Keeper.");
-    resultsDiv.innerHTML = "Searching private records...";
-
-    try {
-        // We query the 'claims' collection where the master records live
-        const q = query(collection(db, "claims"), where("email", "==", email)); 
-        const snap = await getDocs(q);
-        let blocks = [];
-        
-        snap.forEach((doc) => blocks.push(doc.id)); // doc.id is the Block Number
-
-        if (blocks.length > 0) {
-            resultsDiv.innerHTML = `⚠️ FOUND: ${email}<br>Blocks: ${blocks.join(', ')}`;
-            // Auto-fill the Scrub box for you!
-            document.getElementById('blockIds').value = blocks.join(', ');
-        } else {
-            resultsDiv.innerHTML = "No private records found for this email.";
-        }
-    } catch (err) {
-        resultsDiv.innerHTML = "Error: " + err.message;
-    }
-};
-        
         // --- SCRUB & RELEASE ---
         document.getElementById('availableBtn').onclick = async () => {
             const input = document.getElementById('blockIds').value;
@@ -239,16 +247,14 @@ document.getElementById('searchOwnerBtn').onclick = async () => {
                     partnership: null,
                     reserved: false,
                     reservedBy: null,
-                    reservedAt: null,
-                    reservedName: null,
-                    mediaUrl: null, imageUrl: null, message: null, isBulk: null,
+                    mediaUrl: null, message: null,
                     email: null, ownerId: null
                 });
             });
 
             try {
                 await batch.commit();
-                alert(`🧹 Cleaned & Released ${blockArray.length} blocks.`);
+                alert(`🧹 Scrubbed & Released ${blockArray.length} blocks.`);
             } catch (error) {
                 alert("Error: " + error.message);
             }
