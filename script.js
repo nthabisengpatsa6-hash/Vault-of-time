@@ -759,7 +759,7 @@ const isOwner = currentUser &&
            const reportBtn = document.getElementById("reportBtn");
            if (reportBtn) {
                reportBtn.onclick = async () => {
-                   const reason = prompt("Director, why are you reporting this block?");
+                   const reason = prompt("Why are you reporting this block?");
                    if (!reason) return;
 
                    try {
