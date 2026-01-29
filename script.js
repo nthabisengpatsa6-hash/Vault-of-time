@@ -809,19 +809,12 @@ const isOwner = currentUser &&
       div.classList.add("selected");
       hiddenBlockNumber.value = i;
       
-      // WFC Logic
-      if (cachedData?.partnership === "WFC") {
-          if (selectedText) selectedText.textContent = `Sponsor a Memorial: Block #${i}`;
-          if (readyMsg) {
-              readyMsg.innerHTML = "💜 <strong>Solidarity Block:</strong> $1 from this purchase goes directly to Women For Change.";
-              readyMsg.classList.remove("hidden"); 
-          }
-      } else {
-          if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
-          if (readyMsg) {
-              readyMsg.innerHTML = ""; 
-              readyMsg.classList.add("hidden"); 
-          }
+     // Standard header for all available blocks
+      if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
+      
+      if (readyMsg) {
+          readyMsg.innerHTML = ""; 
+          readyMsg.classList.add("hidden"); 
       }
 
       // Show Inputs
