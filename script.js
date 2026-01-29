@@ -13,7 +13,7 @@ import {
   query, 
   orderBy, 
   limit,
-  where // <--- THIS IS THE CRITICAL ADDITION
+  where 
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import {
   getStorage,
@@ -27,10 +27,11 @@ import {
   sendSignInLinkToEmail, 
   isSignInWithEmailLink, 
   signInWithEmailLink,
-  onAuthStateChanged, // Add this too, it's very helpful
+  onAuthStateChanged, 
   signOut
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app-check.js";
+
 // ================= GLOBAL SHERIFF ====================
 // Define this at the TOP of script.js, outside any other functions
 const toggleLegalButtons = () => {
@@ -52,6 +53,7 @@ const toggleLegalButtons = () => {
 
 // This makes sure the function can be called from ANYWHERE in your code
 window.toggleLegalButtons = toggleLegalButtons;
+
 // ================= FIREBASE CONFIG ==================
 const firebaseConfig = {
   apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc",
@@ -65,20 +67,22 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const storage = getStorage(app); // <--- ADD THIS LINE
+const storage = getStorage(app); 
+
 // ✨ APP CHECK INIT
-//self.FIREBASE_APPCHECK_DEBUG_TOKEN = "add68dda-9fd0-478b-ada8-22c51a518ae0";
 const appCheck = initializeAppCheck(app, {
-provider: new ReCaptchaV3Provider('6LfcVFMsAAAAACJlRkwVbkHEKgc3gQklwRZcRXfl'),
+  provider: new ReCaptchaV3Provider('6LfcVFMsAAAAACJlRkwVbkHEKgc3gQklwRZcRXfl'),
   isTokenAutoRefreshEnabled: true
 });
+
 // THE BRIDGE: Allowing the game to talk to your database
 window.db = db;
 window.FirebaseFirestore = { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp };
+
 // ================= COUPON CLERK (Game Bridge & Emailer) =================
 window.createCoupon = async (email, code) => {
   try {
-    // 1. SAVE TO FIRESTORE (The bit you already had)
+    // 1. SAVE TO FIRESTORE 
     const couponsRef = collection(db, "coupons");
     await addDoc(couponsRef, {
       code: code,
@@ -90,18 +94,15 @@ window.createCoupon = async (email, code) => {
     });
     console.log("🎟️ Coupon saved to DB:", code);
 
-    // 2. SEND THE EMAIL (The New Upgrade!) 📧
-    // We use the same Service ID as your bulk reservations
+    // 2. SEND THE EMAIL 
     const serviceID = "service_pmuwoaa"; 
-    
-    // 👇👇👇 PASTE YOUR NEW ID HERE 👇👇👇
     const templateID = "template_leeso2n"; 
 
     const emailParams = {
-      name: "Legendary Runner", // Matches {{name}} in the template
-      email: email,             // Matches {{email}} in the template
-      code: code,               // Matches {{code}} in the template
-      discount: "10"            // Matches {{discount}} in the template
+      name: "Legendary Runner", 
+      email: email,             
+      code: code,               
+      discount: "10"            
     };
 
     await emailjs.send(serviceID, templateID, emailParams);
@@ -139,6 +140,7 @@ window.closeArcade = () => {
 };
 
 const blocksCollection = collection(db, "blocks");
+
 // ================= GLOBAL CONFIG & STATE ====================
 const TOTAL_BLOCKS = 100000;
 const PAGE_SIZE = 500;
@@ -171,7 +173,6 @@ let loginGeneratedCode = null;
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     // === SCENARIO A: User is Logged In ===
-    
     if (user.isAnonymous) {
       console.log("Guest mode active:", user.uid);
     } else {
@@ -192,11 +193,9 @@ onAuthStateChanged(auth, async (user) => {
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
-          
-          let didWork = false; // Flag: Did we actually change anything?
+          let didWork = false; 
           const updates = [];
 
-          // Use "for...of" loop to handle checks properly
           for (const claimDoc of querySnapshot.docs) {
             const blockId = claimDoc.id; 
             const blockRef = doc(db, "blocks", blockId);
@@ -207,7 +206,7 @@ onAuthStateChanged(auth, async (user) => {
             // Only update if I don't own it yet
             if (blockSnap.exists() && blockSnap.data().ownerId !== user.uid) {
                 console.log(`⚡ Syncing new block #${blockId}...`);
-                didWork = true; // We found work to do!
+                didWork = true; 
 
                 const updatePromise = setDoc(blockRef, { 
                   ownerId: user.uid,  
@@ -284,7 +283,6 @@ async function loadClaimedBlocks() {
         if (now - reservedTime > timeLimit) {
           console.log("Auto-releasing:", idNum);
           
-          // ✨ SAFETY BUBBLE: Prevent Guest crash
           try {
               await setDoc(doc(blocksCollection, String(idNum)), {
                 reserved: false, reservedBy: null, reservedAt: null, isBulk: null,
@@ -292,7 +290,6 @@ async function loadClaimedBlocks() {
               }, { merge: true });
               data.reserved = false; 
           } catch (err) {
-              // If we are a Guest, we can't clean the DB. Just ignore it!
               console.log("Guest mode: Skipping cleanup for block #" + idNum);
           }
         }
@@ -313,6 +310,7 @@ async function loadClaimedBlocks() {
     reservedBlocks = JSON.parse(localStorage.getItem("reservedBlocks") || "[]");
   }
 }
+
 async function fetchBlock(num) {
   const snap = await getDoc(doc(blocksCollection, String(num)));
   return snap.exists() ? snap.data() : null;
@@ -354,15 +352,12 @@ const handleSave = async () => {
   if (!valid()) return;
   
   const blockId = hiddenBlockNumber.value;
-  
-// Just grab the current user (which might be a Guest now)
-const user = auth.currentUser;
+  const user = auth.currentUser;
 
-if (!user) {
-  alert("System initializing... please wait 2 seconds and try again.");
-  return;
-}
-
+  if (!user) {
+    alert("System initializing... please wait 2 seconds and try again.");
+    return;
+  }
 
   const originalText = saveBtn.textContent;
   saveBtn.disabled = true; 
@@ -370,13 +365,11 @@ if (!user) {
 
   try {
     const file = fileInput.files[0];
-    const isImg = file.type.startsWith("image/");
     const isAud = file.type.startsWith("audio/");
     
     // 2. Upload the file to Storage
-    // ✨ Vibe Fix: Add a timestamp so filenames are always unique
-const uniqueName = `${Date.now()}_${file.name}`; 
-const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
+    const uniqueName = `${Date.now()}_${file.name}`; 
+    const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
     await uploadBytes(fileRef, file);
     const mediaUrl = await getDownloadURL(fileRef);
 
@@ -386,7 +379,7 @@ const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
       message: messageInput.value,
       mediaUrl,
       mediaType: isAud ? "audio" : "image",
-      ownerId: user.uid, // The permanent link to their account
+      ownerId: user.uid, 
       status: "pending"
     });
 
@@ -442,15 +435,12 @@ const reserveBlock = async (blockId, userEmail) => {
         const reservedAt = data.reservedAt ? data.reservedAt.toMillis() : 0;
 
         // ✨ THE SMART CHECK:
-        // Only stop the user if the reservation is STILL VALID (Time hasn't run out)
         if (now - reservedAt < timeLimit) {
              const minutesLeft = Math.ceil((timeLimit - (now - reservedAt)) / 60000);
              alert(`This block is reserved by someone else for another ${minutesLeft} minutes.`); 
              return false;
         }
         
-        // If we get here, the time IS up. 
-        // We silently proceed and overwrite the old reservation!
         console.log("Overwriting expired reservation on block #" + blockId);
     }
 
@@ -467,7 +457,6 @@ const reserveBlock = async (blockId, userEmail) => {
     
   } catch (err) {
     console.error("Reservation error:", err);
-    // Usually means permissions error or connection issue
     alert("Could not reserve block. Please try refreshing.");
     return false;
   }
@@ -488,9 +477,6 @@ async function executeBulkReservation() {
   }
 
   try {
-    // ✨ NEW LOGIC: Skip the database write entirely.
-    // Just send the email so the Keeper (you) gets the request.
-    
     const serviceID = "service_pmuwoaa";
     const templateID = "template_xraan78";
     
@@ -522,6 +508,7 @@ async function executeBulkReservation() {
     }
   }
 }
+
 // 6. UI Rendering & Click Handling
 const highlightBlock = (num) => {
   const blocks = [...document.querySelectorAll(".block")];
@@ -566,19 +553,14 @@ const renderPage = (pageNum) => {
   if (chapterRangeDisplay) chapterRangeDisplay.textContent = `Blocks ${start} – ${end}`;
   updateKeeper(pageNum);
 
+  // [CLEANED]: Fixed the duplicate loop structure here
   for (let i = start; i <= end; i++) {
     const div = document.createElement("div");
     div.className = "block";
     div.textContent = i;
     div.dataset.blockId = i;
 
-for (let i = start; i <= end; i++) {
-    const div = document.createElement("div");
-    div.className = "block";
-    div.textContent = i;
-    div.dataset.blockId = i;
-
-    // 🏆 1. DEFINE THE GENESIS RANGE (Insert here)
+    // 🏆 1. DEFINE THE GENESIS RANGE
     const isGenesisId = 
         (i >= 15 && i <= 20) || 
         (i >= 34 && i <= 40) || 
@@ -593,12 +575,8 @@ for (let i = start; i <= end; i++) {
         div.textContent = "🏆"; 
     }
 
-    // ... (rest of your visual logic like Reserved and Claimed follows)
-    
     // --- VISUALS ---
     const cachedData = blockCache[i]; 
-
-    
 
     // Reserved
     if (reservedBlocks.includes(i)) {
@@ -651,7 +629,7 @@ for (let i = start; i <= end; i++) {
       if (lockedMsg) lockedMsg.classList.add("hidden");
       if (warning) warning.classList.add("hidden");
       
-      // Multi-Select Logic (No changes here)
+      // Multi-Select Logic
       if (isMultiSelect) {
         if (claimed.includes(i)) return alert("This block is already purchased.");
         if (reservedBlocks.includes(i)) {
@@ -701,16 +679,18 @@ for (let i = start; i <= end; i++) {
       const snap = await getDoc(docRef);
       const freshData = snap.exists() ? snap.data() : null;
       const currentUser = auth.currentUser;
+      
       // THE FIX: You only own it if your ID is on it AND you actually paid for it.
-const isOwner = currentUser && 
+      const isOwner = currentUser && 
                 freshData && 
                 freshData.ownerId === currentUser.uid && 
                 freshData.status === "paid";
+                
       // === SCENARIO A: YOU OWN IT (Edit Mode) ===
       if (isOwner) {
           if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
           
-          // 🔒 SECURITY FIX: Hide the "Reserve" button so you can't re-buy it
+          // 🔒 SECURITY FIX: Hide the "Reserve" button
           if (reserveBtn) reserveBtn.classList.add("hidden"); 
           if (paymentButtons) paymentButtons.classList.add("hidden");
 
@@ -730,14 +710,13 @@ const isOwner = currentUser &&
           if (fileInput) fileInput.classList.remove("hidden");
           if (lockedMsg) lockedMsg.classList.add("hidden");
           // Sync the checkbox every time the modal opens
-      toggleLegalButtons();
+          toggleLegalButtons();
           modal.classList.remove("hidden"); 
           return;
       }
 
       // === SCENARIO B: SOMEONE ELSE OWNS IT (View Mode) ===
       if (freshData && freshData.status === "paid") {
-           // ... (View Modal Logic stays same) ...
            const viewModal = document.getElementById("viewModal");
            const viewTitle = document.getElementById("viewBlockTitle");
            const viewMedia = document.getElementById("viewBlockMedia");
@@ -784,22 +763,22 @@ const isOwner = currentUser &&
                    try {
                        // 1. Log the report to Firestore
                        await addDoc(collection(db, "reports"), {
-                           blockId: i, // 'i' is correctly scoped here from your loop
+                           blockId: i, // 'i' is correctly scoped here
                            reason: reason,
                            reportedAt: serverTimestamp(),
                            status: "pending_review"
                        });
 
-// 🚩 THE TRUTH-CHECK (Add this before you send)
-    console.log("🚨 REPORTING DATA:", { blockId: i, reason: reason });
+                       // 🚩 THE TRUTH-CHECK
+                       console.log("🚨 REPORTING DATA:", { blockId: i, reason: reason });
 
-    // 2. Alert the Keeper via EmailJS
-    await emailjs.send("service_pmuwoaa", "template_o5d770e", {
-        blockId: i,        
-        reason: reason,    
-        to_email: "hello@vaultoftime.com"
-    });
-                     
+                       // 2. Alert the Keeper via EmailJS
+                       await emailjs.send("service_pmuwoaa", "template_o5d770e", {
+                           blockId: i,        
+                           reason: reason,     
+                           to_email: "hello@vaultoftime.com"
+                       });
+                      
                        alert("Report sent. The Keeper will investigate.");
                    } catch (err) {
                        console.error("Report failed:", err);
@@ -832,7 +811,7 @@ const isOwner = currentUser &&
       div.classList.add("selected");
       hiddenBlockNumber.value = i;
       
-      // 🏆 THE GENESIS BANNER (Replaces WFC Logic)
+      // 🏆 THE GENESIS BANNER
       if (isGenesisId) {
           if (selectedText) selectedText.textContent = `👑 Genesis Block: #${i}`;
           if (readyMsg) {
@@ -857,18 +836,15 @@ const isOwner = currentUser &&
       // 🔒 SECURITY FIX: Show Reserve button, HIDE Update button
       if (reserveBtn) reserveBtn.classList.remove("hidden");
       if (saveBtn) { 
-    saveBtn.style.display = "block"; // Show the button
-    saveBtn.textContent = "Save Details"; // Set the text for a new buyer
-    
-    // THE SECURITY FIX: Force it to ONLY handle a new save
-    saveBtn.onclick = async () => {
-       if (termsCheckbox && !termsCheckbox.checked) return; 
-       await handleSave(); 
-    };
-}
-      
-      // But we still set the onclick event for LATER (in case they buy it)
-      // This logic actually belongs in handleSave, but we set the display to none here.
+        saveBtn.style.display = "block"; // Show the button
+        saveBtn.textContent = "Save Details"; // Set the text for a new buyer
+        
+        // THE SECURITY FIX: Force it to ONLY handle a new save
+        saveBtn.onclick = async () => {
+           if (termsCheckbox && !termsCheckbox.checked) return; 
+           await handleSave(); 
+        };
+      }
       
       modal.classList.remove("hidden");
     };
@@ -878,6 +854,7 @@ const isOwner = currentUser &&
   }
   renderPagination();
 };
+
 const changePage = (page) => {
   currentPage = page;
   renderPage(page);
@@ -941,8 +918,8 @@ async function handleKeeperUpdate(blockId) {
       }
 
       // ✨ Vibe Fix: Add a timestamp so filenames are always unique
-const uniqueName = `${Date.now()}_${file.name}`; 
-const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
+      const uniqueName = `${Date.now()}_${file.name}`; 
+      const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
       await uploadBytes(fileRef, file);
       const mediaUrl = await getDownloadURL(fileRef);
       
@@ -1002,6 +979,7 @@ function updateKeeper(pageNum) {
     keeperText.innerText = content;
   }
 }
+
 const handlePaypalReturn = async () => {
   const params = new URLSearchParams(window.location.search);
   if (params.get("paid") !== "true") return;
@@ -1019,11 +997,7 @@ const handlePaypalReturn = async () => {
     });
 
     const numId = Number(pendingBlockId);
-    if (!claimed.includes(numId)) {
-     // claimed.push(numId); 
-      //localStorage.setItem("claimed", JSON.stringify(claimed));
-    }
-
+    
     // 2. Clear pending status but KEEP the ID for the "Claim" step
     localStorage.removeItem("pendingBlockId");
     
@@ -1079,20 +1053,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   reserveBtn = document.getElementById("reserveBtn");
   payBtn = document.getElementById("paypalBtn");
 
-  // Inside document.addEventListener("DOMContentLoaded", ...) 
+  // 1. Point to the checkbox
+  termsCheckbox = document.getElementById("termsCheckbox");
 
-// 1. Point to the checkbox
-termsCheckbox = document.getElementById("termsCheckbox");
+  // 2. Watch for the click using the now-global function
+  if (termsCheckbox) {
+    termsCheckbox.addEventListener("change", window.toggleLegalButtons);
+  }
 
-// 2. Watch for the click using the now-global function
-if (termsCheckbox) {
-  termsCheckbox.addEventListener("change", window.toggleLegalButtons);
-}
+  // 3. Run it once immediately
+  window.toggleLegalButtons();
 
-// 3. Run it once immediately
-window.toggleLegalButtons();
-// --- THE MAGIC LINK CATCHER ---
-if (isSignInWithEmailLink(auth, window.location.href)) {
+  // --- THE MAGIC LINK CATCHER ---
+  if (isSignInWithEmailLink(auth, window.location.href)) {
     // 1. Get the email from storage (saved when they clicked 'Send')
     let email = window.localStorage.getItem('emailForSignIn');
     
@@ -1123,53 +1096,54 @@ if (isSignInWithEmailLink(auth, window.location.href)) {
             console.error("Magic link failed:", error);
             alert("This link has expired or was already used.");
         });
-}
-if (menuLoginBtn) {
-  menuLoginBtn.addEventListener("click", async () => {
-    const user = auth.currentUser;
+  }
 
-    // 1. LOGOUT LOGIC (Only for Real Owners)
-    // We check !user.isAnonymous to make sure we don't try to log out a Guest
-    if (user && !user.isAnonymous) {
-      const doLogout = confirm(`You are currently logged in as:\n${user.email}\n\nDo you want to log out?`);
-      
-      if (doLogout) {
-        try {
-          await signOut(auth);
-          alert("✅ You have been logged out.");
-          location.reload(); 
-        } catch (err) {
-          console.error("Logout failed:", err);
+  if (menuLoginBtn) {
+    menuLoginBtn.addEventListener("click", async () => {
+      const user = auth.currentUser;
+
+      // 1. LOGOUT LOGIC (Only for Real Owners)
+      if (user && !user.isAnonymous) {
+        const doLogout = confirm(`You are currently logged in as:\n${user.email}\n\nDo you want to log out?`);
+        
+        if (doLogout) {
+          try {
+            await signOut(auth);
+            alert("✅ You have been logged out.");
+            location.reload(); 
+          } catch (err) {
+            console.error("Logout failed:", err);
+          }
         }
+        return; 
       }
-      return; 
-    }
 
-    // 2. LOGIN MODAL LOGIC (For Guests or Logged-out users)
-    // If they are a Guest, we treat them as "not logged in" so they can upgrade their account
-    const sideMenu = document.getElementById("sideMenu");
-    if (sideMenu) sideMenu.classList.remove("open");
-    
-    if (loginModal) loginModal.classList.remove("hidden");
-    if (loginStep1) loginStep1.classList.remove("hidden");
-    if (loginStep2) loginStep2.classList.add("hidden");
-  });
-}
+      // 2. LOGIN MODAL LOGIC (For Guests or Logged-out users)
+      const sideMenu = document.getElementById("sideMenu");
+      if (sideMenu) sideMenu.classList.remove("open");
+      
+      if (loginModal) loginModal.classList.remove("hidden");
+      if (loginStep1) loginStep1.classList.remove("hidden");
+      if (loginStep2) loginStep2.classList.add("hidden");
+    });
+  }
+  
   if (closeLogin) closeLogin.onclick = () => loginModal.classList.add("hidden");
 
 
-const actionCodeSettings = {
-  url: 'https://vaultoftime.com/index.html', // Where they go after clicking the link
-  handleCodeInApp: true,
-};
+  const actionCodeSettings = {
+    url: 'https://vaultoftime.com/index.html', // Where they go after clicking the link
+    handleCodeInApp: true,
+  };
 
-// Replace your current loginSendBtn.onclick
-loginSendBtn.onclick = async () => {
-  const email = loginEmailInput.value.trim();
-  await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-  window.localStorage.setItem('emailForSignIn', email);
-  alert("Check your inbox! We've sent you a magic login link.");
-};
+  if (loginSendBtn) {
+    loginSendBtn.onclick = async () => {
+      const email = loginEmailInput.value.trim();
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      window.localStorage.setItem('emailForSignIn', email);
+      alert("Check your inbox! We've sent you a magic login link.");
+    };
+  }
 
   if (loginConfirmBtn) {
     loginConfirmBtn.onclick = () => {
@@ -1340,6 +1314,7 @@ loginSendBtn.onclick = async () => {
   await loadClaimedBlocks();
   renderPage(currentPage);
   hideLoader();
+
   // ================= DISCOUNT CODE LOGIC =================
   const applyBtn = document.getElementById("applyCouponBtn");
   
@@ -1398,5 +1373,4 @@ loginSendBtn.onclick = async () => {
         }
     };
   }
-}
 });
