@@ -575,11 +575,7 @@ const renderPage = (pageNum) => {
     // --- VISUALS ---
     const cachedData = blockCache[i]; 
 
-    // WFC
-    if (cachedData?.partnership === "WFC" && cachedData?.status === "available") {
-        div.classList.add("wfc-solidarity"); 
-        div.textContent = "💜"; 
-    }
+    
 
     // Reserved
     if (reservedBlocks.includes(i)) {
