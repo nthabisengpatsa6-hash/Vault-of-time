@@ -773,7 +773,7 @@ const isOwner = currentUser &&
 
                        // 2. Alert the Keeper via EmailJS
                        await emailjs.send("service_pmuwoaa", "template_o5d770e", {
-                           to_email: "support@vaultoftime.com",
+                           to_email: "hello@vaultoftime.com",
                            subject: `🚨 CONTENT REPORT: Block #${i}`,
                            message: `Report filed for Block #${i}.\nReason: ${reason}`
                        });
