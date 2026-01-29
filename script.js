@@ -676,14 +676,27 @@ const renderPage = (pageNum) => {
         }
       }
 
+     // === SCENARIO D: AVAILABLE (Buy Mode) ===
       document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
       div.classList.add("selected");
       hiddenBlockNumber.value = i;
+
+      // 🧹 THE AMNESIA PROTOCOL (Reset coupon state for every new block)
+      const cInput = document.getElementById("couponInput");
+      const cMsg = document.getElementById("couponMsg");
+      const cBtn = document.getElementById("applyCouponBtn");
+      const pLink = document.getElementById("externalPayBtn");
+
+      if (cInput) { cInput.disabled = false; cInput.value = ""; }
+      if (cMsg) cMsg.textContent = "";
+      if (cBtn) { cBtn.disabled = false; cBtn.textContent = "Apply"; } // Set to your button's default text
+      if (pLink) pLink.href = `https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE?block=${i}`;
       
+      // 🏆 THE GENESIS BANNER 
       if (isGenesisId) {
           if (selectedText) selectedText.textContent = `👑 Genesis Block: #${i}`;
           if (readyMsg) {
-              readyMsg.innerHTML = "✨ <strong>LAUNCH SPECIAL:</strong> Use code <strong>GENESIS</strong> at checkout for $5.00.";
+              readyMsg.innerHTML = "✨ <strong>LAUNCH SPECIAL:</strong> Use code <strong>GENESIS</strong> for your $5.00 price.";
               readyMsg.classList.remove("hidden"); 
           }
       } else {
