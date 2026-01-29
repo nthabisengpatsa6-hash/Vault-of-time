@@ -771,13 +771,16 @@ const isOwner = currentUser &&
                            status: "pending_review"
                        });
 
-                       // 2. Alert the Keeper via EmailJS
-await emailjs.send("service_pmuwoaa", "template_o5d770e", {
-    blockId: i,        // This must match {{blockId}} in EmailJS
-    reason: reason,    // This must match {{reason}} in EmailJS
-    to_email: "hello@vaultoftime.com" // This must match {{to_email}} if used
-});
+// 🚩 THE TRUTH-CHECK (Add this before you send)
+    console.log("🚨 REPORTING DATA:", { blockId: i, reason: reason });
 
+    // 2. Alert the Keeper via EmailJS
+    await emailjs.send("service_pmuwoaa", "template_o5d770e", {
+        blockId: i,        
+        reason: reason,    
+        to_email: "hello@vaultoftime.com"
+    });
+                     
                        alert("Report sent. The Keeper will investigate.");
                    } catch (err) {
                        console.error("Report failed:", err);
