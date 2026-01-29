@@ -1105,21 +1105,43 @@ document.addEventListener("DOMContentLoaded", async () => {
         const originalText = applyBtn.textContent;
         applyBtn.textContent = "⏳";
         couponMsg.textContent = "";
-
-        try {
+try {
             const q = query(collection(db, "coupons"), where("code", "==", code));
             const snapshot = await getDocs(q);
 
             if (!snapshot.empty) {
-                couponMsg.textContent = "✅ Discount Applied!";
-                couponMsg.style.color = "#4CAF50";
-                let paypalID = "2C27Z8DP7K27U"; 
+                // 🕵️ THE GATEKEEPER CHECK
+                const currentBlockId = Number(document.getElementById("blockNumber").value);
+                const isActualGenesis = 
+                    (currentBlockId >= 15 && currentBlockId <= 20) || 
+                    (currentBlockId >= 34 && currentBlockId <= 40) || 
+                    (currentBlockId >= 53 && currentBlockId <= 60) || 
+                    (currentBlockId >= 73 && currentBlockId <= 80) || 
+                    (currentBlockId >= 93 && currentBlockId <= 100) || 
+                    (currentBlockId >= 101 && currentBlockId <= 500);
+
+                let paypalID = "2C27Z8DP7K27U"; // Default: Bunny Game Code ($5.40)
+                
                 if (code === "GENESIS") {
+                    // 🛑 DENIAL LOGIC
+                    if (!isActualGenesis) {
+                        couponMsg.textContent = "❌ Code valid for Genesis blocks (Trophy icons) only.";
+                        couponMsg.style.color = "#d32f2f";
+                        applyBtn.textContent = originalText;
+                        return; // Stop the execution here!
+                    }
+                    
+                    // ✅ APPROVAL LOGIC
                     paypalID = "PZPRVQKJAFPRS"; 
                     couponMsg.textContent = "✅ Genesis Price Applied! ($5.00)";
                 }
-                const blockId = document.getElementById("blockNumber").value;
-                payLink.href = `https://www.paypal.com/ncp/payment/${paypalID}?block=${blockId}`;
+
+                couponMsg.textContent = couponMsg.textContent || "✅ Discount Applied!";
+                couponMsg.style.color = "#4CAF50";
+                
+                const payLink = document.getElementById("externalPayBtn");
+                payLink.href = `https://www.paypal.com/ncp/payment/${paypalID}?block=${currentBlockId}`;
+                
                 couponInput.disabled = true;
                 applyBtn.disabled = true;
                 applyBtn.textContent = "✔";
@@ -1128,7 +1150,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 couponMsg.style.color = "#d32f2f"; 
                 applyBtn.textContent = originalText;
             }
-        } catch (err) {
+        }
+        catch (err) {
             console.error("Coupon check failed:", err);
             couponMsg.textContent = "⚠️ System Error";
             applyBtn.textContent = originalText;
