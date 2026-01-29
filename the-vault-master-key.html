@@ -282,12 +282,15 @@ document.getElementById('loadReportsBtn').onclick = async () => {
 
         let html = '<table style="width:100%; text-align:left;"><tr><th>Block</th><th>Reason</th><th>Action</th></tr>';
         
-        snap.forEach((report) => {
+       snap.forEach((report) => {
             const data = report.data();
             html += `<tr>
                 <td>#${data.blockId}</td>
-                <td>${data.reason}</td>
-                <td><button onclick="window.investigateReport('${data.blockId}', '${report.id}')" style="padding:5px; font-size:10px;">Investigate</button></td>
+                <td style="padding: 10px;">${data.reason}</td>
+                <td>
+                    <button onclick="window.investigateReport('${data.blockId}')" style="padding:5px; font-size:10px; margin-right:5px;">🔍 Investigate</button>
+                    <button onclick="window.resolveReport('${report.id}')" style="padding:5px; font-size:10px; background:#4CAF50; color:white;">✅ Clear</button>
+                </td>
             </tr>`;
         });
         
@@ -301,6 +304,27 @@ document.getElementById('loadReportsBtn').onclick = async () => {
 window.investigateReport = (blockId, reportId) => {
     document.getElementById('blockIds').value = blockId;
     alert(`Investigating Block #${blockId}. The Investigator Tool is ready.`);
+};
+
+// ✅ THE KEEPER'S RESOLUTION
+window.resolveReport = async (reportId) => {
+    const action = prompt("Keeper's Decree: How was this resolved? (e.g., Actioned, Dismissed, Scrubbed)");
+    if (!action) return;
+
+    try {
+        const reportRef = doc(db, "reports", reportId);
+        await updateDoc(reportRef, {
+            status: action, // Changes it from "pending_review" to your note
+            resolvedAt: serverTimestamp()
+        });
+
+        alert("Legacy issue settled. The Vault is clean.");
+        // Re-trigger the button click to refresh the list without a full page reload
+        document.getElementById('loadReportsBtn').click(); 
+    } catch (err) {
+        console.error("Resolution failed:", err);
+        alert("The Decree failed to seal. Check your connection.");
+    }
 };
         
     </script>
