@@ -63,6 +63,12 @@
             <button id="searchOwnerBtn" style="background: #4CAF50; color: white;">Scan Archives</button>
             <div id="investigationResults" style="margin-top: 15px; color: #D4AF37; font-family: monospace; line-height: 1.6;"></div>
         </div>
+
+        <div class="admin-box" style="border-color: #D4AF37;">
+    <h3>🚩 Pending Reports</h3>
+    <button id="loadReportsBtn">Check for New Flags</button>
+    <div id="reportsList" style="margin-top: 15px; font-size: 0.9em;"></div>
+</div>
     </div>
 
     <script type="module">
@@ -259,6 +265,44 @@
                 alert("Error: " + error.message);
             }
         };
+
+// 🚩 THE REPORT MANAGER
+document.getElementById('loadReportsBtn').onclick = async () => {
+    const reportsDiv = document.getElementById('reportsList');
+    reportsDiv.innerHTML = "⏳ Fetching flags...";
+
+    try {
+        const q = query(collection(db, "reports"), where("status", "==", "pending_review"));
+        const snap = await getDocs(q);
+        
+        if (snap.empty) {
+            reportsDiv.innerHTML = "✅ The Vault is quiet. No pending reports.";
+            return;
+        }
+
+        let html = '<table style="width:100%; text-align:left;"><tr><th>Block</th><th>Reason</th><th>Action</th></tr>';
+        
+        snap.forEach((report) => {
+            const data = report.data();
+            html += `<tr>
+                <td>#${data.blockId}</td>
+                <td>${data.reason}</td>
+                <td><button onclick="window.investigateReport('${data.blockId}', '${report.id}')" style="padding:5px; font-size:10px;">Investigate</button></td>
+            </tr>`;
+        });
+        
+        reportsDiv.innerHTML = html + '</table>';
+    } catch (err) {
+        reportsDiv.innerHTML = "❌ Failed to load reports: " + err.message;
+    }
+};
+
+// Hook it up so "Investigate" auto-fills your other tools
+window.investigateReport = (blockId, reportId) => {
+    document.getElementById('blockIds').value = blockId;
+    alert(`Investigating Block #${blockId}. The Investigator Tool is ready.`);
+};
+        
     </script>
 </body>
 </html>
