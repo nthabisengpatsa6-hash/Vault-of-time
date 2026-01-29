@@ -1398,4 +1398,5 @@ loginSendBtn.onclick = async () => {
         }
     };
   }
+}
 });
