@@ -772,11 +772,11 @@ const isOwner = currentUser &&
                        });
 
                        // 2. Alert the Keeper via EmailJS
-                       await emailjs.send("service_pmuwoaa", "template_o5d770e", {
-                           to_email: "hello@vaultoftime.com",
-                           subject: `🚨 CONTENT REPORT: Block #${i}`,
-                           message: `Report filed for Block #${i}.\nReason: ${reason}`
-                       });
+await emailjs.send("service_pmuwoaa", "template_o5d770e", {
+    blockId: i,        // This must match {{blockId}} in EmailJS
+    reason: reason,    // This must match {{reason}} in EmailJS
+    to_email: "hello@vaultoftime.com" // This must match {{to_email}} if used
+});
 
                        alert("Report sent. The Keeper will investigate.");
                    } catch (err) {
