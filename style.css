@@ -1189,3 +1189,11 @@ html, body {
     font-size: 1.5vw !important;
   }
 }
+
+.genesis-gold {
+    background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c) !important;
+    color: black !important;
+    border: 1px solid #D4AF37;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+}
