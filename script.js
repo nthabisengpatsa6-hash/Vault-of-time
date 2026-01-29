@@ -572,6 +572,29 @@ const renderPage = (pageNum) => {
     div.textContent = i;
     div.dataset.blockId = i;
 
+for (let i = start; i <= end; i++) {
+    const div = document.createElement("div");
+    div.className = "block";
+    div.textContent = i;
+    div.dataset.blockId = i;
+
+    // 🏆 1. DEFINE THE GENESIS RANGE (Insert here)
+    const isGenesisId = 
+        (i >= 15 && i <= 20) || 
+        (i >= 34 && i <= 40) || 
+        (i >= 53 && i <= 60) || 
+        (i >= 73 && i <= 80) || 
+        (i >= 93 && i <= 100) || 
+        (i >= 101 && i <= 500);
+
+    // 🏆 2. APPLY THE VISUAL GLOW
+    if (isGenesisId && !claimed.includes(i) && !reservedBlocks.includes(i)) {
+        div.classList.add("genesis-gold");
+        div.textContent = "🏆"; 
+    }
+
+    // ... (rest of your visual logic like Reserved and Claimed follows)
+    
     // --- VISUALS ---
     const cachedData = blockCache[i]; 
 
@@ -804,17 +827,25 @@ const isOwner = currentUser &&
         }
       }
 
-      // === SCENARIO D: AVAILABLE (Buy Mode) ===
+     // === SCENARIO D: AVAILABLE (Buy Mode) ===
       document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
       div.classList.add("selected");
       hiddenBlockNumber.value = i;
       
-     // Standard header for all available blocks
-      if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
-      
-      if (readyMsg) {
-          readyMsg.innerHTML = ""; 
-          readyMsg.classList.add("hidden"); 
+      // 🏆 THE GENESIS BANNER (Replaces WFC Logic)
+      if (isGenesisId) {
+          if (selectedText) selectedText.textContent = `👑 Genesis Block: #${i}`;
+          if (readyMsg) {
+              readyMsg.innerHTML = "✨ <strong>LAUNCH SPECIAL:</strong> This is a foundation block. Use code <strong>GENESIS</strong> at checkout for your $5.00 early-bird price.";
+              readyMsg.classList.remove("hidden"); 
+          }
+      } else {
+          // Standard banner for non-Genesis blocks
+          if (selectedText) selectedText.textContent = `Selected Block: #${i}`;
+          if (readyMsg) {
+              readyMsg.innerHTML = ""; 
+              readyMsg.classList.add("hidden"); 
+          }
       }
 
       // Show Inputs
@@ -1333,19 +1364,24 @@ loginSendBtn.onclick = async () => {
             const snapshot = await getDocs(q);
 
             if (!snapshot.empty) {
-                // 🎉 VALID CODE!
-                couponMsg.textContent = "✅ Discount Applied! ($5.40)";
-                couponMsg.style.color = "#4CAF50"; // Green
+                const couponData = snapshot.docs[0].data();
+                couponMsg.textContent = "✅ Discount Applied!";
+                couponMsg.style.color = "#4CAF50";
+
+                // 🪄 THE DUAL-LINK SWITCH
+                let paypalID = "2C27Z8DP7K27U"; // Default: Bunny Game Code ($5.40)
                 
-                // 🪄 THE MAGIC SWITCH 🪄
-                // We construct the new link using your $5.40 PayPal ID
-                const discountID = "2C27Z8DP7K27U"; // <--- PASTE YOUR $5.40 PAYPAL ID HERE
+                // If they use the Genesis code, we swap to the $5.00 link
+                const codeUsed = couponInput.value.trim().toUpperCase();
+                if (codeUsed === "GENESIS") {
+                    paypalID = "PZPRVQKJAFPRS"; // Your new Genesis ID
+                    couponMsg.textContent = "✅ Genesis Price Applied! ($5.00)";
+                }
+
                 const blockId = document.getElementById("blockNumber").value;
+                payLink.href = `https://www.paypal.com/ncp/payment/${paypalID}?block=${blockId}`;
                 
-                // Swap the link!
-                payLink.href = `https://www.paypal.com/ncp/payment/${discountID}?block=${blockId}`;
-                
-                // Lock the input so they can't change it
+                // Lock the UI
                 couponInput.disabled = true;
                 applyBtn.disabled = true;
                 applyBtn.textContent = "✔";
