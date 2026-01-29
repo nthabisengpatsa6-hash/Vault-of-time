@@ -13,6 +13,10 @@
         label { display: block; margin-top: 15px; margin-bottom: 5px; color: #8b949e; font-size: 0.9em; }
         .ban-hammer { border-color: #ff4d4d; }
         hr { border: 0; border-top: 1px solid #30363d; margin: 25px 0; }
+        .heinous { background: #4a0000 !important; border: 2px solid #ff4d4d !important; animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0.7; } }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #30363d; }
     </style>
 </head>
 <body>
@@ -65,20 +69,20 @@
         </div>
 
         <div class="admin-box" style="border-color: #D4AF37;">
-    <h3>🚩 Pending Reports</h3>
-    <button id="loadReportsBtn">Check for New Flags</button>
-    <div id="reportsList" style="margin-top: 15px; font-size: 0.9em;"></div>
-</div>
+            <h3>🚩 Pending Reports</h3>
+            <button id="loadReportsBtn">Check for New Flags</button>
+            <div id="reportsList" style="margin-top: 15px; font-size: 0.9em;"></div>
+        </div>
     </div>
 
     <script type="module">
-        // --- FIREBASE IMPORTS ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import { 
             getFirestore, 
             writeBatch, 
             doc, 
+            getDoc,
             serverTimestamp, 
             collection, 
             query, 
@@ -100,234 +104,104 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- LOGIN ACTION ---
         document.getElementById('loginBtn').onclick = async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('ledger-section').style.display = 'block';
             } catch (error) {
-                console.error(error);
                 alert("Access Denied: " + error.message);
             }
         };
 
-        // --- BATCH UPDATE: MARK AS PAID ---
         document.getElementById('batchUpdateBtn').onclick = async () => {
             const input = document.getElementById('blockIds').value;
             const buyerEmail = document.getElementById('buyerEmail').value.trim();
             const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
-            
-            if (blockArray.length === 0) return alert("No IDs to process!");
-            if (!buyerEmail) return alert("⚠️ STOP: Enter Buyer Email!");
+            if (blockArray.length === 0 || !buyerEmail) return alert("IDs and Email required!");
 
             const batch = writeBatch(db);
             blockArray.forEach((id) => {
-                const blockRef = doc(db, "blocks", id); 
-                const claimRef = doc(db, "claims", id); 
-
-                batch.set(blockRef, { 
-                    status: "paid", 
-                    ownerId: null, 
-                    email: null,   
-                    purchasedAt: serverTimestamp(),
-                    reserved: false,
-                    reservedBy: null,
-                    reservedAt: null
-                }, { merge: true });
-
-                batch.set(claimRef, {
-                    email: buyerEmail,
-                    blockId: id,
-                    createdAt: serverTimestamp()
-                });
+                batch.set(doc(db, "blocks", id), { status: "paid", purchasedAt: serverTimestamp(), reserved: false }, { merge: true });
+                batch.set(doc(db, "claims", id), { email: buyerEmail, blockId: id, createdAt: serverTimestamp() });
             });
-
-            try {
-                await batch.commit();
-                alert(`✅ SUCCESS! ${blockArray.length} blocks updated.`);
-                document.getElementById('blockIds').value = "";
-                document.getElementById('buyerEmail').value = "";
-            } catch (error) {
-                alert("Error: " + error.message);
-            }
+            await batch.commit();
+            alert("✅ Blocks updated!");
         };
 
-        // --- 🔨 BATCH BANISHMENT ---
         document.getElementById('batchBanBtn').onclick = async () => {
-            const emailInput = document.getElementById('banEmails').value;
-            const reason = document.getElementById('banReason').value.trim() || "Admin Banishment";
-            const emailArray = emailInput.split(',').map(e => e.trim().toLowerCase()).filter(e => e !== "");
-
-            if (emailArray.length === 0) return alert("Enter emails to banish.");
-
-            const confirmBan = confirm(`⚠️ DANGER: Ban ${emailArray.length} users?`);
-            if (!confirmBan) return;
-
+            const emails = document.getElementById('banEmails').value.split(',').map(e => e.trim().toLowerCase()).filter(e => e !== "");
+            if (emails.length === 0) return alert("Emails required!");
             const batch = writeBatch(db);
-            emailArray.forEach((email) => {
-                const banRef = doc(db, "banned_users", email);
-                batch.set(banRef, {
-                    bannedAt: serverTimestamp(),
-                    reason: reason,
-                    bannedBy: "Keeper Admin"
-                });
-            });
-
-            try {
-                await batch.commit();
-                alert(`🚫 EXECUTED: ${emailArray.length} users cast out.`);
-                document.getElementById('banEmails').value = "";
-            } catch (error) {
-                alert("Banishment failed: " + error.message);
-            }
+            emails.forEach(email => batch.set(doc(db, "banned_users", email), { bannedAt: serverTimestamp(), reason: document.getElementById('banReason').value || "Admin Banishment" }));
+            await batch.commit();
+            alert("🚫 Users Banished!");
         };
 
-        // --- 🔎 THE ARCHIVE SCANNER (Deep Investigator) ---
         document.getElementById('searchOwnerBtn').onclick = async () => {
             const email = document.getElementById('investigateEmail').value.trim().toLowerCase();
-            const resultsDiv = document.getElementById('investigationResults');
-            
-            if (!email) return alert("Enter an email to scan archives.");
-            resultsDiv.innerHTML = "⏳ Scanning private claims...";
+            const q = query(collection(db, "claims"), where("email", "==", email));
+            const snap = await getDocs(q);
+            let blocks = [];
+            snap.forEach(doc => blocks.push(doc.id));
+            document.getElementById('investigationResults').innerHTML = blocks.length > 0 ? `⚠️ Found: ${blocks.join(', ')}` : "No records.";
+            if(blocks.length > 0) document.getElementById('blockIds').value = blocks.join(', ');
+        };
 
+        document.getElementById('loadReportsBtn').onclick = async () => {
+            const reportsDiv = document.getElementById('reportsList');
+            reportsDiv.innerHTML = "⏳ Fetching flags...";
+            const snap = await getDocs(query(collection(db, "reports"), where("status", "==", "pending_review")));
+            if (snap.empty) return reportsDiv.innerHTML = "✅ Vault is quiet.";
+
+            const counts = {};
+            snap.forEach(d => counts[d.data().blockId] = (counts[d.data().blockId] || 0) + 1);
+
+            let html = '<table><tr><th>Block</th><th>Reason</th><th>Actions</th></tr>';
+            snap.forEach((report) => {
+                const data = report.data();
+                const heinous = counts[data.blockId] >= 3;
+                html += `<tr class="${heinous ? 'heinous' : ''}">
+                    <td>#${data.blockId} ${heinous ? '🚨' : ''}</td>
+                    <td>${data.reason}</td>
+                    <td>
+                        <button onclick="window.investigateReport('${data.blockId}')">🔍 Scan</button>
+                        <button onclick="window.resolveReport('${report.id}')" style="background:#4CAF50; color:white;">✅ Clear</button>
+                        <button onclick="window.banAndScrub('${data.blockId}', '${report.id}')" style="background:#8b0000; color:white;">🔥 BAN & SCRUB</button>
+                    </td>
+                </tr>`;
+            });
+            reportsDiv.innerHTML = html + '</table>';
+        };
+
+        window.investigateReport = (id) => { document.getElementById('investigateEmail').scrollIntoView(); alert(`Scanning Block #${id}`); };
+
+        window.resolveReport = async (id) => {
+            const note = prompt("Resolution note?");
+            if (!note) return;
+            await updateDoc(doc(db, "reports", id), { status: note, resolvedAt: serverTimestamp() });
+            document.getElementById('loadReportsBtn').click();
+        };
+
+        window.banAndScrub = async (blockId, reportId) => {
+            if (!confirm(`Permanently ban owner of #${blockId} and wipe content?`)) return;
             try {
-                const q = query(collection(db, "claims"), where("email", "==", email)); 
-                const snap = await getDocs(q);
-                let blocks = [];
+                const claimSnap = await getDoc(doc(db, "claims", blockId));
+                if (!claimSnap.exists()) return alert("Owner email not found in archives.");
+                const email = claimSnap.data().email;
+
+                const batch = writeBatch(db);
+                batch.set(doc(db, "banned_users", email.toLowerCase()), { bannedAt: serverTimestamp(), reason: "Heinous Content" });
+                batch.update(doc(db, "blocks", blockId), { status: "available", message: null, mediaUrl: null, ownerId: null });
+                batch.update(doc(db, "reports", reportId), { status: "BANISHED", resolvedAt: serverTimestamp() });
                 
-                snap.forEach((doc) => blocks.push(doc.id));
-
-                if (blocks.length > 0) {
-                    resultsDiv.innerHTML = `⚠️ <strong style="color:white">FOUND:</strong> ${email}<br>Blocks: ${blocks.join(', ')}`;
-                    // Auto-fill the IDs box for quick scrubbing
-                    document.getElementById('blockIds').value = blocks.join(', ');
-                } else {
-                    resultsDiv.innerHTML = "No private records found for this email.";
-                }
-            } catch (err) {
-                console.error(err);
-                resultsDiv.innerHTML = "❌ Search failed: " + err.message;
-            }
-        };
-
-        // --- PURPLE RAIN (WFC) ---
-        document.getElementById('wfcUpdateBtn').onclick = async () => {
-            const input = document.getElementById('blockIds').value;
-            const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
-            if (blockArray.length === 0) return alert("No IDs to process!");
-
-            const batch = writeBatch(db);
-            blockArray.forEach((id) => {
-                const blockRef = doc(db, "blocks", id); 
-                batch.set(blockRef, { 
-                    status: "available", 
-                    partnership: "WFC",
-                    reserved: false,
-                    mediaUrl: null, imageUrl: null, message: null
-                }, { merge: true });
-            });
-
-            try {
                 await batch.commit();
-                alert(`Done! ${blockArray.length} blocks are now Solidarity Purple.`);
-            } catch (error) {
-                alert("Error: " + error.message);
-            }
+                alert("🔥 Banished and Scrubbed.");
+                document.getElementById('loadReportsBtn').click();
+            } catch (e) { alert("Error: " + e.message); }
         };
-
-        // --- SCRUB & RELEASE ---
-        document.getElementById('availableBtn').onclick = async () => {
-            const input = document.getElementById('blockIds').value;
-            const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
-            if (blockArray.length === 0) return alert("No IDs to process!");
-
-            const batch = writeBatch(db);
-            blockArray.forEach((id) => {
-                const blockRef = doc(db, "blocks", id); 
-                batch.set(blockRef, { 
-                    status: "available",
-                    blockNumber: Number(id),
-                    partnership: null,
-                    reserved: false,
-                    reservedBy: null,
-                    mediaUrl: null, message: null,
-                    email: null, ownerId: null
-                });
-            });
-
-            try {
-                await batch.commit();
-                alert(`🧹 Scrubbed & Released ${blockArray.length} blocks.`);
-            } catch (error) {
-                alert("Error: " + error.message);
-            }
-        };
-
-// 🚩 THE REPORT MANAGER
-document.getElementById('loadReportsBtn').onclick = async () => {
-    const reportsDiv = document.getElementById('reportsList');
-    reportsDiv.innerHTML = "⏳ Fetching flags...";
-
-    try {
-        const q = query(collection(db, "reports"), where("status", "==", "pending_review"));
-        const snap = await getDocs(q);
-        
-        if (snap.empty) {
-            reportsDiv.innerHTML = "✅ The Vault is quiet. No pending reports.";
-            return;
-        }
-
-        let html = '<table style="width:100%; text-align:left;"><tr><th>Block</th><th>Reason</th><th>Action</th></tr>';
-        
-       snap.forEach((report) => {
-            const data = report.data();
-            html += `<tr>
-                <td>#${data.blockId}</td>
-                <td style="padding: 10px;">${data.reason}</td>
-                <td>
-                    <button onclick="window.investigateReport('${data.blockId}')" style="padding:5px; font-size:10px; margin-right:5px;">🔍 Investigate</button>
-                    <button onclick="window.resolveReport('${report.id}')" style="padding:5px; font-size:10px; background:#4CAF50; color:white;">✅ Clear</button>
-                </td>
-            </tr>`;
-        });
-        
-        reportsDiv.innerHTML = html + '</table>';
-    } catch (err) {
-        reportsDiv.innerHTML = "❌ Failed to load reports: " + err.message;
-    }
-};
-
-// Hook it up so "Investigate" auto-fills your other tools
-window.investigateReport = (blockId, reportId) => {
-    document.getElementById('blockIds').value = blockId;
-    alert(`Investigating Block #${blockId}. The Investigator Tool is ready.`);
-};
-
-// ✅ THE KEEPER'S RESOLUTION
-window.resolveReport = async (reportId) => {
-    const action = prompt("Keeper's Decree: How was this resolved? (e.g., Actioned, Dismissed, Scrubbed)");
-    if (!action) return;
-
-    try {
-        const reportRef = doc(db, "reports", reportId);
-        await updateDoc(reportRef, {
-            status: action, // Changes it from "pending_review" to your note
-            resolvedAt: serverTimestamp()
-        });
-
-        alert("Legacy issue settled. The Vault is clean.");
-        // Re-trigger the button click to refresh the list without a full page reload
-        document.getElementById('loadReportsBtn').click(); 
-    } catch (err) {
-        console.error("Resolution failed:", err);
-        alert("The Decree failed to seal. Check your connection.");
-    }
-};
-        
     </script>
 </body>
 </html>
