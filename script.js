@@ -217,44 +217,41 @@ async function loadClaimedBlocks() {
     claimed = [];
     reservedBlocks = [];
     blockCache = {};
-    const docs = snap.docs;
+    
+    const now = Date.now();
 
-    for (const d of docs) {
+    snap.docs.forEach(d => {
       const idNum = Number(d.id);
       const data = d.data();
-      if (!data) continue;
+      if (!data) return;
 
       blockCache[idNum] = data;
 
-      if (data.reserved === true && data.reservedAt && data.status !== "paid") {
-        const now = Date.now();
+      // 🏛️ THE SMART FILTER
+      if (data.status === "paid") {
+        claimed.push(idNum);
+      } else if (data.reserved === true && data.reservedAt) {
         const reservedTime = data.reservedAt.toMillis();
-        let timeLimit = 30 * 60 * 1000;
-        if (data.isBulk === true) timeLimit = 1440 * 60 * 1000;
+        let timeLimit = 30 * 60 * 1000; // 30 Mins
+        if (data.isBulk === true) timeLimit = 1440 * 60 * 1000; // 24 Hours
 
-        if (now - reservedTime > timeLimit) {
-          try {
-              await setDoc(doc(blocksCollection, String(idNum)), {
-                reserved: false, reservedBy: null, reservedAt: null, isBulk: null,
-                reservedName: null, status: "available"
-              }, { merge: true });
-              data.reserved = false; 
-          } catch (err) { /* Guest mode ignore */ }
+        // Only count it as reserved if the timer hasn't run out!
+        if (now - reservedTime < timeLimit) {
+          reservedBlocks.push(idNum);
+        } else {
+          // It's technically expired, so we treat it as "available" in the UI
+          console.log(`⏳ Block #${idNum} has expired. Ignoring reservation.`);
         }
       }
+    });
 
-      if (data.status === "paid") claimed.push(idNum);
-      else if (data.reserved === true) reservedBlocks.push(idNum);
-      blockCache[idNum] = data;
-    }
     localStorage.setItem("claimed", JSON.stringify(claimed));
     localStorage.setItem("reservedBlocks", JSON.stringify(reservedBlocks));
   } catch (err) {
-    console.error("Error loading block states:", err);
-    claimed = JSON.parse(localStorage.getItem("claimed") || "[]");
-    reservedBlocks = JSON.parse(localStorage.getItem("reservedBlocks") || "[]");
+    console.error("Load error:", err);
   }
 }
+
 
 function hideLoader() {
   const loader = document.getElementById("vault-loader");
