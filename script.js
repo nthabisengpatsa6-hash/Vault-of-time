@@ -481,18 +481,21 @@ const renderPage = (pageNum) => {
 
     const cachedData = blockCache[i]; 
 
+        // 🛡️ RESERVATION VISUALS
     if (reservedBlocks.includes(i)) {
       const reservedBy = cachedData?.reservedBy || null;
       const savedEmail = localStorage.getItem("userEmail");
       const userEmail = (emailInput?.value && emailInput.value.trim()) || savedEmail || null;
+
       if (userEmail && reservedBy === userEmail) {
         div.classList.add("reserved-owner");
-        div.textContent = `${i} (Your Reserved Block)`;
+        div.textContent = `(Mine)`; // 🤏 Short and sweet
       } else {
         div.classList.add("reserved");
-        div.textContent = `${i} (R)`;
+        div.textContent = `(R)`; // 🤏 Standard marker
       }
     }
+
 
     if (claimed.includes(i)) {
       div.classList.add("claimed");
