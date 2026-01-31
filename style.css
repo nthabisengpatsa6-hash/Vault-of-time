@@ -1197,3 +1197,21 @@ html, body {
     font-weight: bold;
     box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
 }
+
+/* 📏 Prevents the grid from "breaking" when text is present */
+.reserved, .reserved-owner {
+    font-size: 8px !important; /* Tiny font for tiny squares */
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* Stops text from pushing the borders */
+    white-space: nowrap; /* Forces text to stay on one line */
+    background-color: #333 !important;
+}
+
+.reserved-owner {
+    background-color: #4CAF50 !important; /* Green signals it's yours */
+    color: white !important;
+    border: 1px solid #FFF;
+}
