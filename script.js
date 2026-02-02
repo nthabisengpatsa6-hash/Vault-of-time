@@ -314,7 +314,10 @@ const handleSave = async () => {
     const isAud = file.type.startsWith("audio/");
     const uniqueName = `${Date.now()}_${file.name}`; 
     const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
-    await uploadBytes(fileRef, file);
+    // 👇 ADD THIS METADATA
+    const metadata = { cacheControl: 'public,max-age=31536000', contentType: file.type };
+// 👇 UPDATE THIS LINE TO INCLUDE METADATA
+    await uploadBytes(fileRef, file, metadata);
     const mediaUrl = await getDownloadURL(fileRef);
 
     await setDoc(doc(db, "blocks", blockId), {
@@ -789,7 +792,9 @@ async function handleKeeperUpdate(blockId) {
       const isAud = file.type.startsWith("audio/");
       const uniqueName = `${Date.now()}_${file.name}`; 
       const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
-      await uploadBytes(fileRef, file);
+      const metadata = { cacheControl: 'public,max-age=31536000', contentType: file.type };
+     // 👇 UPDATE THIS LINE TO INCLUDE METADATA
+      await uploadBytes(fileRef, file, metadata);
       const mediaUrl = await getDownloadURL(fileRef);
       updateData.mediaUrl = mediaUrl;
       updateData.mediaType = isAud ? "audio" : "image";
