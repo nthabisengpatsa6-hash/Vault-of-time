@@ -112,6 +112,12 @@ window.closeArcade = () => {
 };
 
 const blocksCollection = collection(db, "blocks");
+// 👇 ADD THIS NEW CODE
+const activeBlocksQuery = query(
+  blocksCollection,
+  where("status", "in", ["paid", "pending"])
+);
+// 👆 END OF NEW CODE
 
 // ================= GLOBAL CONFIG & STATE ====================
 const TOTAL_BLOCKS = 100000;
@@ -179,11 +185,15 @@ onAuthStateChanged(auth, async (user) => {
                 updates.push(updatePromise);
             }
           }
-          if (didWork) {
-            await Promise.all(updates);
-            alert("Ownership Verified! Reloading your Vault...");
-            window.location.reload(); 
-          }
+          // ✅ PASTE THIS:
+if (didWork) {
+  await Promise.all(updates);
+  alert("Ownership Verified! Updating your view...");
+  
+  // Just re-fetch the data and re-draw the grid without refreshing the page
+  await loadClaimedBlocks(); 
+  renderPage(currentPage);
+}
         }
       } catch (err) {
         console.error("Handshake error:", err);
@@ -213,7 +223,8 @@ function updateBulkBar() {
 
 async function loadClaimedBlocks() {
   try {
-    const snap = await getDocs(blocksCollection);
+   // ✅ REPLACE IT WITH THIS:
+const snap = await getDocs(activeBlocksQuery);
     claimed = [];
     reservedBlocks = [];
     blockCache = {};
@@ -569,9 +580,16 @@ const renderPage = (pageNum) => {
         return;
       }
 
-      const docRef = doc(db, "blocks", String(i));
-      const snap = await getDoc(docRef);
-      const freshData = snap.exists() ? snap.data() : null;
+     // ✅ PASTE THIS INSTEAD:
+let freshData = blockCache[i]; // 1. Check local storage first
+
+if (!freshData) {
+    // 2. Only ask Firebase if we really don't know
+    console.log("Cache miss! Fetching from DB..."); 
+    const docRef = doc(db, "blocks", String(i));
+    const snap = await getDoc(docRef);
+    freshData = snap.exists() ? snap.data() : null;
+}
       const currentUser = auth.currentUser;
       const isOwner = currentUser && freshData && freshData.ownerId === currentUser.uid && freshData.status === "paid";
                 
