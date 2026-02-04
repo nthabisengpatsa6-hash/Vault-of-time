@@ -682,20 +682,34 @@ if (!freshData) {
            return;
       }
 
-      if (freshData && freshData.reserved === true) {
-        const reservedBy = freshData.reservedBy || null;
-        const userEmail = loggedInUserEmail || emailInput?.value?.trim() || localStorage.getItem("userEmail");
-        if (!userEmail || !reservedBy || userEmail.toLowerCase() !== reservedBy.toLowerCase()) {
-          if (selectedText) selectedText.textContent = `Block #${i} (Reserved)`;
-          if (lockedMsg) {
-             lockedMsg.textContent = "This block is currently reserved."; 
-             lockedMsg.classList.remove("hidden");
-          }
-          if (saveBtn) saveBtn.style.display = "none";
-          modal.classList.remove("hidden"); 
-          return;
+      // ✅ REPLACE WITH THIS:
+if (freshData && freshData.reserved === true) {
+  
+  // 🕒 1. THE ZOMBIE CHECK
+  const now = Date.now();
+  const reservedTime = freshData.reservedAt ? freshData.reservedAt.toMillis() : 0;
+  const timeLimit = 30 * 60 * 1000; // 30 Minutes
+  
+  // If time is up, we IGNORE the reservation and let the user buy it.
+  if (now - reservedTime < timeLimit) {
+      
+      // 🔒 2. It is genuinely reserved. Run the ownership check.
+      const reservedBy = freshData.reservedBy || null;
+      const userEmail = loggedInUserEmail || emailInput?.value?.trim() || localStorage.getItem("userEmail");
+      
+      if (!userEmail || !reservedBy || userEmail.toLowerCase() !== reservedBy.toLowerCase()) {
+        if (selectedText) selectedText.textContent = `Block #${i} (Reserved)`;
+        if (lockedMsg) {
+            lockedMsg.textContent = "This block is currently reserved."; 
+            lockedMsg.classList.remove("hidden");
         }
+        if (saveBtn) saveBtn.style.display = "none";
+        modal.classList.remove("hidden"); 
+        return; // STOP HERE
       }
+  }
+  // If we get here, the time is up! We fall through to the "Buy" logic below. 👇
+}
 
      // === SCENARIO D: AVAILABLE (Buy Mode) ===
       document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
