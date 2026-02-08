@@ -234,21 +234,26 @@ async function loadClaimedBlocks() {
 
       blockCache[idNum] = data;
 
-      // 🏛️ THE SMART FILTER
+      // 🏛️ THE SMART FILTER (Updated)
       if (data.status === "paid") {
         claimed.push(idNum);
-      } else if (data.reserved === true && data.reservedAt) {
-        const reservedTime = data.reservedAt.toMillis();
-        let timeLimit = 30 * 60 * 1000; // 30 Mins default
+      } 
+      // 👇 NEW: Catch "Pending" uploads so they don't vanish!
+      else if (data.status === "pending" || (data.reserved === true && data.reservedAt)) {
         
-        // If you ever want 24h bulk reservations, uncomment this:
-        // if (data.isBulk === true) timeLimit = 1440 * 60 * 1000; 
-
-        // Only count it as reserved if the timer hasn't run out!
-        if (now - reservedTime < timeLimit) {
-          reservedBlocks.push(idNum);
+        // If it's a timer reservation, check if time is up
+        if (data.reserved === true && data.reservedAt) {
+            const reservedTime = data.reservedAt.toMillis();
+            let timeLimit = 30 * 60 * 1000; 
+            if (now - reservedTime < timeLimit) {
+                reservedBlocks.push(idNum);
+            } else if (data.status === "pending") {
+                // If timer expired BUT they uploaded content (status: pending), keep it reserved!
+                reservedBlocks.push(idNum); 
+            }
         } else {
-          console.log(`⏳ Block #${idNum} has expired. Ignoring reservation.`);
+            // It's just pending (uploaded content, waiting for payment), so keep it safe.
+            reservedBlocks.push(idNum);
         }
       }
     });
@@ -645,29 +650,57 @@ const renderPage = (pageNum) => {
         freshData = snap.exists() ? snap.data() : null;
       }
 
+     // 1. CHECK IF OWNER (Now includes 'pending' status)
       const currentUser = auth.currentUser;
-      const isOwner = currentUser && freshData && freshData.ownerId === currentUser.uid && freshData.status === "paid";
+      const isOwner = currentUser && freshData && freshData.ownerId === currentUser.uid;
                 
       if (isOwner) {
-          if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
-          if (reserveBtn) reserveBtn.classList.add("hidden"); 
-          if (paymentButtons) paymentButtons.classList.add("hidden");
-          if (saveBtn) {
-            saveBtn.style.display = "block";
-            saveBtn.textContent = "🚀 Update Legacy";
-            saveBtn.disabled = false;
-            saveBtn.onclick = () => handleKeeperUpdate(i);
+          // A. IF PAID -> Allow Editing
+          if (freshData.status === "paid") {
+              if (selectedText) selectedText.textContent = `Managing Legacy: Block #${i}`;
+              if (reserveBtn) reserveBtn.classList.add("hidden"); 
+              if (paymentButtons) paymentButtons.classList.add("hidden");
+              if (saveBtn) {
+                saveBtn.style.display = "block";
+                saveBtn.textContent = "🚀 Update Legacy";
+                saveBtn.disabled = false;
+                saveBtn.onclick = () => handleKeeperUpdate(i);
+              }
+              if (messageInput) {
+                  messageInput.classList.remove("hidden");
+                  messageInput.value = freshData.message || ""; 
+                  if (messageCounter) messageCounter.textContent = `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
+              }
+              if (fileInput) fileInput.classList.remove("hidden");
+              if (lockedMsg) lockedMsg.classList.add("hidden");
+              toggleLegalButtons();
+              modal.classList.remove("hidden"); 
+              return;
           }
-          if (messageInput) {
-              messageInput.classList.remove("hidden");
-              messageInput.value = freshData.message || ""; 
-              if (messageCounter) messageCounter.textContent = `${messageInput.value.length}/${MAX_MESSAGE_LENGTH}`;
+          
+          // B. IF PENDING -> Show "Finish Payment" Screen
+          if (freshData.status === "pending") {
+              if (selectedText) selectedText.textContent = `Finish Payment: Block #${i}`;
+              // Hide inputs, show payment buttons
+              if (nameInput) nameInput.classList.add("hidden");
+              if (emailInput) emailInput.classList.add("hidden");
+              if (fileInput) fileInput.classList.add("hidden");
+              if (messageInput) messageInput.classList.add("hidden");
+              if (saveBtn) saveBtn.style.display = "none";
+              
+              if (readyMsg) {
+                  readyMsg.innerHTML = "⚠️ <strong>Action Required:</strong> Payment pending for this block.";
+                  readyMsg.classList.remove("hidden");
+              }
+              
+              if (paymentButtons) {
+                  paymentButtons.classList.remove("hidden");
+                  const payLink = document.getElementById("externalPayBtn");
+                  if (payLink) payLink.href = `https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE?block=${i}`;
+              }
+              modal.classList.remove("hidden");
+              return;
           }
-          if (fileInput) fileInput.classList.remove("hidden");
-          if (lockedMsg) lockedMsg.classList.add("hidden");
-          toggleLegalButtons();
-          modal.classList.remove("hidden"); 
-          return;
       }
 
       if (freshData && freshData.status === "paid") {
@@ -907,18 +940,50 @@ function updateKeeper(pageNum) {
 
 const handlePaypalReturn = async () => {
   const params = new URLSearchParams(window.location.search);
+  
+  // 1. Check if we are actually returning from PayPal
   if (params.get("paid") !== "true") return;
-  const pendingBlockId = localStorage.getItem("pendingBlockId");
-  if (!pendingBlockId) return;
+
+  console.log("PayPal return detected. Verifying...");
+
+  // 2. Try to find the block ID from URL (best) or LocalStorage (backup)
+  let pendingBlockId = params.get("block");
+  if (!pendingBlockId) {
+      pendingBlockId = localStorage.getItem("pendingBlockId");
+  }
+
+  if (!pendingBlockId) {
+      console.warn("No pending block ID found in URL or Storage.");
+      return;
+  }
+
   try {
     const blockRef = doc(blocksCollection, pendingBlockId);
-    await updateDoc(blockRef, { status: "paid", purchasedAt: serverTimestamp() });
+    
+    // Double check it isn't already paid to avoid overwriting timestamps
+    const snap = await getDoc(blockRef);
+    if (snap.exists() && snap.data().status === "paid") {
+        console.log("Block already marked paid.");
+    } else {
+        await updateDoc(blockRef, { status: "paid", purchasedAt: serverTimestamp() });
+        console.log("✅ Block status updated to PAID via return handler.");
+    }
+
     localStorage.removeItem("pendingBlockId");
-    alert("Payment received! 🎉 Your block is live. Now, 'Login' with the same email to permanently secure your editing rights.");
+    
+    // Show the success message
+    alert("Payment received! 🎉 Your block is live.\n\nSince you have already uploaded your content, it is now visible on the grid.");
+    
+    // Clean the URL so if they refresh, it doesn't trigger again
     window.history.replaceState({}, document.title, "/index.html");
+    
+    // Force a reload of the data
+    await loadClaimedBlocks();
+    renderPage(currentPage);
+
   } catch (err) {
     console.error("Error finalizing PayPal:", err);
-    alert("Payment detected, but the Vault is struggling to seal the block. Please contact support.");
+    alert("Payment detected, but the Vault is struggling to verify the block. Please contact support or check your 'Owner Login'.");
   }
 };
 
