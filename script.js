@@ -112,12 +112,11 @@ window.closeArcade = () => {
 };
 
 const blocksCollection = collection(db, "blocks");
-// 👇 ADD THIS NEW CODE
+// Optimized Query for Performance
 const activeBlocksQuery = query(
   blocksCollection,
   where("status", "in", ["paid", "pending"])
 );
-// 👆 END OF NEW CODE
 
 // ================= GLOBAL CONFIG & STATE ====================
 const TOTAL_BLOCKS = 100000;
@@ -161,7 +160,7 @@ onAuthStateChanged(auth, async (user) => {
         menuLoginBtn.style.color = "#4CAF50"; 
       }
 
-      // Secure Handshake
+      // Secure Handshake: Sync ownership if missing
       try {
         const claimsRef = collection(db, "claims");
         const q = query(claimsRef, where("email", "==", user.email));
@@ -185,15 +184,13 @@ onAuthStateChanged(auth, async (user) => {
                 updates.push(updatePromise);
             }
           }
-          // ✅ PASTE THIS:
-if (didWork) {
-  await Promise.all(updates);
-  alert("Ownership Verified! Updating your view...");
-  
-  // Just re-fetch the data and re-draw the grid without refreshing the page
-  await loadClaimedBlocks(); 
-  renderPage(currentPage);
-}
+          
+          if (didWork) {
+              await Promise.all(updates);
+              alert("Ownership Verified! Updating your view...");
+              await loadClaimedBlocks(); 
+              renderPage(currentPage);
+          }
         }
       } catch (err) {
         console.error("Handshake error:", err);
@@ -223,8 +220,7 @@ function updateBulkBar() {
 
 async function loadClaimedBlocks() {
   try {
-   // ✅ REPLACE IT WITH THIS:
-const snap = await getDocs(activeBlocksQuery);
+    const snap = await getDocs(activeBlocksQuery);
     claimed = [];
     reservedBlocks = [];
     blockCache = {};
@@ -243,14 +239,15 @@ const snap = await getDocs(activeBlocksQuery);
         claimed.push(idNum);
       } else if (data.reserved === true && data.reservedAt) {
         const reservedTime = data.reservedAt.toMillis();
-        let timeLimit = 30 * 60 * 1000; // 30 Mins
-        if (data.isBulk === true) timeLimit = 1440 * 60 * 1000; // 24 Hours
+        let timeLimit = 30 * 60 * 1000; // 30 Mins default
+        
+        // If you ever want 24h bulk reservations, uncomment this:
+        // if (data.isBulk === true) timeLimit = 1440 * 60 * 1000; 
 
         // Only count it as reserved if the timer hasn't run out!
         if (now - reservedTime < timeLimit) {
           reservedBlocks.push(idNum);
         } else {
-          // It's technically expired, so we treat it as "available" in the UI
           console.log(`⏳ Block #${idNum} has expired. Ignoring reservation.`);
         }
       }
@@ -262,7 +259,6 @@ const snap = await getDocs(activeBlocksQuery);
     console.error("Load error:", err);
   }
 }
-
 
 function hideLoader() {
   const loader = document.getElementById("vault-loader");
@@ -314,9 +310,9 @@ const handleSave = async () => {
     const isAud = file.type.startsWith("audio/");
     const uniqueName = `${Date.now()}_${file.name}`; 
     const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
-    // 👇 ADD THIS METADATA
+    
+    // Add caching metadata
     const metadata = { cacheControl: 'public,max-age=31536000', contentType: file.type };
-// 👇 UPDATE THIS LINE TO INCLUDE METADATA
     await uploadBytes(fileRef, file, metadata);
     const mediaUrl = await getDownloadURL(fileRef);
 
@@ -387,43 +383,99 @@ const reserveBlock = async (blockId, userEmail) => {
   }
 };
 
+// ================= BULK RESERVE + QUOTE =================
 async function executeBulkReservation() {
   if (!selectedBatch || selectedBatch.length === 0) return;
-  const name = prompt("Please enter your Name for the quote:");
+
+  // 1. Get User Details
+  let name = nameInput ? nameInput.value : "";
+  if (!name) name = prompt("Please enter your Name for the reservation:");
   if (!name) return;
-  const email = prompt("Please enter your Email address for the quote:");
+
+  let email = loggedInUserEmail;
+  if (!email && emailInput && emailInput.value.trim()) {
+      email = emailInput.value.trim();
+  }
+  if (!email) email = prompt("Please enter your Email to receive the payment link:");
   if (!email) return;
 
+  // 2. Update Button State
   const originalText = bulkReserveBtn ? bulkReserveBtn.textContent : "Reserve All";
   if (bulkReserveBtn) { 
-      bulkReserveBtn.textContent = "Sending Request..."; 
+      bulkReserveBtn.textContent = "Reserving & Sending Invoice..."; 
       bulkReserveBtn.disabled = true; 
   }
 
   try {
+    // 3. LOCK THE BLOCKS IN FIREBASE (The 30 Minute Timer)
+    // We do this first so nobody else can snag them while the email is sending.
+    const updates = selectedBatch.map(async (blockId) => {
+        const blockRef = doc(db, "blocks", String(blockId));
+        const snap = await getDoc(blockRef);
+        
+        // Safety check: Don't overwrite if already paid or reserved by someone else
+        if (snap.exists()) {
+            const data = snap.data();
+            if (data.status === "paid") return; 
+            if (data.reserved === true && data.reservedBy !== email) {
+                const now = Date.now();
+                const reservedAt = data.reservedAt ? data.reservedAt.toMillis() : 0;
+                // If reservation is still valid (under 30 mins), skip this block
+                if (now - reservedAt < 30 * 60 * 1000) return; 
+            }
+        }
+
+        // Set the lock
+        return setDoc(blockRef, {
+            reserved: true,
+            reservedBy: email,
+            reservedAt: serverTimestamp(),
+            status: "pending"
+            // Note: We are NOT setting isBulk:true, so these will default to 30 mins
+        }, { merge: true });
+    });
+
+    await Promise.all(updates);
+    console.log("🔒 Blocks locked in database.");
+
+    // 4. SEND THE EMAIL (The Quote/Payment Link)
     const serviceID = "service_pmuwoaa";
-    const templateID = "template_xraan78";
+    const templateID = "template_xraan78"; 
+    
+    // Calculate cost (Assuming $6 per block)
+    const totalCost = selectedBatch.length * 6; 
+
     const emailParams = {
       name: name, 
       email: email, 
       block_count: selectedBatch.length,
-      total_cost: selectedBatch.length * 6, 
+      total_cost: totalCost, 
       block_list: selectedBatch.join(", ")
     };
 
     if (window.emailjs) {
         await emailjs.send(serviceID, templateID, emailParams);
-        alert(`✅ QUOTE REQUEST SENT!\n\nThe Keeper has received your request for ${selectedBatch.length} blocks.`);
+        console.log("📧 Invoice sent to:", email);
+        
+        // 🎉 SUCCESS MESSAGE
+        alert("Blocks successfully reserved!🎉 You will receive a quote via email shortly.");
     } else {
-        alert("Email system offline. Please contact support manually.");
+        console.error("EmailJS not found");
+        alert("Blocks are reserved, but the email system is offline. Please contact support manually.");
     }
     
+    // 5. Cleanup UI
     selectedBatch = [];
     document.querySelectorAll(".block").forEach(b => b.classList.remove("multi-selected"));
     if (bulkBar) bulkBar.classList.add("hidden");
+    
+    // Refresh grid to show the new "Reserved" status
+    await loadClaimedBlocks(); 
+    renderPage(currentPage);
+
   } catch (err) {
-    console.error("Bulk email error:", err);
-    alert("❌ Could not send quote request. Please check your internet connection.");
+    console.error("Bulk process error:", err);
+    alert("❌ Something went wrong. Please check your internet connection.");
   } finally {
     if (bulkReserveBtn) { 
         bulkReserveBtn.textContent = originalText; 
@@ -492,7 +544,7 @@ const renderPage = (pageNum) => {
 
     const cachedData = blockCache[i]; 
 
-        // 🛡️ RESERVATION VISUALS
+    // 🛡️ RESERVATION VISUALS
     if (reservedBlocks.includes(i)) {
       const reservedBy = cachedData?.reservedBy || null;
       const savedEmail = localStorage.getItem("userEmail");
@@ -500,13 +552,12 @@ const renderPage = (pageNum) => {
 
       if (userEmail && reservedBy === userEmail) {
         div.classList.add("reserved-owner");
-        div.textContent = `(Mine)`; // 🤏 Short and sweet
+        div.textContent = `(Mine)`; 
       } else {
         div.classList.add("reserved");
-        div.textContent = `(R)`; // 🤏 Standard marker
+        div.textContent = `(R)`; 
       }
     }
-
 
     if (claimed.includes(i)) {
       div.classList.add("claimed");
@@ -583,16 +634,17 @@ const renderPage = (pageNum) => {
         return;
       }
 
-     // ✅ PASTE THIS INSTEAD:
-let freshData = blockCache[i]; // 1. Check local storage first
+      // Check local storage first, then DB
+      let freshData = blockCache[i]; 
 
-if (!freshData) {
-    // 2. Only ask Firebase if we really don't know
-    console.log("Cache miss! Fetching from DB..."); 
-    const docRef = doc(db, "blocks", String(i));
-    const snap = await getDoc(docRef);
-    freshData = snap.exists() ? snap.data() : null;
-}
+      if (!freshData) {
+        // Only ask Firebase if we really don't know
+        console.log("Cache miss! Fetching from DB..."); 
+        const docRef = doc(db, "blocks", String(i));
+        const snap = await getDoc(docRef);
+        freshData = snap.exists() ? snap.data() : null;
+      }
+
       const currentUser = auth.currentUser;
       const isOwner = currentUser && freshData && freshData.ownerId === currentUser.uid && freshData.status === "paid";
                 
@@ -682,36 +734,36 @@ if (!freshData) {
            return;
       }
 
-      // ✅ REPLACE WITH THIS:
-if (freshData && freshData.reserved === true) {
-  
-  // 🕒 1. THE ZOMBIE CHECK
-  const now = Date.now();
-  const reservedTime = freshData.reservedAt ? freshData.reservedAt.toMillis() : 0;
-  const timeLimit = 30 * 60 * 1000; // 30 Minutes
-  
-  // If time is up, we IGNORE the reservation and let the user buy it.
-  if (now - reservedTime < timeLimit) {
-      
-      // 🔒 2. It is genuinely reserved. Run the ownership check.
-      const reservedBy = freshData.reservedBy || null;
-      const userEmail = loggedInUserEmail || emailInput?.value?.trim() || localStorage.getItem("userEmail");
-      
-      if (!userEmail || !reservedBy || userEmail.toLowerCase() !== reservedBy.toLowerCase()) {
-        if (selectedText) selectedText.textContent = `Block #${i} (Reserved)`;
-        if (lockedMsg) {
-            lockedMsg.textContent = "This block is currently reserved."; 
-            lockedMsg.classList.remove("hidden");
+      // === RESERVATION CHECK ===
+      if (freshData && freshData.reserved === true) {
+        
+        // 🕒 1. THE ZOMBIE CHECK (Time validation)
+        const now = Date.now();
+        const reservedTime = freshData.reservedAt ? freshData.reservedAt.toMillis() : 0;
+        const timeLimit = 30 * 60 * 1000; // 30 Minutes
+        
+        // If time is up, we IGNORE the reservation and let the user buy it.
+        if (now - reservedTime < timeLimit) {
+            
+            // 🔒 2. It is genuinely reserved. Run the ownership check.
+            const reservedBy = freshData.reservedBy || null;
+            const userEmail = loggedInUserEmail || emailInput?.value?.trim() || localStorage.getItem("userEmail");
+            
+            if (!userEmail || !reservedBy || userEmail.toLowerCase() !== reservedBy.toLowerCase()) {
+              if (selectedText) selectedText.textContent = `Block #${i} (Reserved)`;
+              if (lockedMsg) {
+                  lockedMsg.textContent = "This block is currently reserved."; 
+                  lockedMsg.classList.remove("hidden");
+              }
+              if (saveBtn) saveBtn.style.display = "none";
+              modal.classList.remove("hidden"); 
+              return; // STOP HERE
+            }
         }
-        if (saveBtn) saveBtn.style.display = "none";
-        modal.classList.remove("hidden"); 
-        return; // STOP HERE
+        // If we get here, the time is up! We fall through to the "Buy" logic below.
       }
-  }
-  // If we get here, the time is up! We fall through to the "Buy" logic below. 👇
-}
 
-     // === SCENARIO D: AVAILABLE (Buy Mode) ===
+     // === AVAILABLE (Buy Mode) ===
       document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
       div.classList.add("selected");
       hiddenBlockNumber.value = i;
@@ -724,7 +776,7 @@ if (freshData && freshData.reserved === true) {
 
       if (cInput) { cInput.disabled = false; cInput.value = ""; }
       if (cMsg) cMsg.textContent = "";
-      if (cBtn) { cBtn.disabled = false; cBtn.textContent = "Apply"; } // Set to your button's default text
+      if (cBtn) { cBtn.disabled = false; cBtn.textContent = "Apply"; } 
       if (pLink) pLink.href = `https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE?block=${i}`;
       
       // 🏆 THE GENESIS BANNER 
@@ -807,7 +859,6 @@ async function handleKeeperUpdate(blockId) {
       const uniqueName = `${Date.now()}_${file.name}`; 
       const fileRef = ref(storage, `blocks/${blockId}/${uniqueName}`);
       const metadata = { cacheControl: 'public,max-age=31536000', contentType: file.type };
-     // 👇 UPDATE THIS LINE TO INCLUDE METADATA
       await uploadBytes(fileRef, file, metadata);
       const mediaUrl = await getDownloadURL(fileRef);
       updateData.mediaUrl = mediaUrl;
@@ -1155,7 +1206,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const originalText = applyBtn.textContent;
         applyBtn.textContent = "⏳";
         couponMsg.textContent = "";
-try {
+        try {
             const q = query(collection(db, "coupons"), where("code", "==", code));
             const snapshot = await getDocs(q);
 
