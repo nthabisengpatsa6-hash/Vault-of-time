@@ -149,6 +149,8 @@ let loginGeneratedCode = null;
 // ================= AUTH WATCHER =================
 onAuthStateChanged(auth, async (user) => {
   if (user) {
+    // 👇 NEW: Run the PayPal check here! Now we know 'user' exists.
+    await handlePaypalReturn();
     if (user.isAnonymous) {
       console.log("Guest mode active:", user.uid);
     } else {
@@ -1252,7 +1254,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.addEventListener("click", (e) => { if (!e.target.closest(".reserve-wrapper")) tooltip.classList.remove("show"); });
   }
 
-  await handlePaypalReturn();
+ 
   await loadClaimedBlocks();
   renderPage(currentPage);
   hideLoader();
