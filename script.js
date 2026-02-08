@@ -149,8 +149,8 @@ let loginGeneratedCode = null;
 // ================= AUTH WATCHER =================
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    // 👇 NEW: Run the PayPal check here! Now we know 'user' exists.
-    await handlePaypalReturn();
+   // 👇 PASS THE USER OBJECT HERE
+    await handlePaypalReturn(user);
     if (user.isAnonymous) {
       console.log("Guest mode active:", user.uid);
     } else {
@@ -939,42 +939,73 @@ function updateKeeper(pageNum) {
     keeperText.innerText = content;
   }
 }
-
-const handlePaypalReturn = async () => {
+const handlePaypalReturn = async (user) => {
   const params = new URLSearchParams(window.location.search);
   
   // 1. Check if we are actually returning from PayPal
-  if (params.get("paid") !== "true") return;
+  // We check for 'paid=true' OR standard PayPal transaction flags like 'tx'
+  if (params.get("paid") !== "true" && !params.get("tx")) return;
 
   console.log("PayPal return detected. Verifying...");
 
-  // 2. Try to find the block ID from URL (best) or LocalStorage (backup)
+  // 2. Try to find the block ID
   let pendingBlockId = params.get("block");
-  if (!pendingBlockId) {
+  
+  // Method A: Check URL (Best)
+  if (pendingBlockId) {
+      console.log("Found ID in URL:", pendingBlockId);
+  } 
+  
+  // Method B: Check LocalStorage (Backup)
+  else {
       pendingBlockId = localStorage.getItem("pendingBlockId");
+      if (pendingBlockId) console.log("Found ID in Storage:", pendingBlockId);
   }
 
+  // Method C: THE SAFETY NET (Database Search)
+  // If A and B fail, we ask Firebase: "What is pending for this user?"
+  if (!pendingBlockId && user) {
+      console.log("ID lost. Searching DB for pending blocks...");
+      try {
+          const q = query(
+              collection(db, "blocks"), 
+              where("ownerId", "==", user.uid),
+              where("status", "==", "pending")
+          );
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+              // Grab the first pending block we find
+              pendingBlockId = snap.docs[0].id;
+              console.log("Recovered ID from DB:", pendingBlockId);
+          }
+      } catch (err) {
+          console.error("Safety net failed:", err);
+      }
+  }
+
+  // If we STILL don't have an ID, we have to give up.
   if (!pendingBlockId) {
-      console.warn("No pending block ID found in URL or Storage.");
+      console.warn("Critical: Payment detected but Block ID is missing.");
+      alert("Payment received! 🎉\n\nHowever, we lost track of which block it was (browser privacy settings). Please go to 'Owner Login' -> Your Block -> Finish Payment to sync it manually.");
       return;
   }
 
+  // 3. The Update
   try {
-    const blockRef = doc(blocksCollection, pendingBlockId);
+    const blockRef = doc(db, "blocks", pendingBlockId);
     
-    // Double check it isn't already paid to avoid overwriting timestamps
+    // Double check it isn't already paid
     const snap = await getDoc(blockRef);
     if (snap.exists() && snap.data().status === "paid") {
         console.log("Block already marked paid.");
+        alert("Welcome back! Your block is already active and paid for. 🎉");
     } else {
         await updateDoc(blockRef, { status: "paid", purchasedAt: serverTimestamp() });
         console.log("✅ Block status updated to PAID via return handler.");
+        alert("Payment Success! 🎉 Your legacy is sealed.");
     }
 
     localStorage.removeItem("pendingBlockId");
-    
-    // Show the success message
-    alert("Payment received! 🎉 Your block is live.\n\nSince you have already uploaded your content, it is now visible on the grid.");
     
     // Clean the URL so if they refresh, it doesn't trigger again
     window.history.replaceState({}, document.title, "/index.html");
@@ -985,7 +1016,7 @@ const handlePaypalReturn = async () => {
 
   } catch (err) {
     console.error("Error finalizing PayPal:", err);
-    alert("Payment detected, but the Vault is struggling to verify the block. Please contact support or check your 'Owner Login'.");
+    alert("Payment detected, but the Vault is struggling to verify the block. Please contact support.");
   }
 };
 
