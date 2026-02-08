@@ -228,6 +228,7 @@ async function loadClaimedBlocks() {
     blockCache = {};
     
     const now = Date.now();
+    const TIME_LIMIT = 30 * 60 * 1000; // 30 Minutes
 
     snap.docs.forEach(d => {
       const idNum = Number(d.id);
@@ -236,26 +237,26 @@ async function loadClaimedBlocks() {
 
       blockCache[idNum] = data;
 
-      // 🏛️ THE SMART FILTER (Updated)
+      // 1. If it's PAID, it's definitely claimed.
       if (data.status === "paid") {
         claimed.push(idNum);
       } 
-      // 👇 NEW: Catch "Pending" uploads so they don't vanish!
-      else if (data.status === "pending" || (data.reserved === true && data.reservedAt)) {
+      // 2. If it's PENDING or RESERVED, we check the clock.
+      else if (data.status === "pending" || data.reserved === true) {
         
-        // If it's a timer reservation, check if time is up
-        if (data.reserved === true && data.reservedAt) {
-            const reservedTime = data.reservedAt.toMillis();
-            let timeLimit = 30 * 60 * 1000; 
-            if (now - reservedTime < timeLimit) {
-                reservedBlocks.push(idNum);
-            } else if (data.status === "pending") {
-                // If timer expired BUT they uploaded content (status: pending), keep it reserved!
-                reservedBlocks.push(idNum); 
-            }
+        const reservedTime = data.reservedAt ? data.reservedAt.toMillis() : 0;
+        
+        // ⏳ THE EXPIRATION CHECK
+        if (now - reservedTime < TIME_LIMIT) {
+             // Time is NOT up yet. Keep it safe/gray.
+             reservedBlocks.push(idNum);
         } else {
-            // It's just pending (uploaded content, waiting for payment), so keep it safe.
-            reservedBlocks.push(idNum);
+             // Time IS up. 
+             // We do NOT push it to reservedBlocks.
+             // This makes it render as "Available" on the grid so others can buy it.
+             // (If the original Owner clicks it, they will still see "Finish Payment" 
+             // because the data is still in the DB, which is a nice bonus feature).
+             console.log(`💀 Block #${idNum} has expired. Releasing to public.`);
         }
       }
     });
