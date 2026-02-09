@@ -134,49 +134,43 @@
             alert("✅ Blocks updated!");
         };
 
-        // 🚮 NEW: SCRUB & RELEASE FUNCTION
+      // 🚮 SCRUB & RELEASE (Mark as Available)
         document.getElementById('availableBtn').onclick = async () => {
             const input = document.getElementById('blockIds').value;
-            // Split and clean input
+            // 1. Clean the input
             const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
             
             if (blockArray.length === 0) {
                 return alert("⚠️ Please enter Block IDs to scrub.");
             }
 
-            if (!confirm(`⚠️ WARNING: SCRUBBING ${blockArray.length} BLOCKS.\n\nThis will wipe all data and make them 'Available' for purchase again.\n\nProceed?`)) {
+            if (!confirm(`⚠️ NUCLEAR OPTION: DELETE ${blockArray.length} BLOCKS?\n\nThis will completely remove them from the database.\nThey will reset to 'Factory Settings' (Available).`)) {
                 return;
             }
 
             const batch = writeBatch(db);
 
             blockArray.forEach((id) => {
+                // 2. THE NUCLEAR FIX: Delete the document entirely.
+                // Instead of updating status to 'available', we just remove the block.
+                // If it doesn't exist, the Main Grid treats it as free.
                 const blockRef = doc(db, "blocks", id);
-                // Wipe the slate clean
-                batch.update(blockRef, { 
-                    status: "available", 
-                    reserved: false,
-                    reservedBy: null,
-                    reservedAt: null,
-                    ownerId: null,
-                    message: null,
-                    mediaUrl: null,
-                    mediaType: null,
-                    purchasedAt: null,
-                    isBulk: null 
-                });
+                batch.delete(blockRef);
+                
+                // 3. Delete the Claim record too (if it exists)
+                const claimRef = doc(db, "claims", id);
+                batch.delete(claimRef);
             });
 
             try {
                 await batch.commit();
-                alert(`✅ Successfully scrubbed ${blockArray.length} blocks.\nThey are now free.`);
-                document.getElementById('blockIds').value = ""; // Clear the box
+                alert(`✅ Successfully DELETED ${blockArray.length} blocks.\n\n👉 IMPORTANT: Refresh your Main Grid page to see the changes.`);
+                document.getElementById('blockIds').value = ""; 
             } catch (err) {
                 console.error("Scrub failed:", err);
                 alert("❌ Error scrubbing blocks: " + err.message);
             }
         };
-
         document.getElementById('batchBanBtn').onclick = async () => {
             const emails = document.getElementById('banEmails').value.split(',').map(e => e.trim().toLowerCase()).filter(e => e !== "");
             if (emails.length === 0) return alert("Emails required!");
