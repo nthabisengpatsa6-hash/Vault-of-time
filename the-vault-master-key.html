@@ -25,7 +25,8 @@
     <div class="admin-box" id="login-section">
         <h3>Identify Yourself</h3>
         <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password"><br><br>
+        <input type="password" id="password" placeholder="Password">
+        <br><br>
         <button id="loginBtn">Login to the Vault</button>
     </div>
 
@@ -39,6 +40,7 @@
         <input type="email" id="buyerEmail" placeholder="client@gmail.com" style="width: 100%; box-sizing: border-box; border-color: #D4AF37;">
 
         <br><br>
+
         <button id="batchUpdateBtn">Mark as PAID & Assign Email</button>
         
         <hr>
@@ -46,6 +48,7 @@
         <button id="wfcUpdateBtn" style="background: #6a0dad; color: white; margin-right: 10px;">
             Purple Rain: Mark as WFC Available
         </button>
+        
         <button id="availableBtn" style="background: #30363d; color: white;">
             🚮 Scrub & Release (Mark as Available)
         </button>
@@ -129,6 +132,49 @@
             });
             await batch.commit();
             alert("✅ Blocks updated!");
+        };
+
+        // 🚮 NEW: SCRUB & RELEASE FUNCTION
+        document.getElementById('availableBtn').onclick = async () => {
+            const input = document.getElementById('blockIds').value;
+            // Split and clean input
+            const blockArray = input.split(',').map(id => id.trim()).filter(id => id !== "");
+            
+            if (blockArray.length === 0) {
+                return alert("⚠️ Please enter Block IDs to scrub.");
+            }
+
+            if (!confirm(`⚠️ WARNING: SCRUBBING ${blockArray.length} BLOCKS.\n\nThis will wipe all data and make them 'Available' for purchase again.\n\nProceed?`)) {
+                return;
+            }
+
+            const batch = writeBatch(db);
+
+            blockArray.forEach((id) => {
+                const blockRef = doc(db, "blocks", id);
+                // Wipe the slate clean
+                batch.update(blockRef, { 
+                    status: "available", 
+                    reserved: false,
+                    reservedBy: null,
+                    reservedAt: null,
+                    ownerId: null,
+                    message: null,
+                    mediaUrl: null,
+                    mediaType: null,
+                    purchasedAt: null,
+                    isBulk: null 
+                });
+            });
+
+            try {
+                await batch.commit();
+                alert(`✅ Successfully scrubbed ${blockArray.length} blocks.\nThey are now free.`);
+                document.getElementById('blockIds').value = ""; // Clear the box
+            } catch (err) {
+                console.error("Scrub failed:", err);
+                alert("❌ Error scrubbing blocks: " + err.message);
+            }
         };
 
         document.getElementById('batchBanBtn').onclick = async () => {
