@@ -1190,12 +1190,26 @@ html, body {
   }
 }
 
+/* Refined Genesis Blocks: Premium Gold, Less Noise */
 .genesis-gold {
-    background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c) !important;
-    color: black !important;
-    border: 1px solid #D4AF37;
+    background: radial-gradient(circle, #fcf6ba 0%, #bf953f 100%) !important;
+    color: #5d4037 !important; /* Darker brown-gold for better contrast */
+    border: 0.5px solid rgba(255, 255, 255, 0.3);
     font-weight: bold;
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+    box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.5);
+    animation: goldGlow 3s ease-in-out infinite alternate;
+}
+
+/* A soft pulse to attract the eye to Page 1 */
+@keyframes goldGlow {
+    from { filter: brightness(1); }
+    to { filter: brightness(1.2) drop-shadow(0 0 5px rgba(212, 175, 55, 0.6)); }
+}
+
+/* Make the trophy icon pop */
+.genesis-gold::first-letter {
+    font-size: 1.1rem;
+    filter: drop-shadow(1px 1px 0px rgba(0,0,0,0.2));
 }
 
 /* 📏 Prevents the grid from "breaking" when text is present */
@@ -1214,4 +1228,28 @@ html, body {
     background-color: #4CAF50 !important; /* Green signals it's yours */
     color: white !important;
     border: 1px solid #FFF;
+}
+
+#discount-banner {
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid #d4af37;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px auto 20px;
+    max-width: 960px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #fcf6ba;
+    font-size: 0.95rem;
+}
+
+#discount-banner strong {
+    color: #fff;
+    text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+.banner-icon {
+    font-size: 1.5rem;
 }
