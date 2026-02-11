@@ -302,14 +302,17 @@ const valid = () => {
 
 const handleSave = async () => {
   if (!valid()) return;
+
   const blockId = hiddenBlockNumber.value;
   const user = auth.currentUser;
+
   if (!user) {
     alert("System initializing... please wait 2 seconds and try again.");
     return;
   }
 
- // --- 🪄 THE "SEALING" UPGRADE START ---
+  // 1. THE SETUP
+  let sealingInterval; // We declare this here so the 'finally' block can see it
   const sealingMessages = [
     "Sealing...",
     "Etching Coordinates...",
@@ -321,13 +324,12 @@ const handleSave = async () => {
   
   const originalText = saveBtn.textContent;
   saveBtn.disabled = true; 
-  
-  // Start the cycling text
-  const messageInterval = setInterval(() => {
+
+  // 2. START THE RITUAL (The cycling messages)
+  sealingInterval = setInterval(() => {
     saveBtn.textContent = sealingMessages[msgIndex];
     msgIndex = (msgIndex + 1) % sealingMessages.length;
-  }, 800); 
-  // --- 🪄 END UPGRADE ---
+  }, 800);
 
   try {
     const file = fileInput.files[0];
@@ -337,9 +339,12 @@ const handleSave = async () => {
     
     // Add caching metadata
     const metadata = { cacheControl: 'public,max-age=31536000', contentType: file.type };
+    
+    // UPLOAD TO STORAGE
     await uploadBytes(fileRef, file, metadata);
     const mediaUrl = await getDownloadURL(fileRef);
 
+    // SAVE TO FIRESTORE
     await setDoc(doc(db, "blocks", blockId), {
       blockNumber: Number(blockId),
       message: messageInput.value,
@@ -355,6 +360,7 @@ const handleSave = async () => {
       purchasedAt: serverTimestamp()
     });
 
+    // 3. SUCCESS UI
     if (readyMsg) readyMsg.classList.remove("hidden");
     if (paymentButtons) {
         paymentButtons.classList.remove("hidden");
@@ -365,12 +371,24 @@ const handleSave = async () => {
             payLink.href = `https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE?block=${blockId}`;
         }
     }
+
+    // Change the button text to show we are officially DONE
+    saveBtn.textContent = "✅ Legacy Anchored";
+    saveBtn.style.backgroundColor = "#4CAF50"; // Turn it green for that win feeling
+
   } catch (err) {
     console.error("Vault save failed:", err);
     alert("The Vault encountered an error. Please try again.");
-  } finally {
-    saveBtn.disabled = false;
     saveBtn.textContent = originalText;
+    saveBtn.disabled = false;
+  } finally {
+    // 4. THE KILL SWITCH
+    // This stops the messages from cycling once the 'try' block finishes
+    clearInterval(sealingInterval);
+    
+    // Keep the button disabled so they don't click it again 
+    // and focus on the "Complete Payment" button instead.
+    saveBtn.disabled = true; 
   }
 };
 
