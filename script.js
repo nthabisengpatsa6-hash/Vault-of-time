@@ -309,9 +309,25 @@ const handleSave = async () => {
     return;
   }
 
+ // --- 🪄 THE "SEALING" UPGRADE START ---
+  const sealingMessages = [
+    "Sealing...",
+    "Etching Coordinates...",
+    "Consulting the Keeper...",
+    "Anchoring your Legacy...",
+    "Securing the Vault..."
+  ];
+  let msgIndex = 0;
+  
   const originalText = saveBtn.textContent;
   saveBtn.disabled = true; 
-  saveBtn.textContent = "Sealing...";
+  
+  // Start the cycling text
+  const messageInterval = setInterval(() => {
+    saveBtn.textContent = sealingMessages[msgIndex];
+    msgIndex = (msgIndex + 1) % sealingMessages.length;
+  }, 800); 
+  // --- 🪄 END UPGRADE ---
 
   try {
     const file = fileInput.files[0];
@@ -517,6 +533,15 @@ const searchBlock = () => {
 };
 
 const renderPage = (pageNum) => {
+  // --- ADD THIS LOGIC ---
+  const discountBanner = document.getElementById("discount-banner");
+  if (discountBanner) {
+      if (pageNum === 1) {
+          discountBanner.classList.remove("hidden");
+      } else {
+          discountBanner.classList.add("hidden");
+      }
+  }
   if (!grid) return;
   grid.innerHTML = "";
   const start = (pageNum - 1) * PAGE_SIZE + 1;
