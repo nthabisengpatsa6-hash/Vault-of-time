@@ -227,10 +227,15 @@ body {
   background: #0d1117;
   border-right: 1px solid var(--gold);
   padding: 40px;
+  padding-bottom: 100px; /* Extra space at bottom for scrolling */
   z-index: 9998;
   transform: translateX(-100%);
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+  
+  /* THE SCROLL FIX 👇 */
+  overflow-y: auto; 
+  overflow-x: hidden;
 }
 
 .side-menu.open {
@@ -382,4 +387,22 @@ a.menu-styled-link {
 a.menu-styled-link:hover {
     color: #D4AF37; /* Gold on hover */
     border-bottom-color: #D4AF37;
+}
+
+/* ================= CUSTOM SCROLLBAR (MENU) ================= */
+.side-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.side-menu::-webkit-scrollbar-track {
+    background: #0d1117; 
+}
+
+.side-menu::-webkit-scrollbar-thumb {
+    background: #333; 
+    border-radius: 3px;
+}
+
+.side-menu::-webkit-scrollbar-thumb:hover {
+    background: #D4AF37; /* Turns Gold when you grab it */
 }
