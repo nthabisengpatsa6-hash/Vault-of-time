@@ -228,3 +228,73 @@ input:focus {
   text-transform: uppercase;
   font-size: 0.8rem;
 }
+
+/* The Container */
+#vault-loader {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #000;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.6s ease;
+}
+
+/* The Spinner Wrapper */
+.vault-spinner-box {
+    width: 120px;
+    height: 120px;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+/* Outer Ring */
+.vault-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 4px solid transparent;
+    border-top-color: #D4AF37; /* Gold */
+    animation: spin 2s linear infinite;
+}
+
+/* Inner Ring (Counter-rotating) */
+.vault-ring:before {
+    content: "";
+    position: absolute;
+    top: 10px; left: 10px; right: 10px; bottom: 10px;
+    border-radius: 50%;
+    border: 4px solid transparent;
+    border-top-color: #ffffff;
+    animation: spin-reverse 3s linear infinite;
+}
+
+/* The Core (Blinking Dot) */
+.vault-core {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px; height: 10px;
+    background: #D4AF37;
+    border-radius: 50%;
+    box-shadow: 0 0 15px #D4AF37;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+.vault-loader-text {
+    font-family: 'Courier New', monospace;
+    color: #D4AF37;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 1; /* Keep visible, we change text content */
+    transition: opacity 0.3s ease;
+}
+
+/* Animations */
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes spin-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+@keyframes pulse { 0%, 100% { opacity: 0.5; scale: 0.8; } 50% { opacity: 1; scale: 1.2; } }
