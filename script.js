@@ -1,3 +1,4 @@
+
 // ================= FIREBASE IMPORTS =================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { 
@@ -33,14 +34,16 @@ function performHandshake() {
   if (!loader) return;
 
   // 1. Inject the fancy HTML structure dynamically
-  // This means you don't have to change your index.html
-  loader.innerHTML = `
-    <div class="vault-spinner-box">
-        <div class="vault-ring"></div>
-        <div class="vault-core"></div>
-    </div>
-    <div class="vault-loader-text">INITIALIZING PROTOCOL...</div>
-  `;
+  // This ensures the loader looks right even if HTML is old
+  if (!loader.querySelector(".vault-spinner-box")) {
+      loader.innerHTML = `
+        <div class="vault-spinner-box">
+            <div class="vault-ring"></div>
+            <div class="vault-core"></div>
+        </div>
+        <div class="vault-loader-text">INITIALIZING PROTOCOL...</div>
+      `;
+  }
 
   const loaderText = loader.querySelector(".vault-loader-text");
   const messages = [
@@ -307,6 +310,44 @@ async function verifyAccessKey() {
     }
 }
 
+// ================= ACCORDION MENU LOGIC (NEW) =================
+function initAccordion() {
+    const headers = document.querySelectorAll(".accordion-header");
+    
+    headers.forEach(header => {
+        // We clone to remove any old listeners if this runs twice
+        const newHeader = header.cloneNode(true);
+        header.parentNode.replaceChild(newHeader, header);
+        
+        newHeader.onclick = function() {
+            // Toggle active class on header for color change
+            this.classList.toggle("active");
+
+            // Find the content div (it's the next sibling in your HTML)
+            const content = this.nextElementSibling;
+            
+            // Safety check: make sure there is content below (Login button has none)
+            if (content && content.classList.contains("accordion-content")) {
+                if (content.style.maxHeight) {
+                    // CLOSE IT
+                    content.style.maxHeight = null;
+                    content.style.opacity = 0;
+                    content.classList.remove("open");
+                } else {
+                    // OPEN IT
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    content.style.opacity = 1;
+                    content.classList.add("open");
+                }
+            } else if (this.id === "menuLoginBtn") {
+                // Special case for Login Button
+                document.getElementById("loginModal").classList.remove("hidden");
+            }
+        };
+    });
+}
+
+
 // ================= INITIALIZATION =================
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Check Session immediately
@@ -319,7 +360,10 @@ document.addEventListener("DOMContentLoaded", () => {
   loadVault();
   performHandshake();
 
-  // 4. Close Events
+  // 4. Initialize Accordion Menu
+  initAccordion();
+
+  // 5. Close Events
   const modal = document.getElementById("modal");
   const viewModal = document.getElementById("viewModal");
   const loginModal = document.getElementById("loginModal");
@@ -333,44 +377,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeLogin = document.querySelector(".close-login");
   if (closeLogin) closeLogin.onclick = () => loginModal.classList.add("hidden");
 
-  // 5. Action Buttons
+  // 6. Action Buttons
   const uploadBtn = document.getElementById("uploadBtn");
   if (uploadBtn) uploadBtn.onclick = handleInquiry;
 
   const loginSendBtn = document.getElementById("loginSendBtn");
   if (loginSendBtn) loginSendBtn.onclick = verifyAccessKey;
 
-// ================= ACCORDION LOGIC =================
-function initAccordion() {
-    const headers = document.querySelectorAll(".accordion-header");
-    
-    headers.forEach(header => {
-        // Remove old listeners to be safe (cloning node is a quick hack, but loop is fine here)
-        header.onclick = function() {
-            // 1. Toggle the visual state of the header
-            this.classList.toggle("active");
-
-            // 2. Find the content div (it's the next sibling in your HTML)
-            const content = this.nextElementSibling;
-            
-            // 3. Safety check: make sure there is actually content below (The login button has none)
-            if (content && content.classList.contains("accordion-content")) {
-                if (content.style.maxHeight) {
-                    // CLOSE IT
-                    content.style.maxHeight = null;
-                    content.classList.remove("open");
-                } else {
-                    // OPEN IT
-                    // We calculate the exact height so the animation is smooth
-                    content.style.maxHeight = content.scrollHeight + "px";
-                    content.classList.add("open");
-                }
-            }
-        };
-    });
-}
-  
-  // 6. Side Menu
+  // 7. Side Menu
   document.getElementById("menuToggle").onclick = () => document.getElementById("sideMenu").classList.add("open");
   document.getElementById("closeMenu").onclick = () => document.getElementById("sideMenu").classList.remove("open");
 });
