@@ -5,34 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VAULT OF TIME | The Genesis 50</title>
   
-  <link rel="stylesheet" href="style.css?v=6.0" /> 
+  <link rel="stylesheet" href="style.css?v=7.0" /> 
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
-  
-  <style>
-    /* EXTRA STYLES FOR THE NEW HEADER (Built-in so you don't lose them) */
-    .brand-header-main {
-        position: fixed;
-        top: 30px;
-        left: 80px; /* Right next to the hamburger menu */
-        font-family: 'Playfair Display', serif;
-        font-size: 1.2rem;
-        color: #D4AF37; /* Gold */
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        z-index: 8000;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-        pointer-events: none; /* Let clicks pass through */
-    }
-
-    /* Mobile adjustment */
-    @media (max-width: 768px) {
-        .brand-header-main {
-            font-size: 1rem;
-            top: 35px; /* Align with hamburger */
-            left: 70px;
-        }
-    }
-  </style>
 </head>
 
 <body>
@@ -49,8 +23,6 @@
 
     <div class="menu-toggle" id="menuToggle">☰</div>
     
-    <div class="brand-header-main">VAULT OF TIME</div>
-
     <nav class="side-menu" id="sideMenu">
       <button id="closeMenu">&times;</button>
       
@@ -116,7 +88,12 @@
     </nav>
 
     <header id="vaultHeader">
-      <h1 class="vault-title">THE GENESIS 50</h1>
+      <h1 class="main-brand-title">VAULT OF TIME</h1>
+      
+      <div class="header-divider"></div>
+
+      <h2 class="sub-brand-title">THE GENESIS 50</h2>
+      
       <p id="chapterRange">Only 50 coordinates will ever be etched.</p>
     </header>
 
@@ -167,7 +144,7 @@
    (function(){ emailjs.init("O9ZTyJYVkoIrBxFdQ"); })();
 </script>
 
-<script type="module" src="script.js?v=6.0"></script>
+<script type="module" src="script.js?v=7.0"></script>
 
 </body>
 </html>
