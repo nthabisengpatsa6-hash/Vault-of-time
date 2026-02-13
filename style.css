@@ -406,3 +406,31 @@ a.menu-styled-link:hover {
 .side-menu::-webkit-scrollbar-thumb:hover {
     background: #D4AF37; /* Turns Gold when you grab it */
 }
+
+/* THE GOLDEN BLOCK PULSE */
+.block.active-bid {
+    border: 2px solid #D4AF37;
+    background: rgba(212, 175, 55, 0.05);
+    cursor: pointer;
+    animation: goldPulse 2s infinite;
+}
+
+@keyframes goldPulse {
+    0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+}
+
+.block.locked {
+    opacity: 0.2;
+    filter: grayscale(1);
+    cursor: not-allowed;
+    border: 1px dashed #333;
+}
+
+.lock-icon {
+    font-size: 0.8rem;
+    display: block;
+    margin-top: 5px;
+    opacity: 0.5;
+}
