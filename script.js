@@ -1,4 +1,3 @@
-
 // ================= FIREBASE IMPORTS =================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { 
@@ -33,8 +32,6 @@ function performHandshake() {
   const loader = document.getElementById("vault-loader");
   if (!loader) return;
 
-  // 1. Inject the fancy HTML structure dynamically
-  // This ensures the loader looks right even if HTML is old
   if (!loader.querySelector(".vault-spinner-box")) {
       loader.innerHTML = `
         <div class="vault-spinner-box">
@@ -54,14 +51,12 @@ function performHandshake() {
   ];
 
   let i = 0;
-  
-  // 2. Cycle through messages with a glitch effect
   const interval = setInterval(() => {
     if (loaderText) {
-      loaderText.style.opacity = 0.2; // Dim text briefly
+      loaderText.style.opacity = 0.2;
       setTimeout(() => {
         loaderText.textContent = messages[i];
-        loaderText.style.opacity = 1; // Bring it back
+        loaderText.style.opacity = 1;
         i++;
       }, 150);
     }
@@ -93,120 +88,134 @@ function checkSession() {
     if (session) {
         try {
             const { email, expiresAt } = JSON.parse(session);
-            
-            // Check if session is still valid
             if (Date.now() < expiresAt) {
                 loggedInUserEmail = email;
-                
-                // Hide the login box if it's currently open
                 if (loginModal) loginModal.classList.add("hidden");
-
-                // Update the menu button VISUALS
                 if (loginBtn) {
-                    // Show email and a disconnect hint
                     const shortName = email.split('@')[0];
                     loginBtn.innerHTML = `👤 ${shortName.toUpperCase()} <span style="font-size: 0.7em; opacity: 0.6; margin-left: 10px;">(DISCONNECT)</span>`;
                     loginBtn.style.color = "#D4AF37";
                 }
-                console.log("Session restored for:", email);
             } else {
-                // Session expired
-                console.log("Session expired.");
                 localStorage.removeItem('vault_session');
                 loggedInUserEmail = null;
             }
         } catch (e) {
-            console.error("Session parse error", e);
             localStorage.removeItem('vault_session');
             loggedInUserEmail = null;
         }
-    } else {
-        loggedInUserEmail = null;
     }
 }
+
 // ================= THE AUCTION RATCHET =================
 async function getCurrentFloorPrice() {
   try {
-    const q = query(collection(db, "blocks"), where("status", "==", "paid"), orderBy("purchasePrice", "desc"), limit(1));
+    // Look at the public Ledger to find the most recent price
+    const q = query(collection(db, "ledger"), orderBy("blockId", "desc"), limit(1));
     const snap = await getDocs(q);
-    if (snap.empty) return 1000; 
-    const lastPrice = snap.docs[0].data().purchasePrice;
-    return Math.ceil(lastPrice * 1.1); 
+    
+    if (snap.empty) return 1000; // Base starting price
+    
+    const lastPrice = snap.docs[0].data().price;
+    return Math.ceil(lastPrice * 1.1); // Add 10% premium
   } catch (err) {
     console.error("Price fetch error:", err);
-    return 1000; // Default fallback
+    return 1000;
   }
 }
 
 // ================= CORE DATA FETCH =================
 async function loadVault() {
   try {
-      const snap = await getDocs(collection(db, "blocks"));
+      // Sync both content (blocks) and ownership (ledger)
+      const [blocksSnap, ledgerSnap] = await Promise.all([
+          getDocs(collection(db, "blocks")),
+          getDocs(collection(db, "ledger"))
+      ]);
+
       claimed = [];
       blockCache = {};
       
-      snap.forEach(d => {
-        const data = d.data();
-        blockCache[d.id] = data;
-        if (data.status === "paid") claimed.push(Number(d.id));
+      ledgerSnap.forEach(d => {
+        claimed.push(Number(d.data().blockId));
       });
+
+      blocksSnap.forEach(d => {
+        blockCache[d.id] = d.data();
+      });
+
       renderGrid();
   } catch (err) {
       console.error("Error loading vault:", err);
   }
 }
 
-// ================= GALLERY RENDERING =================
+// ================= GALLERY RENDERING (THE STATE MACHINE) =================
 async function renderGrid() {
   const grid = document.getElementById("grid");
   if (!grid) return;
   
-  grid.innerHTML = ""; // Clear current grid
+  grid.innerHTML = ""; 
   const floorPrice = await getCurrentFloorPrice();
+  let activeFound = false;
 
   for (let i = 1; i <= TOTAL_BLOCKS; i++) {
     const div = document.createElement("div");
     div.className = "block";
-    div.innerHTML = `<span class="coord-num">#${i}</span>`;
     
-    if (claimed.includes(i)) {
+    const isSold = claimed.includes(i);
+
+    if (isSold) {
+      // STATE: SOLD
       div.classList.add("claimed");
+      div.innerHTML = `<span class="coord-num">#${i}</span>`;
       const data = blockCache[i];
       if (data && data.mediaUrl && data.mediaType === "image") {
         div.style.backgroundImage = `url(${data.mediaUrl})`;
         div.style.backgroundSize = "cover";
         div.querySelector(".coord-num").style.display = "none";
       }
-    } else {
-      div.innerHTML += `<span class="price-tag">Entry: $${floorPrice}</span>`;
+      div.onclick = () => handleCoordinateClick(i, "sold");
+    } 
+    else if (!activeFound) {
+      // STATE: ACTIVE (The Golden Block)
+      div.classList.add("active-bid");
+      div.innerHTML = `
+        <span class="coord-num" style="color:#D4AF37;">#${i}</span>
+        <span class="price-tag">BID OPEN: $${floorPrice}</span>
+      `;
+      div.onclick = () => handleCoordinateClick(i, "active", floorPrice);
+      activeFound = true; 
+    } 
+    else {
+      // STATE: LOCKED
+      div.classList.add("locked");
+      div.innerHTML = `<span class="coord-num">#${i}</span><span class="lock-icon">🔒</span>`;
+      div.onclick = () => alert("This coordinate is currently locked until the previous block is etched.");
     }
-    div.onclick = () => handleCoordinateClick(i, floorPrice);
     grid.appendChild(div);
   }
 }
 
-// ================= THE INQUIRY ENGINE =================
-async function handleCoordinateClick(id, price) {
-  const data = blockCache[id];
+// ================= MODAL ROUTING =================
+async function handleCoordinateClick(id, state, price) {
   const viewModal = document.getElementById("viewModal");
   const inquiryModal = document.getElementById("modal");
   
-  if (data && data.status === "paid") {
-    // Show Museum View
+  if (state === "sold") {
+    const data = blockCache[id];
     document.getElementById("viewBlockTitle").textContent = `Coordinate #${id}`;
-    document.getElementById("viewBlockMessage").textContent = data.message || "A silent legacy.";
+    document.getElementById("viewBlockMessage").textContent = data ? data.message : "Archives sealed.";
     const mediaContainer = document.getElementById("viewBlockMedia");
     
-    // Safety check for media
-    if (data.mediaType === "image") {
+    if (data && data.mediaType === "image") {
         mediaContainer.innerHTML = `<img src="${data.mediaUrl}" style="width:100%; border-radius: 4px;">`;
     } else {
         mediaContainer.innerHTML = "";
     }
-    
     viewModal.classList.remove("hidden");
-  } else {
-    // Open the Application Modal
+  } 
+  else if (state === "active") {
     document.getElementById("blockNumber").value = id;
     document.getElementById("selected-block-text").textContent = `Coordinate #${id}: Apply to Bid`;
     inquiryModal.classList.remove("hidden");
@@ -245,13 +254,11 @@ async function handleInquiry() {
     alert("Application Logged. The Curator will review your credentials.");
     document.getElementById("modal").classList.add("hidden");
     
-    // clear form
     document.getElementById("email").value = "";
     document.getElementById("name").value = "";
     document.getElementById("message").value = "";
 
   } catch (err) {
-    console.error(err);
     alert("Vault restricted. Try again.");
   } finally {
     btn.disabled = false;
@@ -259,52 +266,31 @@ async function handleInquiry() {
   }
 }
 
-// ================= THE GENESIS KEY CHECK (FIXED) =================
+// ================= THE GENESIS KEY CHECK =================
 async function verifyAccessKey() {
     const email = document.getElementById("loginEmailInput").value.trim().toLowerCase();
     const enteredKey = document.getElementById("loginKeyInput").value.trim();
     const loginBtn = document.getElementById("loginSendBtn");
 
-    if (!email || !enteredKey) {
-        alert("Credentials required for coordinate access.");
-        return;
-    }
+    if (!email || !enteredKey) return alert("Credentials required.");
 
     loginBtn.disabled = true;
     loginBtn.textContent = "Verifying...";
 
     try {
-        const bidderRef = doc(db, "authorized_bidders", email);
-        const snap = await getDoc(bidderRef);
-
-        if (snap.exists()) {
-            const data = snap.data();
-            // Check exact key match
-            if (data.accessKey === enteredKey) {
-                
-                // 1. Set Session
-                localStorage.setItem('vault_session', JSON.stringify({ 
-                    email: email, 
-                    expiresAt: Date.now() + 21600000 // 6 hour session
-                }));
-
-                // 2. Alert User
-                alert(`✅ Access Granted. Welcome, ${data.bidderName || "Keeper"}.`);
-                
-                // 3. Update UI immediately (NO RELOAD)
-                checkSession(); 
-                
-                // 4. Close Modal
-                document.getElementById("loginModal").classList.add("hidden");
-
-            } else {
-                alert("❌ Invalid Access Key.");
-            }
+        const snap = await getDoc(doc(db, "authorized_bidders", email));
+        if (snap.exists() && snap.data().accessKey === enteredKey) {
+            localStorage.setItem('vault_session', JSON.stringify({ 
+                email: email, 
+                expiresAt: Date.now() + 21600000 
+            }));
+            alert(`✅ Access Granted. Welcome, ${snap.data().bidderName || "Keeper"}.`);
+            checkSession(); 
+            document.getElementById("loginModal").classList.add("hidden");
         } else {
-            alert("❌ Credentials not recognized.");
+            alert("❌ Invalid Credentials.");
         }
     } catch (err) {
-        console.error("Verification error:", err);
         alert("Verification restricted.");
     } finally {
         loginBtn.disabled = false;
@@ -312,93 +298,55 @@ async function verifyAccessKey() {
     }
 }
 
-// ================= ACCORDION MENU LOGIC (UPDATED) =================
+// ================= ACCORDION MENU LOGIC =================
 function initAccordion() {
     const headers = document.querySelectorAll(".accordion-header");
-    
     headers.forEach(header => {
-        // We clone to remove any old listeners if this runs twice
         const newHeader = header.cloneNode(true);
         header.parentNode.replaceChild(newHeader, header);
         
         newHeader.onclick = function() {
-            // SPECIAL CASE: The Login/Logout Button
             if (this.id === "menuLoginBtn") {
                 if (loggedInUserEmail) {
-                    // LOGOUT LOGIC: If they are already logged in...
                     if(confirm("Sever connection to the Vault?")) {
                         localStorage.removeItem('vault_session');
-                        loggedInUserEmail = null;
-                        alert("Connection Severed.");
-                        location.reload(); // Refresh to reset the page state
+                        location.reload();
                     }
-                    return; // Stop here, don't try to open the accordion
-                } else {
-                    // LOGIN LOGIC: If they are NOT logged in...
-                    document.getElementById("loginModal").classList.remove("hidden");
-                    return; // Stop here
+                    return;
                 }
+                document.getElementById("loginModal").classList.remove("hidden");
+                return;
             }
 
-            // STANDARD ACCORDION LOGIC (For all other buttons)
             this.classList.toggle("active");
             const content = this.nextElementSibling;
-            
             if (content && content.classList.contains("accordion-content")) {
                 if (content.style.maxHeight) {
-                    // CLOSE IT
                     content.style.maxHeight = null;
                     content.style.opacity = 0;
-                    content.classList.remove("open");
                 } else {
-                    // OPEN IT
                     content.style.maxHeight = content.scrollHeight + "px";
                     content.style.opacity = 1;
-                    content.classList.add("open");
                 }
             }
         };
     });
 }
 
-
 // ================= INITIALIZATION =================
 document.addEventListener("DOMContentLoaded", () => {
-  // 1. Check Session immediately
   checkSession();
-
-  // 2. Auth state (Anonymous for public view)
   onAuthStateChanged(auth, (user) => { if (!user) signInAnonymously(auth); });
-
-  // 3. Load Data & Run Loader
   loadVault();
   performHandshake();
-
-  // 4. Initialize Accordion Menu
   initAccordion();
 
-  // 5. Close Events
-  const modal = document.getElementById("modal");
-  const viewModal = document.getElementById("viewModal");
-  const loginModal = document.getElementById("loginModal");
+  document.querySelector(".close-button").onclick = () => document.getElementById("modal").classList.add("hidden");
+  document.querySelector(".close-view").onclick = () => document.getElementById("viewModal").classList.add("hidden");
+  document.querySelector(".close-login").onclick = () => document.getElementById("loginModal").classList.add("hidden");
 
-  if(document.querySelector(".close-button")) 
-      document.querySelector(".close-button").onclick = () => modal.classList.add("hidden");
-  
-  if(document.querySelector(".close-view")) 
-      document.querySelector(".close-view").onclick = () => viewModal.classList.add("hidden");
-  
-  const closeLogin = document.querySelector(".close-login");
-  if (closeLogin) closeLogin.onclick = () => loginModal.classList.add("hidden");
-
-  // 6. Action Buttons
-  const uploadBtn = document.getElementById("uploadBtn");
-  if (uploadBtn) uploadBtn.onclick = handleInquiry;
-
-  const loginSendBtn = document.getElementById("loginSendBtn");
-  if (loginSendBtn) loginSendBtn.onclick = verifyAccessKey;
-
-  // 7. Side Menu
+  document.getElementById("uploadBtn").onclick = handleInquiry;
+  document.getElementById("loginSendBtn").onclick = verifyAccessKey;
   document.getElementById("menuToggle").onclick = () => document.getElementById("sideMenu").classList.add("open");
   document.getElementById("closeMenu").onclick = () => document.getElementById("sideMenu").classList.remove("open");
 });
