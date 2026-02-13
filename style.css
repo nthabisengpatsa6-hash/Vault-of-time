@@ -327,3 +327,66 @@ input:focus {
 .close-view:hover {
     color: #D4AF37; /* Gold hover */
 }
+
+/* ================= THE LEDGER (SIDE MENU) FIXED ================= */
+
+/* 1. Reset the "Ugly Box" Buttons */
+button.accordion-header {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #333; /* Only a bottom line */
+    color: #fff;
+    width: 100%;
+    text-align: left;
+    padding: 15px 0;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    outline: none;
+    transition: color 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+button.accordion-header:hover {
+    color: #D4AF37; /* Gold hover */
+    border-bottom-color: #D4AF37;
+}
+
+/* 2. The Close Button (Make it invisible but clickable) */
+#closeMenu {
+    background: transparent;
+    border: none;
+    color: #D4AF37;
+    font-size: 30px;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+}
+
+/* 3. The Content (Hidden by default) */
+.accordion-content {
+    max-height: 0; /* Collapsed */
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+    padding-left: 10px;
+    border-left: 1px solid #333; /* Subtle indentation line */
+}
+
+/* 4. The Active State (When open) */
+.accordion-content.open {
+    opacity: 1;
+    /* max-height will be set by JS */
+    padding-top: 15px;
+    padding-bottom: 20px;
+}
+
+.accordion-content p {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: 10px;
+}
