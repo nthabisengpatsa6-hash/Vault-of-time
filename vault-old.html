@@ -4,31 +4,17 @@
   <meta name="google-site-verification" content="cBJIyHcCjUYcazeEUg6iPLwaYVSgukisa6i8_fB3xbQ" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vault of Time</title>
- <meta name="title" content="The Vault of Time">
-<meta name="description" content="A digital monument built for memory. What will you leave behind?">
+  <title>THE GENESIS 50 | Vault of Time</title>
+  <meta name="description" content="A private digital archive of 50 sovereign coordinates. Fixed in time.">
 
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://vaultoftime.com/">
-<meta property="og:title" content="The Vault of Time">
-<meta property="og:description" content="A digital monument built for memory. What will you leave behind?">
-<meta property="og:image" content="https://vaultoftime.com/preview-v2.jpg">
-
-<meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:url" content="https://vaultoftime.com/">
-<meta property="twitter:title" content="The Vault of Time">
-<meta property="twitter:description" content="A digital monument built for memory. What will you leave behind?">
-<meta property="twitter:image" content="https://vaultoftime.com/preview-v2.jpg">
+  <meta property="og:title" content="THE GENESIS 50">
+  <meta property="og:description" content="Only 50 seats at the table of eternity.">
+  <meta property="og:image" content="https://vaultoftime.com/preview-v2.jpg">
   
-<meta name="theme-color" content="#0d1117">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+  <meta name="theme-color" content="#0d1117">
   <link rel="icon" type="image/svg+xml" href="vault-assets/favicon.svg" />
-
-  <link rel="stylesheet" href="style.css?v=2.0" />
-
+  <link rel="stylesheet" href="style.css?v=3.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -37,325 +23,110 @@
   <div class="vault-loader-inner">
     <div class="vault-ring"></div>
     <div class="vault-v">V</div>
-    <p class="vault-loader-text">Opening the Vault...</p>
+    <p class="vault-loader-text">Securing the Genesis 50...</p>
   </div>
 </div>
 
 <div id="vault-main-content">
 
-<div id="rules-banner" style="display:none;
-  width:100%;
-  background:#2d1f07;
-  border-bottom:2px solid #d4af37;
-  color:#f1d58a;
-  padding:12px;
-  text-align:center;
-  font-size:14px;
-  line-height:1.4;
-  position:fixed;
-  top:0;
-  left:0;
-  z-index:5000;">
-  Before buying a block, please read <strong>“How to Buy”</strong> and <strong>“Vault Rules”</strong> in the menu.
-  <br>
-  <button id="acknowledgeBtn" style="margin-top:6px;padding:6px 18px;border:none;border-radius:4px;background:#d4af37;color:#000;font-weight:bold;cursor:pointer;">
-    I Understand
-  </button>
-</div>
 <div class="menu-toggle" id="menuToggle">☰</div>
 <div class="overlay" id="overlay"></div>
 
 <nav class="side-menu" id="sideMenu">
   <button id="closeMenu">&times;</button>
-  <h2>Vault Menu</h2>
+  <h2>THE LEDGER</h2>
   
   <div class="accordion">
     
     <div class="accordion-item">
       <button id="menuLoginBtn" class="accordion-header" style="color: #D4AF37; font-weight: bold; border-bottom: 1px solid #D4AF37;">
-        🔑 Owner Login
+        Owner Verification
       </button>
     </div>
 
     <div class="accordion-item">
-      <button onclick="openArcade()" class="accordion-header" id="hopocalypseBtn" style="color: #4CAF50; font-weight: bold; border-bottom: 1px solid #4CAF50;">
-        🕹️ Play Hopocalypse
-      </button>
-    </div>
-
-  <div class="accordion-item">
-  <button class="accordion-header">📜 About The Vault</button>
-  <div class="accordion-content">
-    <p>The Vault of Time is a digital monument—a global memory wall built by ordinary people, one block at a time.</p>
-    <p>Exactly 1,000,000 blocks will ever exist. Once sealed, your coordinate is permanent.</p>
-    <p style="margin-top: 15px;">
-      <a href="about.html" style="color: #D4AF37; font-weight: bold; text-decoration: none; border-bottom: 1px dashed #D4AF37;">
-        Read the Legend & Founder's Message ➔
-      </a>
-    </p>
-  </div>
-</div>
-    
-    <div class="accordion-item">
-      <a href="legend.html" class="accordion-header">📖 The Legend</a>
-    </div>
-
-    <div class="accordion-item">
-      <a href="reservation.html" target="_blank" class="accordion-header" style="text-decoration:none; display:block; color:inherit;">
-        ⏳ Reservation System
-      </a>
-    </div>
-
-   <div class="accordion-item">
-  <button class="accordion-header">💳 How To Buy</button>
-  <div class="accordion-content">
-    <p style="margin-top: 0; color: #aaa; font-style: italic;">Owning a piece of the Vault is a two-step ritual. Here is how to anchor your legacy:</p>
-    
-    <ol style="padding-left: 20px; line-height: 1.6;">
-      <li>
-        <strong>Claim Your Coordinates:</strong> 
-        Browse the grid and tap any available block. 🏆 Genesis blocks (15-500) are prime real estate!
-      </li>
-      <li>
-        <strong>Anchor Your Details:</strong> 
-        Fill in the form with your name, email, and the message or media you want to preserve. 
-      </li>
-      <li>
-        <strong>Seal the Foundation (Important!):</strong> 
-        Click <span style="color: #D4AF37; font-weight: bold;">"Save Details"</span> first. Our system needs a moment to etch your data. Wait for the "Sealing" process to finish—<strong>do not refresh the page</strong> yet.
-      </li>
-      <li>
-        <strong>Finalize the Offering:</strong> 
-        Once the data is sealed, the <strong>"Complete Payment"</strong> button will appear. Follow the secure PayPal link to finalize your purchase.
-      </li>
-    </ol>
-
-    <p style="font-size: 0.9em; color: #888; border-top: 1px solid #333; pt-10; margin-top: 15px;">
-      ✨ <em>The Keeper's Note: Once paid, your block is live! You can log in later with your email to update your content whenever you like.</em>
-    </p>
-  </div>
-</div>
-
-    <div class="accordion-item">
-      <a href="/howtomosaic.html" target="_blank" class="accordion-header" style="text-decoration:none; display:block; color:inherit;">
-        Master the Mosaic 🧱✨
-      </a>
-    </div>
-
-   <div class="accordion-item">
-  <button class="accordion-header">❓ Frequently Asked Questions</button>
-  <div class="accordion-content">
-    <div style="margin-bottom: 15px;">
-      <strong>Why does this exist?</strong>
-      <p style="margin-top: 5px;">Because history usually forgets "regular" people. The Vault ensures your name, message, or brand is etched into the digital timeline forever.</p>
-    </div>
-    <div style="margin-bottom: 15px;">
-      <strong>Can I change my block later?</strong>
-      <p style="margin-top: 5px;">Yes! Log in using the "Owner Login" with the email you used for purchase to update your message or image at any time.</p>
-    </div>
-    <div>
-      <strong>How long will the Vault last?</strong>
-      <p style="margin-top: 5px;">The Vault is built on decentralized principles and high-performance cloud storage. It is designed to outlive us all.</p>
-    </div>
-  </div>
-</div>
-
-<div class="accordion-item">
-  <button class="accordion-header">⚖️ Vault Rules</button>
-  <div class="accordion-content">
-    <p style="font-size: 0.9em; color: #888;">To ensure the Vault remains a respectful monument for centuries, we uphold these standards:</p>
-    <ul style="line-height: 1.6; padding-left: 20px;">
-      <li><strong>Respect the Wall:</strong> No hate speech, harassment, or content that incites violence.</li>
-      <li><strong>Stay Legal:</strong> No illegal content, copyright infringement, or adult material.</li>
-      <li><strong>The Keeper’s Right:</strong> Content violating these rules may be hidden or removed without a refund to protect the integrity of the Vault.</li>
-    </ul>
-  </div>
-</div>
-    
-    <div class="accordion-item">
-      <button class="accordion-header">📇 Legal Info</button>
+      <button class="accordion-header">The Genesis 50</button>
       <div class="accordion-content">
-        <p><strong>Company:</strong> Vault of Time (Pty) Ltd</p>
-        <p><strong>Reg No:</strong> 2025/875420/07</p>
+        <p>A finite archive of 50 digital coordinates. Once a coordinate is sealed, it remains an immutable part of the Vault's history.</p>
+        <p style="margin-top: 15px;">
+          <a href="about.html" style="color: #D4AF37; font-weight: bold; text-decoration: none; border-bottom: 1px dashed #D4AF37;">
+            The Curation Manifesto ➔
+          </a>
+        </p>
       </div>
     </div>
 
-  </div> <p style="font-size:12px;color:#777;margin-top:25px;">
-    © 2026 Vault Of Time (Pty) Ltd
+    <div class="accordion-item">
+      <button class="accordion-header">Auction Protocol</button>
+      <div class="accordion-content">
+        <p>The Vault operates on a Ratchet Auction system. Each subsequent coordinate starts at the final sale price of the previous block plus a 10% prestige premium.</p>
+        <p>Private wire transfers are the only accepted tender for transactions exceeding $10,000.</p>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">Vault Standards</button>
+      <div class="accordion-content">
+        <p style="font-size: 0.9em; color: #888;">To ensure the Vault remains an elite monument, we uphold these curation standards:</p>
+        <ul style="line-height: 1.6; padding-left: 20px;">
+          <li><strong>Integrity:</strong> No hate speech or defamatory content.</li>
+          <li><strong>Sovereignty:</strong> Content must be legally owned by the bidder.</li>
+          <li><strong>The Keeper’s Right:</strong> We reserve the right to decline any bid that compromises the aesthetic of the archive.</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="accordion-item">
+      <button class="accordion-header">Corporate</button>
+      <div class="accordion-content">
+        <p>Vault of Time (Pty) Ltd</p>
+        <p>Reg No: 2025/875420/07</p>
+        <p><a href="terms.html" style="color: #D4AF37;">Terms & Conditions</a></p>
+      </div>
+    </div>
+
+  </div> 
+  <p style="font-size:10px; color:#555; margin-top:25px; text-transform: uppercase; letter-spacing: 1px;">
+    Established 2026 | Global Archive
   </p>
 </nav>
 
-
-
 <header id="vaultHeader">
   <div class="header-icons">
-    <svg class="mini-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="20" cy="15" r="10" stroke="#D4AF37" stroke-width="3" fill="none"/>
-      <rect x="28" y="13" width="16" height="4" fill="#D4AF37"/>
-      <rect x="38" y="10" width="6" height="10" fill="#D4AF37"/>
-    </svg>
-
-    <h1 class="vault-title">The Vault of Time</h1>
-
-    <svg class="mini-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="20" cy="15" r="10" stroke="#D4AF37" stroke-width="3" fill="none"/>
-      <rect x="28" y="13" width="16" height="4" fill="#D4AF37"/>
-      <rect x="38" y="10" width="6" height="10" fill="#D4AF37"/>
-    </svg>
+    <h1 class="vault-title">THE GENESIS 50</h1>
   </div>
-
   <div id="chapterInfo">
-    <h2 id="chapterName">Chapter 1: The Vault Keepers</h2>
-    <p id="chapterRange">Blocks 1 – 100 000</p>
+    <p id="chapterRange">Only 50 coordinates will ever be etched.</p>
   </div>
 </header>
 
-<div class="search-wrapper">
-  <input type="number" id="blockSearch" placeholder="Search block #..." min="1" max="1000000" />
-  <button id="searchBtn">🔍</button>
-  
-  <label class="multi-select-toggle">
-    <input type="checkbox" id="multiSelectMode" />
-    <span>Enable Multi-Select</span>
-  </label>
-</div>
-
-<div id="bulkActionBar" class="hidden">
-        <span id="bulkCount">0 Blocks Selected</span>
-        <button id="markStartBtn" style="
-            background: transparent;
-            border: 1px solid #D4AF37;
-            color: #D4AF37;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-right: 10px;
-        ">
-            1. Mark Start
-        </button>
-        <button id="bulkReserveBtn" class="vault-btn" style="
-            background: #D4AF37;
-            color: #0d1117;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-        ">
-            Reserve All
-        </button>
-    </div>
-
-<div id="discount-banner" class="hidden">
-    <span class="banner-icon">🏆</span>
-    <p><strong>GENESIS SPECIAL:</strong> All blocks on this page are <strong>$5.00</strong> with code <strong>GENESIS</strong>.</p>
-</div>
-
 <div class="grid-container" id="grid"></div>
-  
-<div class="grid-container" id="grid"></div>
-<div id="pagination"></div>
 
-<div id="reservedWarning" class="reserved-warning hidden">
-  ⚠ This block is currently reserved.<br>
-  Only the email used to reserve it can upload or complete payment.<br>
-  If the 30 minutes expire, the block opens again.
-  </div>
 <div class="modal hidden" id="modal">
-  <div class="modal-content">
+  <div class="modal-content" style="border: 1px solid #d4af37;">
     <span class="close-button">&times;</span>
-    <h2>Claim Your Block</h2>
-    <p id="selected-block-text"></p>
-
+    <h2 id="selected-block-text">Coordinate Inquiry</h2>
+    
     <div id="lockedMsg" class="locked-warning-msg hidden">
-  🔒 This block is reserved by another user.  
-  Please try again later.
+      🔒 This coordinate is currently under private negotiation.
     </div>
+
     <form id="blockForm">
       <input type="hidden" id="blockNumber">
-      <input type="text" id="name" placeholder="Your Name" required>
-      <input type="email" id="email" placeholder="Your Email" required>
-      <textarea id="message" placeholder="Optional message…" maxlength="300"></textarea>
-      <p id="messageCounter" style="font-size:12px; opacity:0.7; margin-top:4px;">0/300</p>
-      <input type="file" id="fileUpload" accept="image/*,audio/*" required>
-
+      <input type="text" id="name" placeholder="Full Name / Representing" required>
+      <input type="email" id="email" placeholder="Verified Email" required>
+      <textarea id="message" placeholder="Briefly describe the legacy you wish to anchor..." maxlength="300"></textarea>
+      
       <div style="margin-top: 15px; margin-bottom: 10px; text-align: left; display: flex; align-items: flex-start; gap: 8px;">
-          <input type="checkbox" id="termsCheckbox" style="margin-top: 4px; cursor: pointer;">
-          <label for="termsCheckbox" style="font-size: 11px; color: #ccc; cursor: pointer; line-height: 1.4;">
-              I agree to the <a href="terms.html" target="_blank" style="color: #d4af37; text-decoration: underline;">Terms & Conditions</a>, including the <strong>No-Refund</strong> and <strong>Content Seizure</strong> policies.
+          <input type="checkbox" id="termsCheckbox" style="margin-top: 4px;">
+          <label for="termsCheckbox" style="font-size: 11px; color: #ccc; line-height: 1.4;">
+              I agree to the <a href="terms.html" target="_blank" style="color: #d4af37;">Vault Protocols</a>.
           </label>
       </div>
 
-      <button type="button" id="uploadBtn" class="vault-btn">
-        <span class="btn-text">Save Details</span>
-        <span class="btn-spinner hidden"></span>
+      <button type="button" id="uploadBtn" class="vault-btn" style="background: #d4af37; color: #000;">
+        Submit Application to Bid
       </button>
-
-      <div class="reserve-wrapper" style="width:100%; margin-top:12px;">
-  
-  <button
-    type="button"
-    id="reserveBtn"
-    style="
-      width:100%;
-      padding:12px;
-      background:#d4af37;
-      color:#111;
-      font-weight:bold;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-    "
-  >
-    ⏳ Reserve Block (30 min)
-  </button>
-
-  <span class="reserve-info-icon">i</span>
-
-  <div class="reserve-tooltip">
-    Reserve holds this block for 30 minutes so nobody else can take it 
-    while you upload or choose more blocks.<br><br>
-    If time runs out, the block opens again.
-  </div>
-
-</div>
-      
-      <div id="ready-message" class="hidden">
-        ✅ Saved. Now complete payment to seal your block.
-      </div>
-
-      <div id="paymentButtons" class="hidden" style="margin-top:20px;">
-        <div id="discountSection" class="hidden" style="margin-bottom: 15px; text-align: center;">
-    <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 5px;">Have a Golden Ticket?</p>
-    <div style="display: flex; gap: 5px; justify-content: center;">
-        <input type="text" id="couponInput" placeholder="BUNNY-XXXX" 
-               style="padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff; width: 120px; text-transform: uppercase;">
-        <button type="button" id="applyCouponBtn" style="padding: 8px 12px; background: #D4AF37; color: #000; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">APPLY</button>
-    </div>
-    <p id="couponMsg" style="font-size: 0.8rem; margin-top: 5px; min-height: 1.2em;"></p>
-</div>
-  <a 
-    href="https://www.paypal.com/ncp/payment/T9TZLXDZ6CLSE?block={BLOCK_ID_PLACEHOLDER}"
-    id="externalPayBtn"
-    target="_blank"
-    style="
-      display:block;
-      text-align:center;
-      width:100%;
-      background:#ffc439;
-      color:#111;
-      padding:14px;
-      border-radius:6px;
-      font-size:1.2rem;
-      font-weight:bold;
-      text-decoration:none;
-    "
-  >
-    🔒 Complete Payment
-  </a>
-      </div>
-
     </form>
   </div>
 </div>
@@ -364,99 +135,43 @@
   <div id="viewModalContent">
     <span class="close-view">&times;</span>
     <h2 id="viewBlockTitle"></h2>
-    <div id="viewBlockBadge"></div>   <div id="viewBlockMedia"></div>
+    <div id="viewBlockMedia"></div>
     <p id="viewBlockMessage"></p>
-
-    <button id="shareBlockBtn" class="hidden"
-      style="margin-top:15px;padding:10px 16px;border:none;border-radius:6px;background:#d4af37;color:#111;font-weight:bold;cursor:pointer;">
-      📤 Share This Block
-    </button>
-    
-<div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 15px; text-align: center;">
-    <button id="reportBtn" style="background: none; border: none; color: #888; font-size: 11px; cursor: pointer; text-decoration: underline;">
-        🚩 Report Inappropriate Content
-    </button>
-</div>
   </div>
-</div>
-
-<footer>
-  <p>
-    <a href="contact.html">📩 Contact Us</a> | 
-    <a href="terms.html">📜 Terms & Conditions</a><br>
-    <small style="color:#777;">© 2026 Vault Of Time (Pty) Ltd</small>
-  </p>
-</footer>
-
-</div> <div id="keeper-welcome-modal" class="keeper-modal" style="display:none;">
-    <div class="keeper-modal-content">
-        <div class="keeper-header">
-            <span class="keeper-large-avatar">🏺</span>
-            <h2>A Message from The Keeper</h2>
-        </div>
-        <div class="keeper-body">
-            <p>"Greetings, traveler. You are standing at the threshold of <strong>Chapter 1: The Vault Keepers</strong>."</p>
-            <p>"I am the Keeper of these coordinates. I’ve seen empires rise and Wi-Fi signals fall—I’m here to ensure you leave a footprint that actually matters."</p>
-            <p>"The Vault is divided into <strong>Districts</strong>. Whether you’re here to flex in <em>The Arena</em> or leave a legacy in <em>The Plaza</em>, don’t waste the space."</p>
-            <p><strong>"1,000,000 blocks. One timeline. What will you leave behind?"</strong></p>
-        </div>
-        <button id="close-keeper-welcome" class="vault-btn" style="width:100%; margin-top:10px;">
-            I'm Ready to Build
-        </button>
-    </div>
 </div>
 
 <div id="keeper-container">
     <div id="keeper-bubble" class="keeper-speech-bubble">
         <button id="close-keeper-bubble" class="bubble-x">×</button>
         <div class="keeper-content">
-            <h3 id="keeper-title">The Keeper</h3>
-            <p id="keeper-text">Welcome, traveler. Explore the districts—I'll be here if you need an idea.</p>
+            <h3 id="keeper-title">The Curator</h3>
+            <p id="keeper-text">Welcome. You are viewing the Genesis 50. Each block represents a permanent anchor in the digital timeline.</p>
         </div>
         <div class="bubble-tail"></div>
     </div>
-
     <div id="keeper-trigger" class="keeper-icon-btn">
         <span>🏺</span>
     </div>
 </div>
 
-  
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script type="text/javascript">
-   (function(){
-   emailjs.init("O9ZTyJYVkoIrBxFdQ"); 
-   })();
+   (function(){ emailjs.init("O9ZTyJYVkoIrBxFdQ"); })();
 </script>
 
-<div id="loginModal" class="hidden" style="position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center;">
-  
-  <div class="modal-content" style="background: #161b22; padding: 30px; border: 1px solid #D4AF37; border-radius: 8px; max-width: 400px; width: 90%; text-align: center; position: relative;">
-    
-    <span class="close-login" style="position: absolute; top: 10px; right: 15px; color: #aaa; font-size: 24px; cursor: pointer;">&times;</span>
-    
-    <h2 style="color:#D4AF37; margin-bottom: 20px;">Owner Login</h2>
-    
+<div id="loginModal" class="hidden" style="position: fixed; z-index: 10000; inset: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center;">
+  <div class="modal-content" style="background: #161b22; border: 1px solid #D4AF37;">
+    <span class="close-login" style="position: absolute; top: 10px; right: 15px; color: #aaa; cursor: pointer;">&times;</span>
+    <h2 style="color:#D4AF37;">Owner Verification</h2>
     <div id="loginStep1">
-        <p style="color: #ccc; margin-bottom: 15px;">Enter the email used to purchase your blocks.</p>
-        <input type="email" id="loginEmailInput" placeholder="name@example.com" style="width:100%; padding:12px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #333; background: #0d1117; color: white;">
-        <button id="loginSendBtn" style="width:100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; border-radius: 4px;">Send Magic Link</button>
+        <p style="color: #ccc;">Enter your registered email to request access.</p>
+        <input type="email" id="loginEmailInput" placeholder="name@domain.com" style="width:100%; padding:12px; margin: 15px 0; background: #0d1117; color: white; border: 1px solid #333;">
+        <button id="loginSendBtn" style="width:100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer;">Request Magic Link</button>
     </div>
-
-    <div id="loginStep2" class="hidden">
-        <p style="color: #ccc; margin-bottom: 15px;">Check your email for the link.</p>
-        <p style="font-size: 12px; color: #777;">You can now close this window and open the link from your inbox.</p>
-    </div>
-
   </div>
 </div>
-  
-<script type="module" src="script.js?v=7777777"></script>
-<div id="arcadeOverlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:10000; display:flex; flex-direction:column;">
-    <div style="padding:10px; text-align:right;">
-        <button onclick="closeArcade()" style="background:#D4AF37; color:#000; border:none; padding:10px 20px; font-weight:bold; cursor:pointer; border-radius:5px;">Close Game ×</button>
-    </div>
-    <iframe id="gameIframe" src="" style="flex-grow:1; border:none; width:100%; height:100%;"></iframe>
-</div>
+
+<script type="module" src="script.js?v=9999999"></script>
+
 </body>
 </html>
