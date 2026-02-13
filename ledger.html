@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Official Ledger | Vault of Time</title>
+    
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&family=Courier+Prime&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --gold: #d4af37; 
+            --deep-black: #0d1117; 
+            --table-bg: #161b22; 
+        }
+        
+        body {
+            background-color: var(--deep-black);
+            color: #e6edf3;
+            font-family: 'Poppins', sans-serif;
+            margin: 0; 
+            padding: 40px 20px;
+        }
+
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 50px;
+        }
+
+        /* THE TABLE WRAPPER */
+        .ledger-wrapper {
+            background: var(--table-bg);
+            border: 1px solid #333;
+            overflow-x: auto; /* Scroll on mobile */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Courier Prime', monospace; /* Typewriter look */
+            min-width: 600px;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid var(--gold);
+            color: var(--gold);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        
+        /* Row Hover Effect */
+        tr:hover td { 
+            background-color: rgba(212, 175, 55, 0.05); 
+            color: #fff;
+        }
+
+        .price-cell { 
+            color: #fff; 
+            font-weight: bold; 
+        }
+        
+        .block-id { 
+            color: var(--gold); 
+            font-weight: bold;
+        }
+
+        /* BACK BUTTON */
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 40px;
+            color: #555;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            transition: color 0.3s ease;
+        }
+        .back-link:hover { color: var(--gold); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Public Record</h1>
+    <div class="subtitle">The Chain of Title</div>
+
+    <div class="ledger-wrapper">
+        <table id="ledgerTable">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">#</th>
+                    <th style="width: 30%;">Keeper</th>
+                    <th style="width: 30%;">Date Sealed</th>
+                    <th style="width: 20%;">Valuation</th>
+                    <th style="width: 10%;">Status</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr>
+                    <td colspan="5" style="text-align:center; padding: 30px; color: #555;">
+                        Retrieving Archives...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <a href="index.html" class="back-link">← Return to Vault</a>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDo9YzptBrAvJy7hjiGh1YSy20lZzOKVZc", 
+        authDomain: "vault-of-time-e6c03.firebaseapp.com",
+        projectId: "vault-of-time-e6c03",
+        storageBucket: "vault-of-time-e6c03.firebasestorage.app",
+        messagingSenderId: "941244238426",
+        appId: "1:941244238426:web:80f80b5237b84b1740e663"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadLedger() {
+        const tableBody = document.getElementById("tableBody");
+        try {
+            // Fetch records ordered by Block Number
+            const q = query(collection(db, "ledger"), orderBy("blockId", "asc"));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 30px; font-family: 'Poppins', sans-serif;">The Archives are empty.</td></tr>`;
+                return;
+            }
+
+            let html = "";
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                
+                // 1. FORMAT DATE (Handle Timestamp or String)
+                let dateStr = "Unknown";
+                if (data.date) {
+                    dateStr = data.date.toDate ? data.date.toDate().toLocaleDateString() : data.date;
+                }
+
+                // 2. SOCIAL HANDLE LOGIC (The New Part)
+                let keeperDisplay = data.keeperName || "Anonymous";
+                
+                // If they provided a social link, make the name clickable and Gold
+                if (data.socialLink) {
+                    keeperDisplay = `<a href="${data.socialLink}" target="_blank" style="color: #D4AF37; text-decoration: none; border-bottom: 1px dotted #D4AF37; transition: border-bottom 0.3s ease;">
+                        ${keeperDisplay} ↗
+                    </a>`;
+                }
+
+                // 3. BUILD THE ROW
+                html += `
+                <tr>
+                    <td class="block-id">#${data.blockId}</td>
+                    <td>${keeperDisplay}</td> 
+                    <td>${dateStr}</td>
+                    <td class="price-cell">$${data.price ? data.price.toLocaleString() : "0"}</td>
+                    <td><span style="color: #D4AF37; font-size: 0.8em;">● ETCHED</span></td>
+                </tr>`;
+            });
+
+            tableBody.innerHTML = html;
+        } catch (error) {
+            console.error("Error fetching ledger:", error);
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: #ff4444;">Restricted Access (Error).</td></tr>`;
+        }
+    }
+
+    // RUN ON LOAD
+    loadLedger();
+</script>
+
+</body>
+</html>
