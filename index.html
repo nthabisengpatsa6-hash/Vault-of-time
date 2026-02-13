@@ -3,8 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>THE GENESIS 50 | Vault of Time</title>
-  <link rel="stylesheet" href="style.css?v=5.0" /> <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
+  <title>VAULT OF TIME | The Genesis 50</title>
+  
+  <link rel="stylesheet" href="style.css?v=6.0" /> 
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
+  
+  <style>
+    /* EXTRA STYLES FOR THE NEW HEADER (Built-in so you don't lose them) */
+    .brand-header-main {
+        position: fixed;
+        top: 30px;
+        left: 80px; /* Right next to the hamburger menu */
+        font-family: 'Playfair Display', serif;
+        font-size: 1.2rem;
+        color: #D4AF37; /* Gold */
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        z-index: 8000;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        pointer-events: none; /* Let clicks pass through */
+    }
+
+    /* Mobile adjustment */
+    @media (max-width: 768px) {
+        .brand-header-main {
+            font-size: 1rem;
+            top: 35px; /* Align with hamburger */
+            left: 70px;
+        }
+    }
+  </style>
 </head>
 
 <body>
@@ -14,27 +42,31 @@
       <div class="vault-ring"></div>
       <div class="vault-core"></div>
   </div>
-  <div class="vault-loader-text">INITIALIZING...</div>
+  <div class="vault-loader-text">INITIALIZING PROTOCOL...</div>
 </div>
 
 <div id="vault-main-content">
 
     <div class="menu-toggle" id="menuToggle">☰</div>
+    
+    <div class="brand-header-main">VAULT OF TIME</div>
 
     <nav class="side-menu" id="sideMenu">
       <button id="closeMenu">&times;</button>
       
-      <h1 style="color: #D4AF37; font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-top: 0; line-height: 1;">
-          VAULT OF TIME
-      </h1>
-      <h2 style="font-size: 0.8rem; letter-spacing: 2px; color: #888; margin-bottom: 30px; text-transform: uppercase;">
-          The Ledger
-      </h2>
+      <div style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 20px;">
+          <h1 style="color: #D4AF37; font-family: 'Playfair Display', serif; font-size: 1.8rem; margin: 0; line-height: 1.2;">
+              VAULT OF TIME
+          </h1>
+          <p style="color: #888; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; margin-top: 5px; margin-bottom: 0;">
+              The Official Ledger
+          </p>
+      </div>
       
       <div class="accordion">
         
         <div class="accordion-item">
-          <button id="menuLoginBtn" class="accordion-header" style="color: #D4AF37;">
+          <button id="menuLoginBtn" class="accordion-header" style="color: #D4AF37; font-weight: bold;">
             Owner Verification
           </button>
         </div>
@@ -54,7 +86,7 @@
         <div class="accordion-item">
           <button class="accordion-header">Auction Protocol</button>
           <div class="accordion-content">
-            <p>The Vault operates on a Ratchet Auction system. Each coordinate starts at the final sale price of the previous block plus a 10% premium.</p>
+            <p>The Vault operates on a Ratchet Auction system. Each coordinate starts at the final sale price of the previous block plus a 10% prestige premium.</p>
           </div>
         </div>
 
@@ -79,7 +111,7 @@
 
       </div> 
       <p style="font-size:10px; color:#555; margin-top:40px; text-transform: uppercase; letter-spacing: 1px;">
-        Established 2026
+        Established 2026 | Rustenburg, SA
       </p>
     </nav>
 
@@ -99,7 +131,7 @@
       <input type="hidden" id="blockNumber">
       <input type="text" id="name" placeholder="Full Name" required>
       <input type="email" id="email" placeholder="Email Address" required>
-      <textarea id="message" placeholder="Legacy Message..." rows="4" style="width:100%; background:#0d1117; color:white; border:1px solid #333; padding:10px;"></textarea>
+      <textarea id="message" placeholder="Legacy Message..." rows="4"></textarea>
       
       <button type="button" id="uploadBtn" class="vault-btn">
         Submit Application
@@ -135,7 +167,7 @@
    (function(){ emailjs.init("O9ZTyJYVkoIrBxFdQ"); })();
 </script>
 
-<script type="module" src="script.js?v=5.0"></script>
+<script type="module" src="script.js?v=6.0"></script>
 
 </body>
 </html>
