@@ -1,1255 +1,222 @@
 /* =========================================
-   GLOBAL THEME
-========================================= */
+   GLOBAL THEME: The Vault Palette
+   ========================================= */
+:root {
+  --gold: #d4af37;
+  --gold-glow: rgba(212, 175, 55, 0.3);
+  --deep-black: #0d1117;
+  --vault-gray: #161b22;
+  --text-main: #e6edf3;
+  --text-muted: #8b949e;
+}
 
 body {
-  font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  text-align: center;
-  background-color: #0d1117;
-  color: #e6edf3;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--deep-black);
+  color: var(--text-main);
   margin: 0;
   overflow-x: hidden;
-}
-
-a {
-  color: #4ea4ff;
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
+  line-height: 1.6;
 }
 
 /* =========================================
-   MAIN LOADER (clean version)
-========================================= */
-
+   THE HANDSHAKE LOADER
+   ========================================= */
 #vault-loader {
   position: fixed;
   inset: 0;
-  background: #0d1117;
+  background: var(--deep-black);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  transition: opacity 0.6s ease;
-}
-
-.vault-loader-inner {
-  position: relative;
-  text-align: center;
+  transition: opacity 0.8s ease;
 }
 
 .vault-v {
-  font-size: 70px;
-  font-weight: 700;
-  color: #d4af37;
-  text-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
-  z-index: 2;
-  position: relative;
+  font-family: 'Playfair Display', serif;
+  font-size: 80px;
+  color: var(--gold);
+  text-shadow: 0 0 30px var(--gold-glow);
+  animation: breathe 3s infinite ease-in-out;
 }
 
-.vault-ring {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 4px solid transparent;
-  border-top: 4px solid #d4af37;
-  border-right: 4px solid #d4af37;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: vaultSpin 1.8s linear infinite;
-  opacity: 0.9;
+@keyframes breathe {
+  0%, 100% { opacity: 0.8; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.02); }
 }
 
-@keyframes vaultSpin {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to   { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-.vault-loader-text {
-  margin-top: 18px;
-  color: #ccd5e0;
-  font-size: 1rem;
-  opacity: 0.85;
-}
-
-/* Fade-in content after loader */
 #vault-main-content {
   opacity: 0;
-  transition: opacity 0.6s ease;
+  transition: opacity 1s ease;
 }
+
 #vault-main-content.vault-main-visible {
   opacity: 1;
 }
 
 /* =========================================
-   HEADER / TITLE AREA
-========================================= */
-
-.header-wrapper {
-  position: relative;
-  z-index: 100;
-  padding-top: 70px;
-  background-color: #0d1117;
-}
-
+   HEADER: The Curator's Entrance
+   ========================================= */
 #vaultHeader {
+  padding: 80px 20px 40px;
   text-align: center;
-  padding: 20px 10px;
-  color: #f2f2f2;
-}
-
-.header-icons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 6px;
 }
 
 .vault-title {
-  font-size: 1.9rem;
-  font-weight: 700;
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
+  letter-spacing: 6px;
+  color: #fff;
+  text-transform: uppercase;
   margin: 0;
-  color: #ffffff;
-  cursor: pointer;
 }
 
-.mini-icon {
-  width: 26px;
-  height: 26px;
-}
-.mini-icon:hover {
-  filter: drop-shadow(0 0 4px #d4af37);
-  transition: 0.2s ease;
-}
-
-#chapterInfo h2 {
-  font-size: 1.3rem;
-  margin: 4px 0;
-  color: #ffd700;
-}
-
-#chapterInfo p {
-  font-size: 0.95rem;
-  opacity: 0.8;
-  margin-top: 2px;
-}
-
-@media (max-width: 768px) {
-  .header-wrapper { padding-top: 70px; }
-  .vault-title { font-size: 1.7rem; }
+#chapterRange {
+  color: var(--gold);
+  letter-spacing: 2px;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-transform: uppercase;
 }
 
 /* =========================================
-   PERFECT PIXEL GRID (20 columns always)
-========================================= */
-
+   THE GENESIS GRID (5 Columns)
+   ========================================= */
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(20, 1fr);
-  width: 100%;
-  max-width: 960px;
-  margin: 20px auto;
-  gap: 0;
+  grid-template-columns: repeat(5, 1fr); /* The Magic 5 */
+  gap: 35px;
+  width: 90%;
+  max-width: 1100px;
+  margin: 40px auto 100px;
 }
 
 .block {
-  aspect-ratio: 1 / 1;
-  background: #5b626b;
+  aspect-ratio: 1 / 1.3;
+  background: linear-gradient(145deg, #1c2128, #0d1117);
+  border: 1px solid #30363d;
+  border-top: 3px solid var(--gold); /* The Signature Rim */
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #e6edf3;
-
-  /* Pixel Art Mode — no spacing issues */
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  margin: 0;
-
   cursor: pointer;
-  font-size: clamp(7px, 1.8vw, 12px);
-  transition: background 0.25s ease;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  position: relative;
 }
 
-/* Hover */
-.block:hover:not(.claimed):not(.reserved) {
-  background: #707881;
+.block:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 20px var(--gold-glow);
+  border-color: var(--gold);
 }
 
-/* Selected */
-.block.selected {
-  background-color: #f5e79e !important;
-  box-shadow:
-    0 0 10px rgba(212, 175, 55, 0.8),
-    0 0 30px rgba(212, 175, 55, 0.3);
+.coord-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  color: var(--gold);
 }
 
-/* Reserved */
-.block.reserved {
-  background: #b59f39 !important;
-  color: #000;
-  font-weight: bold;
-  cursor: not-allowed;
-  opacity: 0.88;
+.price-tag {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  letter-spacing: 1px;
 }
 
-/* Claimed */
+/* Claimed State: The Art Piece */
 .block.claimed {
-  background-color: #33494d;
-  opacity: 0.95;
-  cursor: zoom-in;
-  color: #cbd5df;
-}
-
-/* =========================================
-   "PAID BUT EMPTY" BLOCK STYLES
-   ========================================= */
-
-.block.claimed-empty {
-    background-color: #1a1a1a !important; /* Dark Grey */
-    border: 1px solid #444 !important;    /* Subtle Border */
-    color: #555 !important;               /* Dark Text Number */
-    cursor: pointer;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Add a Lock Icon in the center */
-.block.claimed-empty::after {
-    content: "🔒";             /* Lock Emoji */
-    font-size: 14px;
-    opacity: 0.5;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-/* Optional: Make it glow slightly on hover */
-.block.claimed-empty:hover {
-    border-color: #D4AF37 !important;
-    color: #D4AF37 !important;
-}
-
-.block.claimed-empty:hover::after {
-    opacity: 1;
-    filter: drop-shadow(0 0 5px #D4AF37);
-}
-
-/* Image blocks */
-.block.claimed-has-image {
+  border-top: 3px solid #333; /* Sealed look */
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
-  color: transparent;
 }
 
-/* Audio blocks */
-.block.claimed-has-audio {
-  background: #33494d
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23d4af37' viewBox='0 0 24 24'%3E%3Cpath d='M12 3a1 1 0 0 0-1 1v16a1 1 0 0 0 2 0V4a1 1 0 0 0-1-1zm5 3a1 1 0 0 0-1 1v10a1 1 0 0 0 2 0V7a1 1 0 0 0-1-1zM7 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1z'/%3E%3C/svg%3E")
-    center/60% no-repeat;
-}
-
-/* Search highlight pulse */
-.search-highlight::after {
-  content: "";
+.block.claimed::after {
+  content: "SEALED";
   position: absolute;
-  inset: 0;
-  box-shadow: 0 0 20px 8px rgba(255, 240, 150, 0.85);
-  animation: pulseHighlight 1s ease-out;
-}
-@keyframes pulseHighlight {
-  from { box-shadow: 0 0 0px 0 rgba(255, 240, 150, 1); }
-  to   { box-shadow: 0 0 20px 8px rgba(255, 240, 150, 0.85); }
-}
-
-/* Pagination */
-#pagination {
-  margin: 10px auto 25px;
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-}
-#pagination button {
-  background: #1f252b;
-  border: 1px solid #2f333a;
-  color: #e6edf3;
-  padding: 4px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-#pagination button:disabled {
-  opacity: 0.4;
-  cursor: default;
+  bottom: 10px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.5);
 }
 
 /* =========================================
-   SIDE MENU, OVERLAY & ACCORDION
-========================================= */
-
+   SIDE MENU: The Ledger
+   ========================================= */
 .menu-toggle {
   position: fixed;
-  top: 15px;
-  left: 15px;
-  font-size: 32px;
+  top: 30px;
+  left: 30px;
+  z-index: 3001;
   cursor: pointer;
-  z-index: 3000;
-  padding: 8px 12px;
-  background: #1c2128;
-  border-radius: 6px;
-  color: #e6edf3;
-  border: 1px solid #2b3138;
+  font-size: 24px;
+  color: var(--gold);
 }
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: none;
-  z-index: 2500;
-}
-.overlay.show { display: block; }
 
 .side-menu {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 280px;
-  max-width: 75vw;
-  background: #1c2128;
-  color: #e6edf3;
-  padding: 20px;
-  box-shadow: 3px 0 10px rgba(0, 0, 0, 0.4);
-  transform: translateX(-100%);
-  transition: transform 0.35s ease;
-  z-index: 3001;
-  overflow-y: auto;
-  text-align: left;
+  background: #0d1117;
+  border-right: 1px solid var(--gold);
+  width: 320px;
+  padding: 40px;
+  /* ... keep your existing transform/transition ... */
 }
-.side-menu.open {
-  transform: translateX(0);
-}
-
-#closeMenu {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 28px;
-  color: #f9d26e;
-  cursor: pointer;
-}
-
-.side-menu h2 {
-  margin: 4px 0 16px;
-  text-align: center;
-  color: #f9d26e;
-}
-
-.accordion-item { margin-bottom: 14px; }
 
 .accordion-header {
-  width: 100%;
-  background: #2a3038;
-  padding: 10px 12px;
-  border-radius: 6px;
-  text-align: left;
-  border: none;
-  color: #e6edf3;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 15px;
-  transition: background 0.25s;
+  font-family: 'Playfair Display', serif;
+  background: none;
+  border-bottom: 1px solid #30363d;
+  color: #fff;
+  padding: 15px 0;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
-.accordion-header:hover { background: #343b44; }
-.accordion-header.active { background: #3c444f; }
-
-.accordion-content {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s ease;
-  background: #1c2128;
-  padding: 0 5px;
-  border-radius: 6px;
-  color: #bfc8d2;
-  font-size: 0.9rem;
-}
-.accordion-content.show {
-  max-height: 600px;
-  padding: 10px 8px 8px;
-}
-
-.legend-link { margin: 10px 0 4px; }
 
 /* =========================================
-   MODALS (UPLOAD + VIEW)
-========================================= */
-
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 3000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
-}
-
-.modal:not(.hidden) {
-  opacity: 1;
-  pointer-events: auto;
-}
-
+   MODALS: The Inquiry Room
+   ========================================= */
 .modal-content {
-  background-color: #1c2128;
-  padding: 2rem;
-  border-radius: 12px;
-  max-width: 400px;
-  width: 90%;
-  text-align: center;
-  color: #e6edf3;
-  position: relative;
-  box-shadow: 0 0 25px rgba(0,0,0,0.6);
+  background: #161b22;
+  border: 1px solid var(--gold);
+  border-radius: 0; /* Luxury is sharp */
+  padding: 40px;
 }
 
-.close-button {
-  position: absolute;
-  top: 12px;
-  right: 18px;
-  font-size: 28px;
-  cursor: pointer;
-}
-
-#viewModal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 4000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-
-#viewModal:not(.hidden) {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-#viewModalContent {
-  background: #1c2128;
-  padding: 1.8rem;
-  border-radius: 12px;
-  max-width: 420px;
-  width: 90%;
-  text-align: center;
-  color: #e6edf3;
-  box-shadow: 0 0 25px rgba(0,0,0,0.65);
-  position: relative;
-}
-
-.close-view {
-  position: absolute;
-  top: 16px;
-  right: 20px;
-  font-size: 26px;
-  cursor: pointer;
-}
-
-/* Media in view modal */
-#viewBlockMedia img {
-  max-width: 100%;
-  border-radius: 8px;
-  margin: 10px 0 8px;
-}
-
-#viewBlockMedia audio {
-  width: 100%;
-  margin: 10px 0 6px;
-}
-
-#viewBlockMessage {
-  margin-top: 8px;
-  line-height: 1.5;
-}
-
-/* =========================================
-   BANNERS, BUTTONS & FOOTER
-========================================= */
-
-#rules-banner {
-  background: #11161c;
-  padding: 10px 14px;
-  margin: 0 auto 10px;
-  max-width: 800px;
-  border-bottom: 1px solid #2b3138;
-  font-size: 0.9rem;
-}
-#rules-banner.hidden { display: none; }
-
-button,
-input[type="button"],
-input[type="submit"] {
-  font-family: inherit;
-}
-
-.btn-spinner {
-  width: 18px;
-  height: 18px;
-  border: 3px solid #d4af37;
-  border-top-color: transparent;
-  border-radius: 50%;
-  display: inline-block;
-  animation: spin 0.7s linear infinite;
-}
-
-footer {
-  margin-top: 40px;
-  padding-bottom: 25px;
-  opacity: 0.7;
-  font-size: 0.8rem;
-}
-
-/* =========================================
-   LEGEND PAGE
-========================================= */
-
-.legend-body {
-  background: #10100c url("https://www.transparenttextures.com/patterns/aged-paper.png");
-  color: #2b2115;
-  font-family: "Georgia", "Times New Roman", serif;
-  margin: 0;
-}
-
-.legend-container {
-  max-width: 760px;
-  margin: 30px auto 60px;
-  padding: 20px 18px 30px;
-  background: rgba(245, 236, 215, 0.96);
-  border-radius: 10px;
-  box-shadow:
-    0 0 30px rgba(0,0,0,0.6),
-    0 0 0 1px rgba(90,70,40,0.4);
-}
-
-.legend-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.legend-header h1 {
-  color: #6a4a1b;
-  font-size: 2rem;
-  margin: 10px 0 6px;
-}
-.legend-header p {
-  margin: 0;
-  font-size: 0.95rem;
-  color: #4c3617;
-}
-
-.legend-icon {
-  width: 32px;
-  height: 32px;
-}
-
-.legend-section { margin-bottom: 26px; }
-
-.legend-section h2 {
-  color: #6a4a1b;
-  margin-bottom: 6px;
-  font-size: 1.2rem;
-}
-.legend-section h3 {
-  color: #b06022;
-  margin: 6px 0;
-  font-size: 1rem;
-}
-.legend-section p {
-  line-height: 1.7;
-  font-size: 0.96rem;
-  color: #3a2a15;
-}
-
-.legend-back { margin-top: 32px; }
-.legend-button {
-  padding: 10px 18px;
-  background: #f5e6c8;
-  color: #6a4a1b;
-  border: 1px solid #b08a4a;
-  border-radius: 6px;
-  font-weight: 600;
-  text-decoration: none;
-}
-.legend-button:hover {
-  background: #f0d9aa;
-  transform: translateY(-1px);
-}
-
-/* =========================================
-   RESERVED TOOLTIP
-========================================= */
-
-.reserve-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.reserve-info-icon {
-  width: 18px;
-  height: 18px;
-  background: #d4af37;
-  color: #000;
-  font-weight: bold;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.reserve-tooltip {
-  display: none;
-  position: absolute;
-  top: 28px;
-  right: 0;
-  width: 260px;
-  background: #111;
+input, textarea {
+  background: #0d1117;
+  border: 1px solid #30363d;
   color: #fff;
   padding: 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  line-height: 1.4;
-  z-index: 5000;
-  border: 1px solid #d4af37;
-}
-.reserve-tooltip.show {
-  display: block;
+  margin-bottom: 15px;
+  width: 100%;
+  border-radius: 0;
 }
 
-.reserved-warning {
-  background: rgba(255, 200, 0, 0.15);
-  border: 1px solid #d4af37;
-  color: #fff;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1.4;
+input:focus {
+  border-color: var(--gold);
+  outline: none;
 }
 
-.hidden { display: none !important; }
-
-/* ===== STRONG SEARCH HIGHLIGHT (WORKS IN MELT MODE) ===== */
-
-.search-highlight {
-  position: relative;
-  z-index: 10 !important;
-}
-
-.search-highlight::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 0 !important; /* because melt mode is square */
-  box-shadow:
-    0 0 20px 6px rgba(255, 255, 150, 0.95),
-    0 0 40px 10px rgba(255, 255, 170, 0.7),
-    0 0 60px 14px rgba(255, 255, 200, 0.5);
-  animation: searchPulse 1.2s ease-out forwards;
-  pointer-events: none;
-}
-
-@keyframes searchPulse {
-  0% {
-    box-shadow:
-      0 0 0px 0 rgba(255, 255, 150, 1),
-      0 0 0px 0 rgba(255, 255, 170, 0.7),
-      0 0 0px 0 rgba(255, 255, 200, 0.5);
-  }
-  100% {
-    box-shadow:
-      0 0 20px 6px rgba(255, 255, 150, 0.95),
-      0 0 40px 10px rgba(255, 255, 170, 0.7),
-      0 0 60px 14px rgba(255, 255, 200, 0.5);
-  }
-}
-
-/* ===== LOCKED FORM STYLE ===== */
-.locked-form {
-  opacity: 0.45;
-  pointer-events: none;
-  filter: grayscale(0.9);
-}
-
-.locked-warning-msg {
-  background: rgba(255, 200, 0, 0.2);
-  border: 1px solid #d4af37;
-  padding: 10px 12px;
-  border-radius: 6px;
-  margin-bottom: 12px;
-  color: #fff;
+.vault-btn {
+  background: var(--gold);
+  color: #000;
   font-weight: bold;
-  text-align: center;
-  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 15px;
+  border: none;
+  width: 100%;
+  cursor: pointer;
 }
 
 /* =========================================
-   NEW RESERVATION SYSTEM STYLES
+   RESPONSIVENESS
    ========================================= */
-
-/* 1. Multi-Select Toggle (Next to Search) */
-.multi-select-toggle {
-    margin-left: 15px;
-    color: #D4AF37; /* Gold */
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    user-select: none;
-}
-
-.multi-select-toggle input {
-    cursor: pointer;
-    accent-color: #D4AF37; 
-    width: 16px;
-    height: 16px;
-}
-
-/* 2. The "Selected" Block Look */
-.block.multi-selected {
-    border: 2px solid #D4AF37 !important; 
-    background-color: rgba(212, 175, 55, 0.4) !important; 
-    transform: scale(0.9); 
-    box-shadow: 0 0 10px #D4AF37;
-    z-index: 10; 
-}
-
-/* =========================================
-   BULK ACTION BAR STYLES
-   ========================================= */
-
-#bulkActionBar {
-    /* Use flexbox to align items in a row */
-    display: flex;
-    justify-content: space-between; /* Space out the button and the count */
-    align-items: center; /* Vertically center everything */
-    
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 15px;
-    background-color: #161b22; /* Dark background */
-    border-top: 2px solid #30363d;
-    z-index: 1000;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
-
-    /* Ensure it starts hidden until blocks are selected */
-    display: none; 
-}
-
-/* Ensure the count text doesn't take up too much space */
-#bulkCount {
-    white-space: nowrap;
-    margin-right: 15px;
-    font-weight: bold;
-    color: #ffffff;
-}
-
-#bulkActionBar.hidden {
-    display: none !important;
-}
-
-#bulkCount {
-    color: #fff;
-    font-weight: bold;
-    font-size: 1rem;
-    white-space: nowrap;
-}
-
-#bulkReserveBtn {
-    background: #D4AF37;
-    color: #000;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-#bulkReserveBtn:hover {
-    background: #f1d58a; 
-}
-
-.hunt-container {
-    background: #1a1a1a;
-    border: 2px solid #D4AF37; /* Gold border */
-    padding: 20px;
-    border-radius: 8px;
-    max-width: 400px;
-    margin: 20px auto;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.hunt-container input {
-    background: #000;
-    border: 1px solid #333;
-    color: #D4AF37;
-    padding: 10px;
-    border-radius: 4px;
-}
-
-#huntSubmitBtn {
-    background: #D4AF37;
-    color: #000;
-    font-weight: bold;
-    border: none;
-    padding: 12px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-#huntSubmitBtn:hover {
-    background: #fff;
-}
-
-/* Legend Table Styling - High Contrast */
-.legend-section table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #161b22; /* Deep dark background */
-    border: 1px solid #30363d;
-    margin-top: 25px;
-}
-
-.legend-section th {
-    background-color: #0d1117;
-    color: #D4AF37; /* Vault Gold */
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 15px;
-    border-bottom: 2px solid #D4AF37;
-    text-align: left;
-}
-
-.legend-section td {
-    padding: 15px;
-    border-bottom: 1px solid #30363d;
-    color: #ffffff; /* Pure white for maximum readability */
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-/* Make District names pop */
-.legend-section td:first-child {
-    font-weight: bold;
-    color: #f1d58a; /* Soft gold */
-    letter-spacing: 0.5px;
-}
-
-/* Mobile Tweak: Ensure it doesn't squish */
-@media (max-width: 600px) {
-    .legend-section td, .legend-section th {
-        padding: 10px 5px;
-        font-size: 12px;
-    }
-}
-
-/* =========================================================
-   1. THE WELCOME MODAL (The "Front Door")
-   ========================================================= */
-.keeper-modal {
-    position: fixed;
-    z-index: 10001;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.95);
-    display: none; 
-    justify-content: center; align-items: center;
-    backdrop-filter: blur(5px);
-}
-
-.keeper-modal-content {
-    background: #161b22;
-    border: 2px solid #D4AF37;
-    padding: 40px;
-    border-radius: 20px;
-    max-width: 550px;
-    width: 90%;
-    text-align: center;
-    box-shadow: 0 0 60px rgba(212, 175, 55, 0.15);
-}
-
-.keeper-large-avatar { font-size: 60px; display: block; margin-bottom: 15px; }
-
-/* =========================================================
-   2. THE CHAT BUBBLE & TRIGGER (The "Furniture")
-   ========================================================= */
-#keeper-container {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.keeper-speech-bubble {
-    position: relative;
-    background: #161b22;
-    border: 2px solid #D4AF37;
-    border-radius: 15px;
-    padding: 20px;
-    width: 280px;
-    margin-bottom: 20px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-    animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* The Triangle/Tail */
-.bubble-tail {
-    position: absolute;
-    bottom: -12px;
-    right: 25px;
-    width: 0; height: 0;
-    border-left: 12px solid transparent;
-    border-right: 12px solid transparent;
-    border-top: 12px solid #D4AF37;
-}
-
-.keeper-icon-btn {
-    width: 60px; height: 60px;
-    background: #0d1117;
-    border: 2px solid #D4AF37;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center; align-items: center;
-    cursor: pointer;
-    font-size: 30px;
-    transition: transform 0.2s;
-}
-
-.keeper-icon-btn:hover { transform: scale(1.1); }
-
-/* Typography for the Bubble */
-#keeper-title { color: #D4AF37; font-size: 14px; text-transform: uppercase; margin: 0 0 5px 0; }
-#keeper-text { color: #f0f6fc; font-size: 13.5px; line-height: 1.5; margin: 0; }
-
-.bubble-x {
-    position: absolute;
-    top: -10px; left: -10px;
-    background: #000; color: #fff;
-    border: 2px solid #D4AF37;
-    border-radius: 50%;
-    width: 25px; height: 25px;
-    cursor: pointer;
-}
-
-@keyframes bubblePop {
-    0% { transform: scale(0.5); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-/* WFC Solidarity Blocks */
-.block.wfc-solidarity {
-    background-color: #6a0dad !important; /* The Official Solidarity Purple */
-    border: 1px solid #9b59b6 !important;
-    color: white !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
-}
-
-.block.wfc-solidarity:hover {
-    background-color: #8e44ad !important;
-    transform: scale(1.1);
-    z-index: 5;
-    box-shadow: 0 0 15px rgba(106, 13, 173, 0.5);
-}
-
-/* =========================================
-   REFINED ARCADE LOGIC
-   ========================================= */
-
-/* 1. The Overlay: Using 'inset' is cleaner for full-screen coverage */
-#arcadeOverlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.9);
-    backdrop-filter: blur(8px);
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.3s ease;
-}
-
-/* 2. The Cabinet: Added flex-direction to keep the button and game together */
-#arcadeContainer {
-    width: 95%;
-    max-width: 500px;
-    height: 85vh; /* Slightly taller to accommodate the header */
-    background: #000;
-    border: 4px solid #D4AF37;
-    box-shadow: 0 0 20px #D4AF37, inset 0 0 10px #D4AF37;
-    border-radius: 15px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column; /* Stacks header and iframe */
-    position: relative;
-}
-
-/* 3. The Header: A dedicated space for the 'Exit' button inside the cabinet */
-.arcade-header {
-    width: 100%;
-    padding: 10px 15px;
-    background: #111;
-    display: flex;
-    justify-content: flex-end;
-    border-bottom: 2px solid #333;
-}
-
-/* 4. The Exit Button: Fixed positioning and improved hit area */
-#closeArcadeBtn {
-    background: #d32f2f;
-    color: white;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 4px;
-    font-weight: bold;
-    font-family: inherit;
-    cursor: pointer;
-    box-shadow: 0 4px 0 #8b0000;
-    transition: transform 0.1s, box-shadow 0.1s;
-}
-
-#closeArcadeBtn:hover {
-    background: #e53935;
-}
-
-#closeArcadeBtn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #8b0000;
-}
-
-/* 5. The Game Iframe: Force it to fill the remaining cabinet space */
-#gameIframe {
-    flex-grow: 1;
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-
-/* 6. MOBILE RESPONSIVENESS: The "Big Screen" mode */
-@media (max-width: 600px) {
-    #arcadeContainer {
-        width: 100%;
-        height: 100%;
-        max-width: none;
-        border-radius: 0;
-        border: none;
-    }
-    
-    /* On mobile, we might want the button slightly larger for thumbs */
-    #closeArcadeBtn {
-        padding: 12px 25px;
-    }
-}
-
-/* Force the site to never be wider than the screen */
-html, body {
-    max-width: 100%;
-    overflow-x: hidden !important; /* Hides anything sticking out the side */
-    position: relative; 
-}
-
-/* =========================================
-   MOBILE GRID FIX (Seamless Version)
-========================================= */
 @media (max-width: 768px) {
   .grid-container {
-    display: grid;
-    width: 100%;
-    overflow-x: auto; /* Enables swipe */
-    -webkit-overflow-scrolling: touch;
-    
-    /* FIX: Set gap to 0 to merge images back together */
-    gap: 0 !important; 
-    
-    /* Force 20 columns of fixed width */
-    grid-template-columns: repeat(20, 35px); 
-    
-    padding-bottom: 15px; 
-    margin: 10px 0;
-    justify-content: start;
+    grid-template-columns: repeat(2, 1fr); /* 2 blocks on phone */
+    gap: 20px;
   }
-
-  .block {
-    /* Force exact square size to match the column width */
-    width: 35px !important;
-    height: 35px !important;
-    font-size: 9px; /* Slightly smaller text to fit */
-    
-    /* Ensure no borders create accidental gaps */
-    border: none !important;
-    margin: 0 !important;
-    outline: none !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .grid-container {
-    display: grid;
-    width: 100%;
-    /* Change this line: 1fr makes each column 1/20th of the screen */
-    grid-template-columns: repeat(20, 1fr); 
-    gap: 0 !important;
-    margin: 10px 0;
-  }
-
-  .block {
-    /* Remove the 35px fixed width/height */
-    width: 100% !important; 
-    height: auto !important;
-    aspect-ratio: 1 / 1; /* This keeps them square */
-    font-size: 1.5vw; /* Scales text relative to screen width */
-  }
-}
-
-/* 1. Force all images to respect their parent container */
-.block img, 
-.claimed-has-image {
-    max-width: 100% !important;
-    max-height: 100% !important;
-    object-fit: cover; /* This keeps them from looking squished */
-    display: block;
-}
-
-@media (max-width: 768px) {
-  /* Force the body and html to be exactly the screen width */
-  html, body {
-    width: 100% !important;
-    overflow-x: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  .grid-container {
-    display: grid !important;
-    /* We use 100% to ensure it touches both edges */
-    width: 100% !important; 
-    margin: 10px 0 !important;
-    padding: 0 !important;
-    
-    /* Hard percentages: 20 columns at 5% each = Exactly 100% */
-    grid-template-columns: repeat(20, 5%) !important; 
-    gap: 0 !important;
-    border: none !important;
-  }
-
-  .block {
-    /* Reset everything to be absolutely sure */
-    width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 1 / 1 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-    
-    /* This closes the gap without growing the block */
-    outline: 0.5px solid rgba(255, 255, 255, 0.1); 
-    
-    font-size: 1.5vw !important;
-  }
-}
-
-/* Refined Genesis Blocks: Premium Gold, Less Noise */
-.genesis-gold {
-    background: radial-gradient(circle, #fcf6ba 0%, #bf953f 100%) !important;
-    color: #5d4037 !important; /* Darker brown-gold for better contrast */
-    border: 0.5px solid rgba(255, 255, 255, 0.3);
-    font-weight: bold;
-    box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.5);
-    animation: goldGlow 3s ease-in-out infinite alternate;
-}
-
-/* A soft pulse to attract the eye to Page 1 */
-@keyframes goldGlow {
-    from { filter: brightness(1); }
-    to { filter: brightness(1.2) drop-shadow(0 0 5px rgba(212, 175, 55, 0.6)); }
-}
-
-/* Make the trophy icon pop */
-.genesis-gold::first-letter {
-    font-size: 1.1rem;
-    filter: drop-shadow(1px 1px 0px rgba(0,0,0,0.2));
-}
-
-/* 📏 Prevents the grid from "breaking" when text is present */
-.reserved, .reserved-owner {
-    font-size: 8px !important; /* Tiny font for tiny squares */
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden; /* Stops text from pushing the borders */
-    white-space: nowrap; /* Forces text to stay on one line */
-    background-color: #333 !important;
-}
-
-.reserved-owner {
-    background-color: #4CAF50 !important; /* Green signals it's yours */
-    color: white !important;
-    border: 1px solid #FFF;
-}
-
-#discount-banner {
-    background: rgba(212, 175, 55, 0.1);
-    border: 1px solid #d4af37;
-    border-radius: 8px;
-    padding: 12px;
-    margin: 10px auto 20px;
-    max-width: 960px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    color: #fcf6ba;
-    font-size: 0.95rem;
-}
-
-#discount-banner strong {
-    color: #fff;
-    text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
-}
-
-.banner-icon {
-    font-size: 1.5rem;
+  .vault-title { font-size: 2rem; }
 }
