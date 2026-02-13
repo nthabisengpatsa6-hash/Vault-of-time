@@ -340,6 +340,36 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginSendBtn = document.getElementById("loginSendBtn");
   if (loginSendBtn) loginSendBtn.onclick = verifyAccessKey;
 
+// ================= ACCORDION LOGIC =================
+function initAccordion() {
+    const headers = document.querySelectorAll(".accordion-header");
+    
+    headers.forEach(header => {
+        // Remove old listeners to be safe (cloning node is a quick hack, but loop is fine here)
+        header.onclick = function() {
+            // 1. Toggle the visual state of the header
+            this.classList.toggle("active");
+
+            // 2. Find the content div (it's the next sibling in your HTML)
+            const content = this.nextElementSibling;
+            
+            // 3. Safety check: make sure there is actually content below (The login button has none)
+            if (content && content.classList.contains("accordion-content")) {
+                if (content.style.maxHeight) {
+                    // CLOSE IT
+                    content.style.maxHeight = null;
+                    content.classList.remove("open");
+                } else {
+                    // OPEN IT
+                    // We calculate the exact height so the animation is smooth
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    content.classList.add("open");
+                }
+            }
+        };
+    });
+}
+  
   // 6. Side Menu
   document.getElementById("menuToggle").onclick = () => document.getElementById("sideMenu").classList.add("open");
   document.getElementById("closeMenu").onclick = () => document.getElementById("sideMenu").classList.remove("open");
