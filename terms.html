@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Protocol | Vault of Time</title>
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ================= THEME VARIABLES ================= */
+    :root {
+      --gold: #d4af37;
+      --deep-black: #0d1117;
+      --text-main: #e6edf3;
+      --text-muted: #8b949e;
+    }
+
+    /* ================= CORE STYLES ================= */
+    body {
+      background-color: var(--deep-black);
+      color: var(--text-main);
+      font-family: 'Poppins', sans-serif;
+      line-height: 1.8;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 20px 100px;
+    }
+
+    /* ================= TYPOGRAPHY ================= */
+    h1 {
+      font-family: 'Playfair Display', serif;
+      color: var(--gold);
+      font-size: 3rem;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.9rem;
+      margin-bottom: 60px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 30px;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      color: #fff;
+      border-left: 3px solid var(--gold);
+      padding-left: 15px;
+      margin-top: 50px;
+      font-size: 1.5rem;
+    }
+
+    p {
+      color: #ccc;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+    }
+
+    ul {
+      list-style-type: none; /* Custom Bullets */
+      padding-left: 20px;
+    }
+
+    li {
+      position: relative;
+      padding-left: 25px;
+      margin-bottom: 15px;
+      color: #ccc;
+    }
+
+    li::before {
+      content: "▪";
+      color: var(--gold);
+      position: absolute;
+      left: 0;
+      top: -2px;
+      font-size: 1.2rem;
+    }
+
+    strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* ================= BUTTONS ================= */
+    .back-btn {
+      display: block;
+      width: fit-content;
+      margin: 0 auto 40px;
+      color: var(--gold);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.8rem;
+      border: 1px solid #333;
+      padding: 10px 20px;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.1);
+    }
+
+    /* ================= FOOTER ================= */
+    .legal-footer {
+      text-align: center;
+      margin-top: 80px;
+      font-size: 0.8rem;
+      color: #555;
+      border-top: 1px solid #222;
+      padding-top: 30px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="index.html" class="back-btn">← Return to Vault</a>
+
+    <h1>The Protocol</h1>
+    <div class="subtitle">Terms of Service & Curation Standards</div>
+
+    <p><strong>Effective Date:</strong> 1 February 2026</p>
+    <p>Welcome to <strong>Vault of Time (Pty) Ltd</strong> ("The Vault"). By applying for a coordinate, bidding, or holding a digital asset within this archive, you agree to be bound by the following terms. This is a binding legal agreement between you ("The Keeper") and The Vault.</p>
+
+    <h2>1. The Asset & Ownership</h2>
+    <ul>
+      <li><strong>Nature of Goods:</strong> The Vault consists of 50 finite digital coordinates. Ownership of a coordinate grants The Keeper the exclusive right to display one (1) static image or one (1) audio file on that specific block for the duration of their tenure.</li>
+      <li><strong>No Equity:</strong> Ownership of a coordinate does not constitute equity in Vault of Time (Pty) Ltd, nor does it grant rights to the underlying source code or infrastructure of the website.</li>
+      <li><strong>Sovereignty:</strong> The Keeper retains full intellectual property rights to the content they upload, provided they are the legal creator or copyright holder.</li>
+    </ul>
+
+    <h2>2. The Ratchet Auction</h2>
+    <ul>
+      <li><strong>Binding Bids:</strong> All applications to bid are binding. By submitting a bid value, you commit to transferring the funds within 48 hours if selected.</li>
+      <li><strong>Price Discovery:</strong> The base price of any available block is determined by the sale price of the previously sold block, plus a mandated 10% premium.</li>
+      <li><strong>Payment Failure:</strong> Failure to complete the wire transfer/EFT within 48 hours of invoice issuance will result in the forfeiture of the bid and a permanent ban from The Vault. The coordinate will immediately pass to the next qualified bidder.</li>
+    </ul>
+
+    <h2>3. Curation & The "Vibe Check"</h2>
+    <p>The Vault is not a public storage locker; it is a curated gallery. The Curator reserves the absolute right to reject content based on aesthetic or ethical standards.</p>
+    <ul>
+      <li><strong>Prohibited Content:</strong> Hate speech, pornography, political propaganda, defamatory material, or low-resolution "junk" data is strictly prohibited.</li>
+      <li><strong>Technical Specs:</strong> 
+        <br>— Images: Max 5MB (JPEG/PNG). 
+        <br>— Audio: Max 10MB (MP3).
+      </li>
+      <li><strong>The Kill Switch:</strong> The Curator reserves the right to unpublish any coordinate that violates these standards post-upload. No refunds will be issued for content violations.</li>
+    </ul>
+
+    <h2>4. Transfer & Secondary Market</h2>
+    <ul>
+      <li><strong>The Ledger:</strong> Ownership is recorded internally in the Vault's Ledger. A Keeper may sell their coordinate to a third party.</li>
+      <li><strong>The Royalties:</strong> Vault of Time (Pty) Ltd charges a <strong>10% commission fee</strong> on the gross value of any secondary market sale or transfer.</li>
+      <li><strong>Transfer Mechanism:</strong> Transfers are manual. The current owner must notify The Curator. Upon receipt of the 10% fee, The Curator will issue new credentials to the buyer and revoke the seller's access.</li>
+    </ul>
+
+    <h2>5. Disclaimer & Liability</h2>
+    <p>The Vault is provided "as is." While we strive for permanence, we acknowledge the volatile nature of the digital web. In the unlikely event of catastrophic server failure or company dissolution, The Vault will make reasonable efforts to provide Keepers with a backup of their data.</p>
+
+    <h2>6. Jurisdiction</h2>
+    <p>These terms are governed by the laws of the Republic of South Africa. Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the courts located in South Africa.</p>
+
+    <div class="legal-footer">
+      Vault of Time (Pty) Ltd<br>
+      Registration No: 2025/875420/07<br>
+      Rustenburg, North West, South Africa
+    </div>
+
+  </div>
+
+</body>
+</html>
