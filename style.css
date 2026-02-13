@@ -284,3 +284,46 @@ input:focus {
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 @keyframes spin-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
 @keyframes pulse { 0%, 100% { opacity: 0.4; scale: 0.8; } 50% { opacity: 1; scale: 1.2; } }
+
+/* =========================================
+   MODAL UTILITIES (The Missing Link)
+   ========================================= */
+
+/* 1. The Wrapper: Makes it float on top and dim the background */
+.modal {
+    position: fixed; /* Stay in place */
+    z-index: 10000; /* Sit on top of everything */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* Enable scroll if screen is small */
+    background-color: rgba(0,0,0,0.85); /* Blackout background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+/* 2. The Invisibility Cloak */
+.hidden {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* 3. Close Button Styling (Optional polish) */
+.close-button, .close-view {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: -10px;
+}
+
+.close-button:hover,
+.close-view:hover {
+    color: #D4AF37; /* Gold hover */
+}
