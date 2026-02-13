@@ -1,4 +1,3 @@
-
 // ================= FIREBASE IMPORTS =================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { 
@@ -28,40 +27,56 @@ let blockCache = {};
 let claimed = [];
 let loggedInUserEmail = null;
 
-// ================= THE "SECURITY HANDSHAKE" LOADER =================
+// ================= THE FANCY "SECURITY HANDSHAKE" LOADER =================
 function performHandshake() {
-  const loaderText = document.querySelector(".vault-loader-text");
+  const loader = document.getElementById("vault-loader");
+  if (!loader) return;
+
+  // 1. Inject the fancy HTML structure dynamically
+  // This means you don't have to change your index.html
+  loader.innerHTML = `
+    <div class="vault-spinner-box">
+        <div class="vault-ring"></div>
+        <div class="vault-core"></div>
+    </div>
+    <div class="vault-loader-text">INITIALIZING PROTOCOL...</div>
+  `;
+
+  const loaderText = loader.querySelector(".vault-loader-text");
   const messages = [
     "Verifying Curation Standards...",
     "Syncing with the Ledger...",
-    "Authenticating Genesis Coordinates...",
-    "Opening the Vault."
+    "Authenticating Coordinates...",
+    "Access Granted."
   ];
+
   let i = 0;
   
+  // 2. Cycle through messages with a glitch effect
   const interval = setInterval(() => {
     if (loaderText) {
-      loaderText.style.opacity = 0; 
+      loaderText.style.opacity = 0.2; // Dim text briefly
       setTimeout(() => {
         loaderText.textContent = messages[i];
-        loaderText.style.opacity = 1; 
+        loaderText.style.opacity = 1; // Bring it back
         i++;
-      }, 300);
+      }, 150);
     }
     
     if (i >= messages.length) {
       clearInterval(interval);
-      setTimeout(hideLoader, 800); 
+      setTimeout(hideLoader, 600); 
     }
-  }, 1400); 
+  }, 1200); 
 }
 
 function hideLoader() {
   const loader = document.getElementById("vault-loader");
   const main = document.getElementById("vault-main-content");
+  
   if (loader) {
     loader.style.opacity = 0;
-    setTimeout(() => loader.remove(), 600);
+    setTimeout(() => loader.remove(), 800);
   }
   if (main) main.classList.add("vault-main-visible");
 }
@@ -69,22 +84,36 @@ function hideLoader() {
 // ================= SESSION & AUTH =================
 function checkSession() {
     const session = localStorage.getItem('vault_session');
-    const loginModal = document.getElementById("loginModal"); // 👈 THE FIX IS HERE
+    const loginModal = document.getElementById("loginModal"); 
 
     if (session) {
-        const { email, expiresAt } = JSON.parse(session);
-        if (Date.now() < expiresAt) {
-            loggedInUserEmail = email;
+        try {
+            const { email, expiresAt } = JSON.parse(session);
             
-            // 🛑 If session is valid, HIDE the login box immediately
-            if (loginModal) loginModal.classList.add("hidden");
+            // Check if session is still valid
+            if (Date.now() < expiresAt) {
+                loggedInUserEmail = email;
+                
+                // Hide the login box if it's currently open
+                if (loginModal) loginModal.classList.add("hidden");
 
-            const loginBtn = document.getElementById("menuLoginBtn");
-            if (loginBtn) {
-                loginBtn.textContent = `👤 ${email.split('@')[0]}`;
-                loginBtn.style.color = "#D4AF37";
+                // Update the menu button
+                const loginBtn = document.getElementById("menuLoginBtn");
+                if (loginBtn) {
+                    // Show first part of email
+                    loginBtn.textContent = `👤 ${email.split('@')[0]}`;
+                    loginBtn.style.color = "#D4AF37";
+                    // Remove click event so it doesn't open modal again
+                    loginBtn.onclick = null; 
+                }
+                console.log("Session restored for:", email);
+            } else {
+                // Session expired
+                console.log("Session expired.");
+                localStorage.removeItem('vault_session');
             }
-        } else {
+        } catch (e) {
+            console.error("Session parse error", e);
             localStorage.removeItem('vault_session');
         }
     }
@@ -92,32 +121,42 @@ function checkSession() {
 
 // ================= THE AUCTION RATCHET =================
 async function getCurrentFloorPrice() {
-  const q = query(collection(db, "blocks"), where("status", "==", "paid"), orderBy("purchasePrice", "desc"), limit(1));
-  const snap = await getDocs(q);
-  if (snap.empty) return 1000; 
-  const lastPrice = snap.docs[0].data().purchasePrice;
-  return Math.ceil(lastPrice * 1.1); 
+  try {
+    const q = query(collection(db, "blocks"), where("status", "==", "paid"), orderBy("purchasePrice", "desc"), limit(1));
+    const snap = await getDocs(q);
+    if (snap.empty) return 1000; 
+    const lastPrice = snap.docs[0].data().purchasePrice;
+    return Math.ceil(lastPrice * 1.1); 
+  } catch (err) {
+    console.error("Price fetch error:", err);
+    return 1000; // Default fallback
+  }
 }
 
 // ================= CORE DATA FETCH =================
 async function loadVault() {
-  const snap = await getDocs(collection(db, "blocks"));
-  claimed = [];
-  blockCache = {};
-  
-  snap.forEach(d => {
-    const data = d.data();
-    blockCache[d.id] = data;
-    if (data.status === "paid") claimed.push(Number(d.id));
-  });
-  renderGrid();
+  try {
+      const snap = await getDocs(collection(db, "blocks"));
+      claimed = [];
+      blockCache = {};
+      
+      snap.forEach(d => {
+        const data = d.data();
+        blockCache[d.id] = data;
+        if (data.status === "paid") claimed.push(Number(d.id));
+      });
+      renderGrid();
+  } catch (err) {
+      console.error("Error loading vault:", err);
+  }
 }
 
 // ================= GALLERY RENDERING =================
 async function renderGrid() {
   const grid = document.getElementById("grid");
   if (!grid) return;
-  grid.innerHTML = "";
+  
+  grid.innerHTML = ""; // Clear current grid
   const floorPrice = await getCurrentFloorPrice();
 
   for (let i = 1; i <= TOTAL_BLOCKS; i++) {
@@ -128,7 +167,7 @@ async function renderGrid() {
     if (claimed.includes(i)) {
       div.classList.add("claimed");
       const data = blockCache[i];
-      if (data.mediaUrl && data.mediaType === "image") {
+      if (data && data.mediaUrl && data.mediaType === "image") {
         div.style.backgroundImage = `url(${data.mediaUrl})`;
         div.style.backgroundSize = "cover";
         div.querySelector(".coord-num").style.display = "none";
@@ -148,12 +187,18 @@ async function handleCoordinateClick(id, price) {
   const inquiryModal = document.getElementById("modal");
   
   if (data && data.status === "paid") {
-    // If it's your block, maybe you want to edit? 
-    // For now, let's just show the Museum View.
+    // Show Museum View
     document.getElementById("viewBlockTitle").textContent = `Coordinate #${id}`;
     document.getElementById("viewBlockMessage").textContent = data.message || "A silent legacy.";
     const mediaContainer = document.getElementById("viewBlockMedia");
-    mediaContainer.innerHTML = data.mediaType === "image" ? `<img src="${data.mediaUrl}" style="width:100%">` : "";
+    
+    // Safety check for media
+    if (data.mediaType === "image") {
+        mediaContainer.innerHTML = `<img src="${data.mediaUrl}" style="width:100%; border-radius: 4px;">`;
+    } else {
+        mediaContainer.innerHTML = "";
+    }
+    
     viewModal.classList.remove("hidden");
   } else {
     // Open the Application Modal
@@ -169,6 +214,7 @@ async function handleInquiry() {
   const blockId = document.getElementById("blockNumber").value;
   const email = document.getElementById("email").value.trim().toLowerCase();
   const name = document.getElementById("name").value.trim();
+  const message = document.getElementById("message").value;
 
   if (!email || !name) return alert("Credentials required.");
   
@@ -180,7 +226,7 @@ async function handleInquiry() {
       coordinate: blockId,
       bidderEmail: email,
       bidderName: name,
-      message: document.getElementById("message").value,
+      message: message,
       timestamp: serverTimestamp(),
       status: "reviewing"
     });
@@ -193,6 +239,12 @@ async function handleInquiry() {
 
     alert("Application Logged. The Curator will review your credentials.");
     document.getElementById("modal").classList.add("hidden");
+    
+    // clear form
+    document.getElementById("email").value = "";
+    document.getElementById("name").value = "";
+    document.getElementById("message").value = "";
+
   } catch (err) {
     console.error(err);
     alert("Vault restricted. Try again.");
@@ -202,7 +254,7 @@ async function handleInquiry() {
   }
 }
 
-// ================= THE GENESIS KEY CHECK =================
+// ================= THE GENESIS KEY CHECK (FIXED) =================
 async function verifyAccessKey() {
     const email = document.getElementById("loginEmailInput").value.trim().toLowerCase();
     const enteredKey = document.getElementById("loginKeyInput").value.trim();
@@ -222,13 +274,24 @@ async function verifyAccessKey() {
 
         if (snap.exists()) {
             const data = snap.data();
+            // Check exact key match
             if (data.accessKey === enteredKey) {
+                
+                // 1. Set Session
                 localStorage.setItem('vault_session', JSON.stringify({ 
                     email: email, 
                     expiresAt: Date.now() + 21600000 // 6 hour session
                 }));
+
+                // 2. Alert User
                 alert(`✅ Access Granted. Welcome, ${data.bidderName || "Keeper"}.`);
-                location.reload(); // This reloads the page to trigger checkSession()
+                
+                // 3. Update UI immediately (NO RELOAD)
+                checkSession(); 
+                
+                // 4. Close Modal
+                document.getElementById("loginModal").classList.add("hidden");
+
             } else {
                 alert("❌ Invalid Access Key.");
             }
@@ -246,28 +309,38 @@ async function verifyAccessKey() {
 
 // ================= INITIALIZATION =================
 document.addEventListener("DOMContentLoaded", () => {
-  // First thing: Check if they are already logged in
+  // 1. Check Session immediately
   checkSession();
 
+  // 2. Auth state (Anonymous for public view)
   onAuthStateChanged(auth, (user) => { if (!user) signInAnonymously(auth); });
 
+  // 3. Load Data & Run Loader
   loadVault();
   performHandshake();
 
-  // Close Events
-  document.querySelector(".close-button").onclick = () => document.getElementById("modal").classList.add("hidden");
-  document.querySelector(".close-view").onclick = () => document.getElementById("viewModal").classList.add("hidden");
-  const closeLogin = document.querySelector(".close-login");
-  if (closeLogin) closeLogin.onclick = () => document.getElementById("loginModal").classList.add("hidden");
+  // 4. Close Events
+  const modal = document.getElementById("modal");
+  const viewModal = document.getElementById("viewModal");
+  const loginModal = document.getElementById("loginModal");
 
-  // Action Buttons
+  if(document.querySelector(".close-button")) 
+      document.querySelector(".close-button").onclick = () => modal.classList.add("hidden");
+  
+  if(document.querySelector(".close-view")) 
+      document.querySelector(".close-view").onclick = () => viewModal.classList.add("hidden");
+  
+  const closeLogin = document.querySelector(".close-login");
+  if (closeLogin) closeLogin.onclick = () => loginModal.classList.add("hidden");
+
+  // 5. Action Buttons
   const uploadBtn = document.getElementById("uploadBtn");
   if (uploadBtn) uploadBtn.onclick = handleInquiry;
 
   const loginSendBtn = document.getElementById("loginSendBtn");
   if (loginSendBtn) loginSendBtn.onclick = verifyAccessKey;
 
-  // Side Menu
+  // 6. Side Menu
   document.getElementById("menuToggle").onclick = () => document.getElementById("sideMenu").classList.add("open");
   document.getElementById("closeMenu").onclick = () => document.getElementById("sideMenu").classList.remove("open");
 });
