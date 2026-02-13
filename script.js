@@ -36,14 +36,23 @@ function performHandshake() {
     "Opening the Vault."
   ];
   let i = 0;
+  
+  // Faster interval for a snappier feel
   const interval = setInterval(() => {
-    if (loaderText) loaderText.textContent = messages[i];
-    i++;
+    if (loaderText) {
+      loaderText.style.opacity = 0; // Fade out
+      setTimeout(() => {
+        loaderText.textContent = messages[i];
+        loaderText.style.opacity = 1; // Fade in
+        i++;
+      }, 200);
+    }
+    
     if (i >= messages.length) {
       clearInterval(interval);
-      hideLoader();
+      setTimeout(hideLoader, 500); // Slight pause for drama
     }
-  }, 600);
+  }, 1000); 
 }
 
 function hideLoader() {
@@ -177,6 +186,48 @@ async function handleInquiry() {
   }
 }
 
+// ================= THE GENESIS KEY CHECK =================
+async function verifyAccessKey() {
+    const email = document.getElementById("loginEmailInput").value.trim().toLowerCase();
+    const enteredKey = document.getElementById("loginKeyInput").value.trim();
+    const loginBtn = document.getElementById("loginSendBtn");
+
+    if (!email || !enteredKey) {
+        alert("Credentials required for entry.");
+        return;
+    }
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Verifying...";
+
+    try {
+        const bidderRef = doc(db, "authorized_bidders", email);
+        const snap = await getDoc(bidderRef);
+
+        if (snap.exists()) {
+            const data = snap.data();
+            if (data.accessKey === enteredKey) {
+                localStorage.setItem('vault_session', JSON.stringify({ 
+                    email: email, 
+                    expiresAt: Date.now() + 21600000 
+                }));
+                alert(`✅ Access Granted. Welcome, ${data.bidderName || "Keeper"}.`);
+                location.reload(); 
+            } else {
+                alert("❌ Invalid Access Key.");
+            }
+        } else {
+            alert("❌ Credentials not recognized.");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Verification restricted.");
+    } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Request Access";
+    }
+}
+
 // ================= INITIALIZATION =================
 document.addEventListener("DOMContentLoaded", () => {
   onAuthStateChanged(auth, (user) => {
@@ -193,6 +244,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Attach Submit Logic
   const uploadBtn = document.getElementById("uploadBtn");
   if (uploadBtn) uploadBtn.onclick = handleInquiry;
+
+  const loginSendBtn = document.getElementById("loginSendBtn");
+  if (loginSendBtn) loginSendBtn.onclick = verifyAccessKey;
 
   // Toggle Side Menu
   document.getElementById("menuToggle").onclick = () => document.getElementById("sideMenu").classList.add("open");
