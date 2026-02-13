@@ -363,3 +363,23 @@ input, textarea {
 @media (max-width: 768px) {
   .grid-container { grid-template-columns: repeat(2, 1fr); gap: 20px; }
 }
+
+/* ================= MENU LINK STYLES ================= */
+a.menu-styled-link {
+    display: block;
+    width: 100%;
+    padding: 15px 0;
+    border-bottom: 1px solid #333;
+    color: #fff; /* Default color */
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    text-decoration: none !important; /* Forces underline away */
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+a.menu-styled-link:hover {
+    color: #D4AF37; /* Gold on hover */
+    border-bottom-color: #D4AF37;
+}
