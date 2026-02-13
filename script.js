@@ -88,6 +88,7 @@ function hideLoader() {
 function checkSession() {
     const session = localStorage.getItem('vault_session');
     const loginModal = document.getElementById("loginModal"); 
+    const loginBtn = document.getElementById("menuLoginBtn");
 
     if (session) {
         try {
@@ -100,28 +101,29 @@ function checkSession() {
                 // Hide the login box if it's currently open
                 if (loginModal) loginModal.classList.add("hidden");
 
-                // Update the menu button
-                const loginBtn = document.getElementById("menuLoginBtn");
+                // Update the menu button VISUALS
                 if (loginBtn) {
-                    // Show first part of email
-                    loginBtn.textContent = `👤 ${email.split('@')[0]}`;
+                    // Show email and a disconnect hint
+                    const shortName = email.split('@')[0];
+                    loginBtn.innerHTML = `👤 ${shortName.toUpperCase()} <span style="font-size: 0.7em; opacity: 0.6; margin-left: 10px;">(DISCONNECT)</span>`;
                     loginBtn.style.color = "#D4AF37";
-                    // Remove click event so it doesn't open modal again
-                    loginBtn.onclick = null; 
                 }
                 console.log("Session restored for:", email);
             } else {
                 // Session expired
                 console.log("Session expired.");
                 localStorage.removeItem('vault_session');
+                loggedInUserEmail = null;
             }
         } catch (e) {
             console.error("Session parse error", e);
             localStorage.removeItem('vault_session');
+            loggedInUserEmail = null;
         }
+    } else {
+        loggedInUserEmail = null;
     }
 }
-
 // ================= THE AUCTION RATCHET =================
 async function getCurrentFloorPrice() {
   try {
@@ -310,7 +312,7 @@ async function verifyAccessKey() {
     }
 }
 
-// ================= ACCORDION MENU LOGIC (NEW) =================
+// ================= ACCORDION MENU LOGIC (UPDATED) =================
 function initAccordion() {
     const headers = document.querySelectorAll(".accordion-header");
     
@@ -320,13 +322,28 @@ function initAccordion() {
         header.parentNode.replaceChild(newHeader, header);
         
         newHeader.onclick = function() {
-            // Toggle active class on header for color change
-            this.classList.toggle("active");
+            // SPECIAL CASE: The Login/Logout Button
+            if (this.id === "menuLoginBtn") {
+                if (loggedInUserEmail) {
+                    // LOGOUT LOGIC: If they are already logged in...
+                    if(confirm("Sever connection to the Vault?")) {
+                        localStorage.removeItem('vault_session');
+                        loggedInUserEmail = null;
+                        alert("Connection Severed.");
+                        location.reload(); // Refresh to reset the page state
+                    }
+                    return; // Stop here, don't try to open the accordion
+                } else {
+                    // LOGIN LOGIC: If they are NOT logged in...
+                    document.getElementById("loginModal").classList.remove("hidden");
+                    return; // Stop here
+                }
+            }
 
-            // Find the content div (it's the next sibling in your HTML)
+            // STANDARD ACCORDION LOGIC (For all other buttons)
+            this.classList.toggle("active");
             const content = this.nextElementSibling;
             
-            // Safety check: make sure there is content below (Login button has none)
             if (content && content.classList.contains("accordion-content")) {
                 if (content.style.maxHeight) {
                     // CLOSE IT
@@ -339,9 +356,6 @@ function initAccordion() {
                     content.style.opacity = 1;
                     content.classList.add("open");
                 }
-            } else if (this.id === "menuLoginBtn") {
-                // Special case for Login Button
-                document.getElementById("loginModal").classList.remove("hidden");
             }
         };
     });
