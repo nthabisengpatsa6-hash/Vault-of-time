@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Vault of Time | Sealing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0d1117; /* That deep black you like */
+            color: #d4af37; /* The Gold */
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .status {
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            color: #888;
+            margin-bottom: 40px;
+        }
+
+        .message {
+            max-width: 500px;
+            line-height: 1.8;
+            color: #e6edf3;
+            font-size: 1.1rem;
+            border-top: 1px solid #2d2d2d;
+            padding-top: 20px;
+        }
+
+        .keeper-sig {
+            margin-top: 30px;
+            font-style: italic;
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        /* Subtle gold pulse to show the site isn't "dead" */
+        .pulse {
+            width: 12px;
+            height: 12px;
+            background-color: #d4af37;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px #d4af37;
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="pulse"></div>
+    <h1>The Vault</h1>
+    <p class="status">STATUS: CURATION IN PROGRESS</p>
+
+    <div class="message">
+        The archive is currently being condensed into the <strong>Genesis 50</strong>. 
+        Standard access is restricted. Private auctions will commence shortly.
+        <br><br>
+        For inquiries regarding coordinate reservations: <br>
+        <a href="mailto:hello@vaultoftime.com" style="color: #d4af37; text-decoration: none; border-bottom: 1px dashed;">hello@vaultoftime.com</a>
+    </div>
+
+    <p class="keeper-sig">— The Keeper</p>
+
+</body>
+</html>
