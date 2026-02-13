@@ -95,28 +95,60 @@ body {
 }
 
 /* =========================================
-   HEADER: The Curator's Entrance
+   HEADER: The Hierarchy (UPDATED)
    ========================================= */
 #vaultHeader {
-  padding: 80px 20px 40px;
+  padding: 60px 20px 40px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.vault-title {
+/* 1. The Main Brand (Biggest, Gold) */
+.main-brand-title {
   font-family: 'Playfair Display', serif;
-  font-size: 3.5rem;
+  font-size: 4.5rem; /* Massive */
+  letter-spacing: 4px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+}
+
+/* 2. The Divider Line */
+.header-divider {
+    width: 60px;
+    height: 2px;
+    background-color: #333;
+    margin: 20px 0;
+}
+
+/* 3. The Sub Title (Smaller, White) */
+.sub-brand-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
   letter-spacing: 6px;
   color: #fff;
   text-transform: uppercase;
   margin: 0;
+  font-weight: 400; /* Lighter weight for elegance */
 }
 
+/* 4. The Caption */
 #chapterRange {
-  color: var(--gold);
+  color: var(--text-muted);
   letter-spacing: 2px;
   font-size: 0.9rem;
-  margin-top: 10px;
+  margin-top: 15px;
   text-transform: uppercase;
+}
+
+/* Mobile Adjustments for Header */
+@media (max-width: 768px) {
+    .main-brand-title { font-size: 2.8rem; }
+    .sub-brand-title { font-size: 1.4rem; letter-spacing: 3px; }
 }
 
 /* =========================================
@@ -177,11 +209,11 @@ body {
   position: fixed;
   top: 30px;
   left: 30px;
-  z-index: 9000; /* High index to sit above everything */
+  z-index: 9000;
   cursor: pointer;
   font-size: 24px;
   color: var(--gold);
-  background: rgba(0,0,0,0.5); /* Slight backing to see it */
+  background: rgba(0,0,0,0.5);
   padding: 5px 10px;
   border-radius: 4px;
 }
@@ -195,14 +227,14 @@ body {
   background: #0d1117;
   border-right: 1px solid var(--gold);
   padding: 40px;
-  z-index: 9998; /* Under the loader, over the content */
-  transform: translateX(-100%); /* Hides it off-screen */
+  z-index: 9998;
+  transform: translateX(-100%);
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 10px 0 30px rgba(0,0,0,0.5);
 }
 
 .side-menu.open {
-    transform: translateX(0); /* Slides it in */
+    transform: translateX(0);
 }
 
 #closeMenu {
@@ -216,7 +248,7 @@ body {
     cursor: pointer;
 }
 
-/* Accordion Styles (The Tuck-Away Magic) */
+/* Accordion Styles */
 button.accordion-header {
     background: transparent;
     border: none;
@@ -242,7 +274,7 @@ button.accordion-header.active {
 }
 
 .accordion-content {
-    max-height: 0; /* HIDDEN BY DEFAULT */
+    max-height: 0;
     overflow: hidden;
     opacity: 0;
     transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
@@ -252,7 +284,6 @@ button.accordion-header.active {
 
 .accordion-content.open {
     opacity: 1;
-    /* max-height handled by JS */
     padding-top: 15px;
     padding-bottom: 20px;
 }
@@ -314,8 +345,8 @@ input, textarea {
   color: #fff;
   padding: 12px;
   margin-bottom: 15px;
-  width: 100%; /* Fix width */
-  box-sizing: border-box; /* Prevent padding overflow */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .vault-btn {
@@ -331,5 +362,4 @@ input, textarea {
 
 @media (max-width: 768px) {
   .grid-container { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-  .vault-title { font-size: 2rem; }
 }
