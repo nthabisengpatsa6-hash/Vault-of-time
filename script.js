@@ -1,3 +1,4 @@
+
 // ================= FIREBASE IMPORTS =================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { 
@@ -68,14 +69,20 @@ function hideLoader() {
 // ================= SESSION & AUTH =================
 function checkSession() {
     const session = localStorage.getItem('vault_session');
+    const loginModal = document.getElementById("loginModal"); // 👈 THE FIX IS HERE
+
     if (session) {
         const { email, expiresAt } = JSON.parse(session);
         if (Date.now() < expiresAt) {
             loggedInUserEmail = email;
+            
+            // 🛑 If session is valid, HIDE the login box immediately
+            if (loginModal) loginModal.classList.add("hidden");
+
             const loginBtn = document.getElementById("menuLoginBtn");
             if (loginBtn) {
                 loginBtn.textContent = `👤 ${email.split('@')[0]}`;
-                loginBtn.style.color = "#4CAF50";
+                loginBtn.style.color = "#D4AF37";
             }
         } else {
             localStorage.removeItem('vault_session');
@@ -134,83 +141,64 @@ async function renderGrid() {
   }
 }
 
-// ================= THE INQUIRY & UPDATE ENGINE =================
+// ================= THE INQUIRY ENGINE =================
 async function handleCoordinateClick(id, price) {
   const data = blockCache[id];
-  const modal = document.getElementById("modal");
   const viewModal = document.getElementById("viewModal");
-  const uploadBtn = document.getElementById("uploadBtn");
+  const inquiryModal = document.getElementById("modal");
   
-  // CASE 1: BLOCK IS PAID
   if (data && data.status === "paid") {
-    // Check if the current logged-in user is the OWNER
-    if (loggedInUserEmail && data.ownerEmail === loggedInUserEmail) {
-      document.getElementById("blockNumber").value = id;
-      document.getElementById("selected-block-text").textContent = `Edit Coordinate #${id}`;
-      uploadBtn.textContent = "Update Legacy";
-      modal.classList.remove("hidden");
-    } else {
-      document.getElementById("viewBlockTitle").textContent = `Coordinate #${id}`;
-      document.getElementById("viewBlockMessage").textContent = data.message || "A silent legacy.";
-      const mediaContainer = document.getElementById("viewBlockMedia");
-      mediaContainer.innerHTML = data.mediaType === "image" ? `<img src="${data.mediaUrl}" style="width:100%">` : "";
-      viewModal.classList.remove("hidden");
-    }
-  } 
-  // CASE 2: BLOCK IS AVAILABLE
-  else {
+    // If it's your block, maybe you want to edit? 
+    // For now, let's just show the Museum View.
+    document.getElementById("viewBlockTitle").textContent = `Coordinate #${id}`;
+    document.getElementById("viewBlockMessage").textContent = data.message || "A silent legacy.";
+    const mediaContainer = document.getElementById("viewBlockMedia");
+    mediaContainer.innerHTML = data.mediaType === "image" ? `<img src="${data.mediaUrl}" style="width:100%">` : "";
+    viewModal.classList.remove("hidden");
+  } else {
+    // Open the Application Modal
     document.getElementById("blockNumber").value = id;
     document.getElementById("selected-block-text").textContent = `Coordinate #${id}: Apply to Bid`;
-    uploadBtn.textContent = "Submit Application to Bid";
-    modal.classList.remove("hidden");
+    inquiryModal.classList.remove("hidden");
   }
 }
 
-// ================= SUBMIT APPLICATION OR UPDATE =================
-async function handleAction() {
+// ================= SUBMIT APPLICATION =================
+async function handleInquiry() {
   const btn = document.getElementById("uploadBtn");
   const blockId = document.getElementById("blockNumber").value;
   const email = document.getElementById("email").value.trim().toLowerCase();
   const name = document.getElementById("name").value.trim();
-  const msg = document.getElementById("message").value;
 
   if (!email || !name) return alert("Credentials required.");
   
   btn.disabled = true;
+  btn.textContent = "Etching Application...";
 
-  // IF UPDATING EXISTING OWNED BLOCK
-  if (btn.textContent === "Update Legacy") {
-    btn.textContent = "Updating Ledger...";
-    try {
-        await updateDoc(doc(db, "blocks", blockId), {
-            message: msg,
-            updatedAt: serverTimestamp()
-        });
-        alert("✅ Legacy Updated.");
-        location.reload();
-    } catch (err) { alert("Update failed."); btn.disabled = false; }
-  } 
-  // IF APPLYING FOR NEW AUCTION
-  else {
-    btn.textContent = "Etching Application...";
-    try {
-      await addDoc(collection(db, "inquiries"), {
-        coordinate: blockId,
-        bidderEmail: email,
-        bidderName: name,
-        message: msg,
-        timestamp: serverTimestamp(),
-        status: "reviewing"
+  try {
+    await addDoc(collection(db, "inquiries"), {
+      coordinate: blockId,
+      bidderEmail: email,
+      bidderName: name,
+      message: document.getElementById("message").value,
+      timestamp: serverTimestamp(),
+      status: "reviewing"
+    });
+
+    if (window.emailjs) {
+      await emailjs.send("service_pmuwoaa", "template_xraan78", {
+        name: name, email: email, coordinate: blockId, note: "New bid application."
       });
-      if (window.emailjs) {
-        await emailjs.send("service_pmuwoaa", "template_xraan78", {
-          name: name, email: email, coordinate: blockId, note: "New bid application."
-        });
-      }
-      alert("Application Logged. The Curator will review your credentials.");
-      document.getElementById("modal").classList.add("hidden");
-    } catch (err) { alert("Vault restricted."); } 
-    finally { btn.disabled = false; btn.textContent = "Submit Application to Bid"; }
+    }
+
+    alert("Application Logged. The Curator will review your credentials.");
+    document.getElementById("modal").classList.add("hidden");
+  } catch (err) {
+    console.error(err);
+    alert("Vault restricted. Try again.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Submit Application to Bid";
   }
 }
 
@@ -220,7 +208,10 @@ async function verifyAccessKey() {
     const enteredKey = document.getElementById("loginKeyInput").value.trim();
     const loginBtn = document.getElementById("loginSendBtn");
 
-    if (!email || !enteredKey) return alert("Credentials required.");
+    if (!email || !enteredKey) {
+        alert("Credentials required for coordinate access.");
+        return;
+    }
 
     loginBtn.disabled = true;
     loginBtn.textContent = "Verifying...";
@@ -229,29 +220,41 @@ async function verifyAccessKey() {
         const bidderRef = doc(db, "authorized_bidders", email);
         const snap = await getDoc(bidderRef);
 
-        if (snap.exists() && snap.data().accessKey === enteredKey) {
-            localStorage.setItem('vault_session', JSON.stringify({ 
-                email: email, 
-                expiresAt: Date.now() + 21600000 
-            }));
-            alert(`✅ Access Granted. Welcome, ${snap.data().bidderName || "Keeper"}.`);
-            location.reload(); 
+        if (snap.exists()) {
+            const data = snap.data();
+            if (data.accessKey === enteredKey) {
+                localStorage.setItem('vault_session', JSON.stringify({ 
+                    email: email, 
+                    expiresAt: Date.now() + 21600000 // 6 hour session
+                }));
+                alert(`✅ Access Granted. Welcome, ${data.bidderName || "Keeper"}.`);
+                location.reload(); // This reloads the page to trigger checkSession()
+            } else {
+                alert("❌ Invalid Access Key.");
+            }
         } else {
-            alert("❌ Invalid Access Key.");
+            alert("❌ Credentials not recognized.");
         }
-    } catch (err) { alert("Verification restricted."); } 
-    finally { loginBtn.disabled = false; loginBtn.textContent = "Request Access"; }
+    } catch (err) {
+        console.error("Verification error:", err);
+        alert("Verification restricted.");
+    } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Verify Identity";
+    }
 }
 
 // ================= INITIALIZATION =================
 document.addEventListener("DOMContentLoaded", () => {
+  // First thing: Check if they are already logged in
   checkSession();
+
   onAuthStateChanged(auth, (user) => { if (!user) signInAnonymously(auth); });
 
   loadVault();
   performHandshake();
 
-  // Modal Closers
+  // Close Events
   document.querySelector(".close-button").onclick = () => document.getElementById("modal").classList.add("hidden");
   document.querySelector(".close-view").onclick = () => document.getElementById("viewModal").classList.add("hidden");
   const closeLogin = document.querySelector(".close-login");
@@ -259,12 +262,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Action Buttons
   const uploadBtn = document.getElementById("uploadBtn");
-  if (uploadBtn) uploadBtn.onclick = handleAction;
+  if (uploadBtn) uploadBtn.onclick = handleInquiry;
 
   const loginSendBtn = document.getElementById("loginSendBtn");
   if (loginSendBtn) loginSendBtn.onclick = verifyAccessKey;
 
-  // Menu
+  // Side Menu
   document.getElementById("menuToggle").onclick = () => document.getElementById("sideMenu").classList.add("open");
   document.getElementById("closeMenu").onclick = () => document.getElementById("sideMenu").classList.remove("open");
 });
