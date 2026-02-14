@@ -98,6 +98,24 @@
         </div>
 
         <div class="grid-container">
+
+<div class="admin-box" style="border: 1px solid #00bcd4;">
+    <h3 style="color: #00bcd4;">⏳ 3. Start Countdown</h3>
+    <p style="font-size: 0.8rem; color: #888; margin-bottom: 20px;">Set the deadline for the current Active Block.</p>
+
+    <div class="row">
+        <div class="col">
+            <label>Coordinate #</label>
+            <input type="number" id="timerBlockId" placeholder="e.g. 1">
+        </div>
+        <div class="col">
+            <label>Duration (Hours)</label>
+            <input type="number" id="timerHours" placeholder="24">
+        </div>
+    </div>
+
+    <button id="startTimerBtn" style="background: #00bcd4; color: black;">INITIATE TIMER</button>
+</div>
             
             <div class="admin-box full-width">
                 <h3>📡 Incoming Signals (Inquiries)</h3>
@@ -341,6 +359,35 @@
             }
         };
 
+// --- 4. START TIMER ---
+document.getElementById('startTimerBtn').onclick = async () => {
+    const id = document.getElementById('timerBlockId').value;
+    const hours = Number(document.getElementById('timerHours').value);
+
+    if (!id || !hours) return alert("Need Coordinate # and Hours.");
+
+    // Calculate the future timestamp
+    const now = new Date();
+    const deadline = new Date(now.getTime() + hours * 60 * 60 * 1000);
+
+    if (!confirm(`⏳ START TIMER?\n\nCoordinate #${id}\nDuration: ${hours} Hours\nEnds: ${deadline.toLocaleString()}\n\nThis will activate the live clock on the main site.`)) return;
+
+    try {
+        // We update the block document with the deadline
+        await setDoc(doc(db, "blocks", id), {
+            auctionEndsAt: deadline, 
+            status: "active" // Explicitly mark it as active
+        }, { merge: true });
+
+        alert(`⏳ COUNTDOWN STARTED.\nCoordinate #${id} is live.`);
+        // Clear inputs
+        document.getElementById('timerBlockId').value = "";
+        document.getElementById('timerHours').value = "";
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+};
+        
     </script>
 </body>
 </html>
