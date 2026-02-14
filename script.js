@@ -1,3 +1,4 @@
+
 // ================= FIREBASE IMPORTS =================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { 
@@ -110,14 +111,13 @@ function checkSession() {
 // ================= THE AUCTION RATCHET =================
 async function getCurrentFloorPrice() {
   try {
-    // Look at the public Ledger to find the most recent price
     const q = query(collection(db, "ledger"), orderBy("blockId", "desc"), limit(1));
     const snap = await getDocs(q);
     
-    if (snap.empty) return 1000; // Base starting price
+    if (snap.empty) return 1000; 
     
     const lastPrice = snap.docs[0].data().price;
-    return Math.ceil(lastPrice * 1.1); // Add 10% premium
+    return Math.ceil(lastPrice * 1.1); 
   } catch (err) {
     console.error("Price fetch error:", err);
     return 1000;
@@ -127,7 +127,6 @@ async function getCurrentFloorPrice() {
 // ================= CORE DATA FETCH =================
 async function loadVault() {
   try {
-      // Sync both content (blocks) and ownership (ledger)
       const [blocksSnap, ledgerSnap] = await Promise.all([
           getDocs(collection(db, "blocks")),
           getDocs(collection(db, "ledger"))
@@ -150,7 +149,7 @@ async function loadVault() {
   }
 }
 
-// ================= GALLERY RENDERING (THE STATE MACHINE) =================
+// ================= GALLERY RENDERING =================
 async function renderGrid() {
   const grid = document.getElementById("grid");
   if (!grid) return;
@@ -166,7 +165,6 @@ async function renderGrid() {
     const isSold = claimed.includes(i);
 
     if (isSold) {
-      // STATE: SOLD
       div.classList.add("claimed");
       div.innerHTML = `<span class="coord-num">#${i}</span>`;
       const data = blockCache[i];
@@ -178,7 +176,6 @@ async function renderGrid() {
       div.onclick = () => handleCoordinateClick(i, "sold");
     } 
     else if (!activeFound) {
-      // STATE: ACTIVE (The Golden Block)
       div.classList.add("active-bid");
       div.innerHTML = `
         <span class="coord-num" style="color:#D4AF37;">#${i}</span>
@@ -188,7 +185,6 @@ async function renderGrid() {
       activeFound = true; 
     } 
     else {
-      // STATE: LOCKED
       div.classList.add("locked");
       div.innerHTML = `<span class="coord-num">#${i}</span><span class="lock-icon">🔒</span>`;
       div.onclick = () => alert("This coordinate is currently locked until the previous block is etched.");
@@ -228,38 +224,50 @@ async function handleInquiry() {
   const blockId = document.getElementById("blockNumber").value;
   const email = document.getElementById("email").value.trim().toLowerCase();
   const name = document.getElementById("name").value.trim();
+  const bidAmount = document.getElementById("bidAmount").value; // Grab the money
   const message = document.getElementById("message").value;
 
-  if (!email || !name) return alert("Credentials required.");
+  if (!email || !name || !bidAmount) return alert("Credentials and Bid Amount required.");
   
   btn.disabled = true;
   btn.textContent = "Etching Application...";
 
   try {
+    // 1. Log to Firestore
     await addDoc(collection(db, "inquiries"), {
       coordinate: blockId,
       bidderEmail: email,
       bidderName: name,
+      bidAmount: bidAmount,
       message: message,
       timestamp: serverTimestamp(),
       status: "reviewing"
     });
 
+    // 2. Send via EmailJS using YOUR NEW TEMPLATE
     if (window.emailjs) {
-      await emailjs.send("service_pmuwoaa", "template_xraan78", {
-        name: name, email: email, coordinate: blockId, note: "New bid application."
+      await emailjs.send("service_pmuwoaa", "template_a0yyy47", {
+        name: name, 
+        email: email, 
+        coordinate: blockId, 
+        bidAmount: bidAmount,
+        message: message,
+        note: "New high-prestige bid application."
       });
     }
 
     alert("Application Logged. The Curator will review your credentials.");
     document.getElementById("modal").classList.add("hidden");
     
+    // Clear form for next time
     document.getElementById("email").value = "";
     document.getElementById("name").value = "";
+    document.getElementById("bidAmount").value = "";
     document.getElementById("message").value = "";
 
   } catch (err) {
-    alert("Vault restricted. Try again.");
+    console.error(err);
+    alert("Vault restricted. Check your connection.");
   } finally {
     btn.disabled = false;
     btn.textContent = "Submit Application to Bid";
