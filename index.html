@@ -180,6 +180,18 @@
 </script>
 
 <script type="module" src="script.js?v=7.0"></script>
-
+<div id="ownerModal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-owner" style="cursor:pointer; float:right; font-size: 24px;">&times;</span>
+    <h2 id="ownerBlockTitle" style="color:#D4AF37;">Etch Your Coordinate</h2>
+    <p style="color: #888; font-size: 0.8rem; margin-bottom: 20px;">Secure Upload: Image (Max 5MB) or Audio (Max 10MB)</p>
+    <input type="file" id="mediaUpload" accept="image/*,audio/*" style="margin-bottom: 20px; color: #fff; width: 100%;">
+    <textarea id="ownerMessage" placeholder="Your Legacy Message (optional)..." rows="3" style="width: 100%; background: #161b22; color: #fff; border: 1px solid #333; padding: 10px; margin-bottom: 15px;"></textarea>
+    <div id="uploadProgress" style="display:none; width: 100%; background: #222; height: 5px; margin: 10px 0;">
+      <div id="progressBar" style="width: 0%; height: 100%; background: #D4AF37;"></div>
+    </div>
+    <button id="finalizeEtchingBtn" class="vault-btn">COMMENCE ETCHING</button>
+  </div>
+</div>
 </body>
 </html>
