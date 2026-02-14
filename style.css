@@ -458,21 +458,36 @@ a.menu-styled-link:hover {
     animation: fadeInScale 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* THE STAGE (Where the image lives) */
+/* ================= MUSEUM MODE UPDATES ================= */
+
+/* THE STAGE (The container for the artwork) */
 .museum-stage {
-    flex: 1; /* Takes up most of the space */
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
+    /* This creates a portrait-shaped "frame" for the image to live inside */
+    max-width: 600px; 
     margin-bottom: 20px;
     overflow: hidden;
+    /* Optional: Adds a subtle placeholder background */
+    background: rgba(255, 255, 255, 0.02); 
+    border-radius: 4px;
 }
 
+/* THE IMAGE ITSELF */
 .museum-stage img {
-    max-height: 75vh; /* 75% of screen height */
-    max-width: 100%;
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8); /* Deep shadow */
+    /* This is the magic trio for no stretching: */
+    max-height: 75vh;  /* Never taller than 75% of screen */
+    max-width: 100%;   /* Never wider than its container */
+    height: auto;      /* Let height adjust automatically */
+    width: auto;       /* Let width adjust automatically */
+    
+    /* Ensures the entire image is visible without cropping or stretching */
+    object-fit: contain; 
+    
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
     border: 1px solid #222;
     border-radius: 4px;
     transition: transform 0.3s ease;
