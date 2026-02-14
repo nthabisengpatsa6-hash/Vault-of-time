@@ -6,8 +6,14 @@
   <title>VAULT OF TIME | The Genesis 50</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   
-  <link rel="stylesheet" href="style.css?v=7.0" /> 
+  <link rel="stylesheet" href="style.css?v=8.0" /> 
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script type="text/javascript">
+     (function(){ emailjs.init("O9ZTyJYVkoIrBxFdQ"); })();
+  </script>
 </head>
 
 <body>
@@ -28,31 +34,22 @@
       <button id="closeMenu">&times;</button>
       
       <div style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 20px;">
-    <h1 style="color: #D4AF37; font-family: 'Playfair Display', serif; font-size: 1.8rem; margin: 0; line-height: 1.2;">
-        VAULT OF TIME
-    </h1>
-    
-    <a href="ledger.html" target="_blank" style="text-decoration: none; cursor: pointer;">
-        <p style="color: #888; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; margin-top: 5px; margin-bottom: 0; transition: color 0.3s ease;" 
-           onmouseover="this.style.color='#D4AF37'" 
-           onmouseout="this.style.color='#888'">
-            ➤ Open The Official Ledger
-        </p>
-    </a>
-</div>
+        <h1 style="color: #D4AF37; font-family: 'Playfair Display', serif; font-size: 1.8rem; margin: 0; line-height: 1.2;">
+            VAULT OF TIME
+        </h1>
+        
+        <a href="ledger.html" target="_blank" style="text-decoration: none;">
+            <p style="color: #888; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; margin-top: 5px; margin-bottom: 0;">
+                ➤ Open The Official Ledger
+            </p>
+        </a>
+      </div>
       
       <div class="accordion">
-        
-        <div class="accordion-item">
-          <button id="menuLoginBtn" class="accordion-header" style="color: #D4AF37; font-weight: bold;">
-            Owner Verification
-          </button>
-        </div>
-
         <div class="accordion-item">
           <button class="accordion-header">The Genesis 50</button>
           <div class="accordion-content">
-            <p>A finite archive of 50 digital coordinates. Once a coordinate is sealed, it remains an immutable part of the Vault's history.</p>
+            <p>A finite archive of 50 digital coordinates. No uploads. No clutter. Only 50 legacies etched through digital alchemy.</p>
             <p style="margin-top: 15px;">
               <a href="about.html" style="color: #D4AF37; text-decoration: none; border-bottom: 1px dashed #D4AF37;">
                 The Curation Manifesto ➔
@@ -64,64 +61,36 @@
         <div class="accordion-item">
           <button class="accordion-header">Auction Protocol</button>
           <div class="accordion-content">
-            <p>The Vault operates on a Ratchet Auction system. Each coordinate starts at the final sale price of the previous block plus a 10% prestige premium.</p>
+            <p>The Vault operates on a Ratchet Auction. Each coordinate starts at the final sale price of the previous block plus a 10% prestige premium.</p>
           </div>
         </div>
 
         <div class="accordion-item">
-  <button class="accordion-header">Vault Standards</button>
-  <div class="accordion-content">
-    <p style="font-size: 0.85rem; color: #888; margin-bottom: 15px;">
-        To ensure the archive remains a monument of value, strict adherence is mandatory:
-    </p>
-    <ul style="color: #ccc; padding-left: 20px; font-size: 0.9rem; line-height: 1.8;">
-      <li>
-          <strong style="color: #D4AF37;">Decency:</strong> 
-          Zero tolerance for NSFW, pornography, or graphic violence.
-      </li>
-      <li>
-          <strong style="color: #D4AF37;">Civility:</strong> 
-          No hate speech, political extremism, or harassment.
-      </li>
-      <li>
-          <strong style="color: #D4AF37;">Privacy:</strong> 
-          No doxxing or revealing private data of others.
-      </li>
-      <li>
-          <strong style="color: #D4AF37;">Sovereignty:</strong> 
-          You must own 100% of the copyright. No stolen art.
-      </li>
-    </ul>
-  </div>
-</div>
-        
+          <button class="accordion-header">Vault Standards</button>
+          <div class="accordion-content">
+            <p style="font-size: 0.85rem; color: #888; margin-bottom: 15px;">Mandatory compliance for inclusion in the archive:</p>
+            <ul style="color: #ccc; padding-left: 20px; font-size: 0.9rem; line-height: 1.8;">
+              <li><strong style="color: #D4AF37;">Decency:</strong> Zero tolerance for NSFW or graphic violence.</li>
+              <li><strong style="color: #D4AF37;">Civility:</strong> No hate speech or harassment.</li>
+              <li><strong style="color: #D4AF37;">Truth:</strong> Only meaningful legacies are granted coordination.</li>
+            </ul>
+          </div>
+        </div>
       </div> 
 
-     <a href="terms.html" target="_blank" class="menu-styled-link">
-  Terms & Conditions
-</a>
+      <a href="terms.html" target="_blank" class="menu-styled-link">Terms & Conditions</a>
       
       <div style="margin-top: 50px; padding-top: 20px;">
-          <p style="font-size: 10px; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">
-            Vault of Time (Pty) Ltd
-          </p>
-          <p style="font-size: 10px; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">
-            Reg No: 2025/875420/07
-          </p>
-          <p style="font-size: 10px; color: #444; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px;">
-            &copy; 2026 
-          </p>
+          <p style="font-size: 10px; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Vault of Time (Pty) Ltd</p>
+          <p style="font-size: 10px; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Reg No: 2025/875420/07</p>
+          <p style="font-size: 10px; color: #444; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px;">&copy; 2026</p>
       </div>
-
     </nav>
 
     <header id="vaultHeader">
       <h1 class="main-brand-title">VAULT OF TIME</h1>
-      
       <div class="header-divider"></div>
-
       <h2 class="sub-brand-title">THE GENESIS 50</h2>
-      
       <p id="chapterRange">Only 50 coordinates will ever be etched.</p>
     </header>
 
@@ -139,25 +108,20 @@
       <input type="text" id="name" placeholder="Full Name" required>
       <input type="email" id="email" placeholder="Email Address" required>
       <div style="position: relative; margin-bottom: 15px;">
-  <span style="position: absolute; left: 10px; top: 10px; color: #D4AF37;">$</span>
-  <input type="number" id="bidAmount" placeholder="Your Bid (USD)" required 
-         style="padding-left: 25px; width: 100%; box-sizing: border-box;">
-</div>
-      <textarea id="message" placeholder="Legacy Message..." rows="4"></textarea>
-      
-      <button type="button" id="uploadBtn" class="vault-btn">
-        Submit Application
-      </button>
+        <span style="position: absolute; left: 10px; top: 10px; color: #D4AF37;">$</span>
+        <input type="number" id="bidAmount" placeholder="Your Bid (USD)" required 
+               style="padding-left: 25px; width: 100%; box-sizing: border-box;">
+      </div>
+      <textarea id="message" placeholder="Legacy Message (Used to generate your art)..." rows="4"></textarea>
+      <button type="button" id="uploadBtn" class="vault-btn">Submit Application</button>
     </form>
   </div>
 </div>
 
 <div id="viewModal" class="modal hidden museum-mode">
   <span class="close-view" style="z-index: 1001;">&times;</span>
-  
   <div class="museum-content">
     <div id="viewBlockMedia" class="museum-stage"></div>
-
     <div class="museum-plaque">
         <h2 id="viewBlockTitle">Coordinate #XX</h2>
         <div class="separator"></div>
@@ -166,37 +130,7 @@
   </div>
 </div>
 
-<div id="loginModal" class="modal hidden">
-  <div class="modal-content" style="text-align: center;">
-    <span class="close-login">&times;</span>
-    <h2 style="color:#D4AF37;">Owner Verification</h2>
-    <p style="color: #888; margin-bottom: 20px;">Enter credentials to access your coordinate.</p>
-    
-    <input type="email" id="loginEmailInput" placeholder="Registered Email">
-    <input type="text" id="loginKeyInput" placeholder="Genesis Access Key" style="text-align: center; letter-spacing: 2px; color: #D4AF37;">
-    
-    <button id="loginSendBtn" class="vault-btn">Verify Identity</button>
-  </div>
-</div>
+<script type="module" src="script.js?v=8.0"></script>
 
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script type="text/javascript">
-   (function(){ emailjs.init("O9ZTyJYVkoIrBxFdQ"); })();
-</script>
-
-<script type="module" src="script.js?v=7.0"></script>
-<div id="ownerModal" class="modal hidden">
-  <div class="modal-content">
-    <span class="close-owner" style="cursor:pointer; float:right; font-size: 24px;">&times;</span>
-    <h2 id="ownerBlockTitle" style="color:#D4AF37;">Etch Your Coordinate</h2>
-    <p style="color: #888; font-size: 0.8rem; margin-bottom: 20px;">Secure Upload: Image (Max 5MB) or Audio (Max 10MB)</p>
-    <input type="file" id="mediaUpload" accept="image/*,audio/*" style="margin-bottom: 20px; color: #fff; width: 100%;">
-    <textarea id="ownerMessage" placeholder="Your Legacy Message (optional)..." rows="3" style="width: 100%; background: #161b22; color: #fff; border: 1px solid #333; padding: 10px; margin-bottom: 15px;"></textarea>
-    <div id="uploadProgress" style="display:none; width: 100%; background: #222; height: 5px; margin: 10px 0;">
-      <div id="progressBar" style="width: 0%; height: 100%; background: #D4AF37;"></div>
-    </div>
-    <button id="finalizeEtchingBtn" class="vault-btn">COMMENCE ETCHING</button>
-  </div>
-</div>
 </body>
 </html>
