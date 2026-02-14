@@ -152,12 +152,17 @@
   </div>
 </div>
 
-<div id="viewModal" class="modal hidden">
-  <div class="modal-content">
-    <span class="close-view">&times;</span>
-    <h2 id="viewBlockTitle" style="color:#D4AF37;"></h2>
-    <div id="viewBlockMedia" style="margin: 20px 0;"></div>
-    <p id="viewBlockMessage" style="color: #ccc;"></p>
+<div id="viewModal" class="modal hidden museum-mode">
+  <span class="close-view" style="z-index: 1001;">&times;</span>
+  
+  <div class="museum-content">
+    <div id="viewBlockMedia" class="museum-stage"></div>
+
+    <div class="museum-plaque">
+        <h2 id="viewBlockTitle">Coordinate #XX</h2>
+        <div class="separator"></div>
+        <p id="viewBlockMessage" class="legacy-text">The legacy is sealed.</p>
+    </div>
   </div>
 </div>
 
