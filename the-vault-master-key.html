@@ -191,7 +191,7 @@
         import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { 
             getFirestore, doc, setDoc, updateDoc, collection, getDocs, 
-            query, orderBy, serverTimestamp, addDoc 
+            query, orderBy, serverTimestamp, addDoc, deleteField // <--- Added this!
         } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -386,6 +386,26 @@ document.getElementById('startTimerBtn').onclick = async () => {
         // Clear inputs
         document.getElementById('timerBlockId').value = "";
         document.getElementById('timerHours').value = "";
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+};
+
+        // --- 5. STOP / RESET TIMER ---
+document.getElementById('stopTimerBtn').onclick = async () => {
+    const id = document.getElementById('timerBlockId').value;
+
+    if (!id) return alert("Please enter the Coordinate # to reset.");
+
+    if (!confirm(`🛑 STOP COUNTDOWN for #${id}?\n\nThis will remove the timer and reopen the block to standard bidding.`)) return;
+
+    try {
+        // We delete the 'auctionEndsAt' field entirely
+        await updateDoc(doc(db, "blocks", id), {
+            auctionEndsAt: deleteField()
+        });
+
+        alert(`✅ TIMER ABORTED.\nCoordinate #${id} is now open without a deadline.`);
     } catch (err) {
         alert("Error: " + err.message);
     }
