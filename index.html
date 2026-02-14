@@ -10,10 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script type="text/javascript">
-     (function(){ emailjs.init("O9ZTyJYVkoIrBxFdQ"); })();
-  </script>
 </head>
 
 <body>
@@ -49,7 +45,7 @@
         <div class="accordion-item">
           <button class="accordion-header">The Genesis 50</button>
           <div class="accordion-content">
-            <p>A finite archive of 50 digital coordinates. No uploads. No clutter. Only 50 legacies etched through digital alchemy.</p>
+            <p>A finite archive of 50 digital coordinates. Each coordinate is a generative masterpiece etched in time.</p>
             <p style="margin-top: 15px;">
               <a href="about.html" style="color: #D4AF37; text-decoration: none; border-bottom: 1px dashed #D4AF37;">
                 The Curation Manifesto ➔
@@ -61,19 +57,7 @@
         <div class="accordion-item">
           <button class="accordion-header">Auction Protocol</button>
           <div class="accordion-content">
-            <p>The Vault operates on a Ratchet Auction. Each coordinate starts at the final sale price of the previous block plus a 10% prestige premium.</p>
-          </div>
-        </div>
-
-        <div class="accordion-item">
-          <button class="accordion-header">Vault Standards</button>
-          <div class="accordion-content">
-            <p style="font-size: 0.85rem; color: #888; margin-bottom: 15px;">Mandatory compliance for inclusion in the archive:</p>
-            <ul style="color: #ccc; padding-left: 20px; font-size: 0.9rem; line-height: 1.8;">
-              <li><strong style="color: #D4AF37;">Decency:</strong> Zero tolerance for NSFW or graphic violence.</li>
-              <li><strong style="color: #D4AF37;">Civility:</strong> No hate speech or harassment.</li>
-              <li><strong style="color: #D4AF37;">Truth:</strong> Only meaningful legacies are granted coordination.</li>
-            </ul>
+            <p>The Vault operates on a Ratchet Auction system. Prestige increases with every sealed coordinate.</p>
           </div>
         </div>
       </div> 
@@ -82,7 +66,6 @@
       
       <div style="margin-top: 50px; padding-top: 20px;">
           <p style="font-size: 10px; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Vault of Time (Pty) Ltd</p>
-          <p style="font-size: 10px; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Reg No: 2025/875420/07</p>
           <p style="font-size: 10px; color: #444; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px;">&copy; 2026</p>
       </div>
     </nav>
@@ -100,7 +83,7 @@
 
 <div class="modal hidden" id="modal">
   <div class="modal-content">
-    <span class="close-button">&times;</span>
+    <span class="close-button" id="closeInquiry">&times;</span>
     <h2 id="selected-block-text" style="color: #D4AF37;">Coordinate Inquiry</h2>
     
     <form id="blockForm">
@@ -109,17 +92,16 @@
       <input type="email" id="email" placeholder="Email Address" required>
       <div style="position: relative; margin-bottom: 15px;">
         <span style="position: absolute; left: 10px; top: 10px; color: #D4AF37;">$</span>
-        <input type="number" id="bidAmount" placeholder="Your Bid (USD)" required 
-               style="padding-left: 25px; width: 100%; box-sizing: border-box;">
+        <input type="number" id="bidAmount" placeholder="Your Bid (USD)" required style="padding-left: 25px; width: 100%;">
       </div>
-      <textarea id="message" placeholder="Legacy Message (Used to generate your art)..." rows="4"></textarea>
+      <textarea id="message" placeholder="Legacy Message..." rows="4"></textarea>
       <button type="button" id="uploadBtn" class="vault-btn">Submit Application</button>
     </form>
   </div>
 </div>
 
 <div id="viewModal" class="modal hidden museum-mode">
-  <span class="close-view" style="z-index: 1001;">&times;</span>
+  <span class="close-view" id="closeView">&times;</span>
   <div class="museum-content">
     <div id="viewBlockMedia" class="museum-stage"></div>
     <div class="museum-plaque">
@@ -129,6 +111,11 @@
     </div>
   </div>
 </div>
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script type="text/javascript">
+   (function(){ emailjs.init("O9ZTyJYVkoIrBxFdQ"); })();
+</script>
 
 <script type="module" src="script.js?v=8.0"></script>
 
