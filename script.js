@@ -27,6 +27,7 @@ const TOTAL_BLOCKS = 50;
 let blockCache = {};        // Stores the content (images/audio)
 let claimedBlocks = [];     // Stores which blocks are sold
 let loggedInUserEmail = null; // Stores who is currently logged in
+let countdownInterval = null; // Stores the active timer ID
 
 // ================= 3. THE HANDSHAKE LOADER =================
 function performHandshake() {
@@ -168,57 +169,73 @@ async function loadVault() {
   }
 }
 
-// ================= 7. RENDER GRID (STATE MACHINE) =================
+// ================= 7. RENDER GRID (WITH LIVE TIMER) =================
 async function renderGrid() {
   const grid = document.getElementById("grid");
   if (!grid) return;
   
-  grid.innerHTML = ""; // Clear existing grid
+  grid.innerHTML = ""; 
   const floorPrice = await getCurrentFloorPrice();
   let activeBlockFound = false;
+
+  // Clear old timer if re-rendering
+  if (countdownInterval) clearInterval(countdownInterval);
 
   for (let i = 1; i <= TOTAL_BLOCKS; i++) {
     const div = document.createElement("div");
     div.className = "block";
     
-    const isSold = claimedBlocks.includes(i);
+    // Check if Sold (Public or Private)
+    const isSold = claimedBlocks.includes(i) || (blockCache[i] && blockCache[i].status === "paid");
 
     if (isSold) {
-      // --- STATE 1: SOLD ---
+      // --- STATE: SOLD ---
       div.classList.add("claimed");
       div.innerHTML = `<span class="coord-num">#${i}</span>`;
-      
-      // If it has an image, show it
       const data = blockCache[i];
       if (data && data.mediaUrl && data.mediaType === "image") {
         div.style.backgroundImage = `url(${data.mediaUrl})`;
         div.style.backgroundSize = "cover";
         div.querySelector(".coord-num").style.display = "none";
       }
-      // Click opens the Museum View (or Owner View)
       div.onclick = () => handleCoordinateClick(i, "sold");
     } 
     else if (!activeBlockFound) {
-      // --- STATE 2: ACTIVE (GOLDEN PULSE) ---
+      // --- STATE: ACTIVE (GOLDEN PULSE) ---
       div.classList.add("active-bid");
+      
+      const blockData = blockCache[i];
+      let priceOrTimerHTML = `<span class="price-tag">BID OPEN: $${floorPrice}</span>`;
+      
+      // CHECK: Did the admin set a timer for this block?
+      if (blockData && blockData.auctionEndsAt) {
+          // We give this span a specific ID so the interval can find it
+          priceOrTimerHTML = `<span id="live-timer-${i}" class="price-tag" style="font-family:monospace; font-size: 0.9em; color:#D4AF37;">Loading Timer...</span>`;
+          
+          // Start the live clock immediately
+          // We use setTimeout to let the div attach to the DOM first
+          setTimeout(() => startLiveCountdown(blockData.auctionEndsAt, `live-timer-${i}`), 100);
+      }
+
       div.innerHTML = `
         <span class="coord-num" style="color:#D4AF37;">#${i}</span>
-        <span class="price-tag">BID OPEN: $${floorPrice}</span>
+        ${priceOrTimerHTML}
       `;
-      // Click opens the Bid Form
+      
       div.onclick = () => handleCoordinateClick(i, "active", floorPrice);
-      activeBlockFound = true; // Mark that we found the active one
+      activeBlockFound = true; 
     } 
     else {
-      // --- STATE 3: LOCKED ---
+      // --- STATE: LOCKED ---
       div.classList.add("locked");
       div.innerHTML = `<span class="coord-num">#${i}</span><span class="lock-icon">🔒</span>`;
-      div.onclick = () => alert("This coordinate is currently locked until the previous block is etched.");
+      div.onclick = () => alert("This coordinate is currently locked.");
     }
     
     grid.appendChild(div);
   }
 }
+
 
 // ================= 8. CLICK HANDLER (THE ROUTER) =================
 async function handleCoordinateClick(id, state, price) {
@@ -442,6 +459,45 @@ function initAccordion() {
             }
         };
     });
+}
+
+// ================= LIVE COUNTDOWN LOGIC =================
+function startLiveCountdown(deadline, elementId) {
+    // Clear any existing timer to prevent conflicts
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    const timerElement = document.getElementById(elementId);
+    if (!timerElement) return;
+
+    const endTime = deadline.toDate().getTime(); // Convert Firestore timestamp to JS milliseconds
+
+    // Update the count down every 1 second
+    countdownInterval = setInterval(function() {
+        const now = new Date().getTime();
+        const distance = endTime - now;
+
+        // TIME CALCULATION
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        // DISPLAY
+        if (distance < 0) {
+            clearInterval(countdownInterval);
+            timerElement.innerHTML = "⛔ CLOSED";
+            timerElement.style.color = "red";
+            timerElement.parentElement.classList.add("expired"); // Optional styling
+        } else {
+            // "23h 59m 59s" format
+            timerElement.innerHTML = `⏳ ${hours}h ${minutes}m ${seconds}s`;
+            
+            // Panic Mode: If less than 1 hour, make it red
+            if (hours < 1) {
+                timerElement.style.color = "#ff4d4d";
+                timerElement.style.animation = "pulseRed 1s infinite"; 
+            }
+        }
+    }, 1000); // 1000ms = 1 second
 }
 
 // ================= 13. BOOTSTRAP (RUN ON LOAD) =================
